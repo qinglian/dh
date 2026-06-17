@@ -1,0 +1,305 @@
+/* 宠物容器 - 只在宽屏显示 */
+.petContainer {
+  position: fixed;
+  left: 30px;
+  bottom: 100px;
+  z-index: 100;
+  display: none;
+}
+
+/* 宽屏显示（电脑） */
+@media (min-width: 1024px) {
+  .petContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+/* 消息气泡 */
+.messageBubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  animation: popIn 0.3s ease;
+  margin-bottom: 10px;
+}
+
+.bubbleTail {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(255, 255, 255, 0.95);
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) translateY(0);
+  }
+}
+
+/* 宠物主体 */
+.pet {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.pet:hover {
+  transform: scale(1.05);
+}
+
+.pet.jumping {
+  animation: jump 0.5s ease;
+}
+
+@keyframes jump {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+/* 身体 */
+.body {
+  width: 80px;
+  height: 70px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 50% 50% 45% 45%;
+  position: relative;
+  box-shadow: 
+    0 8px 25px rgba(168, 237, 234, 0.4),
+    inset 0 -5px 15px rgba(0, 0, 0, 0.05);
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* 耳朵 */
+.ear {
+  position: absolute;
+  width: 24px;
+  height: 30px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 50% 50% 0 0;
+  top: -12px;
+}
+
+.earLeft {
+  left: 8px;
+  transform: rotate(-20deg);
+}
+
+.earRight {
+  right: 8px;
+  transform: rotate(20deg);
+}
+
+.ear::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 18px;
+  background: #ffb6c1;
+  border-radius: 50% 50% 0 0;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 脸部 */
+.face {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 眼睛 */
+.eyes {
+  display: flex;
+  gap: 20px;
+}
+
+.eye {
+  font-size: 18px;
+  color: #333;
+  font-weight: bold;
+}
+
+/* 腮红 */
+.cheeks {
+  display: flex;
+  gap: 30px;
+  position: absolute;
+  top: 28px;
+}
+
+.cheek {
+  font-size: 12px;
+  color: #ffb6c1;
+  opacity: 0.8;
+}
+
+/* 嘴巴 */
+.mouth {
+  font-size: 16px;
+  color: #ff6b9d;
+  margin-top: -2px;
+}
+
+/* 小手 */
+.hand {
+  position: absolute;
+  width: 18px;
+  height: 22px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 50%;
+  bottom: 15px;
+}
+
+.handLeft {
+  left: -8px;
+  animation: waveLeft 2s ease-in-out infinite;
+}
+
+.handRight {
+  right: -8px;
+  animation: waveRight 2s ease-in-out infinite;
+}
+
+@keyframes waveLeft {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-15deg); }
+}
+
+@keyframes waveRight {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(15deg); }
+}
+
+/* 脚 */
+.foot {
+  position: absolute;
+  width: 20px;
+  height: 14px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 50%;
+  bottom: -5px;
+}
+
+.footLeft {
+  left: 15px;
+}
+
+.footRight {
+  right: 15px;
+}
+
+/* 阴影 */
+.shadow {
+  width: 60px;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: shadowScale 3s ease-in-out infinite;
+}
+
+@keyframes shadowScale {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.1; }
+  50% { transform: translateX(-50%) scale(0.9); opacity: 0.05; }
+}
+
+/* 互动按钮 */
+.actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.petContainer:hover .actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.actionBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.actionBtn:hover {
+  transform: scale(1.1);
+  background: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .messageBubble {
+    background: rgba(50, 50, 60, 0.95);
+    color: #fff;
+  }
+  
+  .bubbleTail {
+    border-top-color: rgba(50, 50, 60, 0.95);
+  }
+  
+  .body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 
+      0 8px 25px rgba(102, 126, 234, 0.3),
+      inset 0 -5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .ear {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .hand, .foot {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .eye {
+    color: #fff;
+  }
+}

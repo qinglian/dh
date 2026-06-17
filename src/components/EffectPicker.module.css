@@ -1,0 +1,98 @@
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.picker {
+  background: rgba(255,255,255,0.96); backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid var(--glass-border); border-radius: 18px;
+  min-width: 380px; max-width: 90vw; max-height: 80vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.35);
+  animation: slideUp 0.2s ease;
+}
+[data-theme="dark"] .picker { background: rgba(28,28,32,0.96); }
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+/* 固定顶部 */
+.fixedTop { flex-shrink: 0; padding: 24px 24px 0; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.header h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0; }
+.closeBtn {
+  width: 32px; height: 32px; border: none; background: rgba(127,127,127,0.08);
+  color: var(--text-tertiary); font-size: 18px; cursor: pointer; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+.closeBtn:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+.controls { padding: 4px 0 12px; border-bottom: 1px solid var(--glass-border); margin-bottom: 4px; }
+
+/* 开关 */
+.toggleRow { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+.toggleRow:last-child { padding-bottom: 2px; }
+.toggleLabel { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.toggle { width: 44px; height: 24px; border-radius: 12px; border: none; background: var(--glass-border); cursor: pointer; position: relative; transition: background 0.3s ease; padding: 0; }
+.toggle.on { background: var(--accent-primary); }
+.toggleDot { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
+.toggle.on .toggleDot { transform: translateX(20px); }
+
+/* 滚动效果区 */
+.scrollBody {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 12px 24px 20px;
+  scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent;
+}
+.scrollBody::-webkit-scrollbar { width: 5px; }
+.scrollBody::-webkit-scrollbar-track { background: transparent; }
+.scrollBody::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
+
+/* 分组 */
+.group { margin-bottom: 14px; }
+.group:last-child { margin-bottom: 0; }
+.groupTitle { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+.effects { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.effect {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 8px; background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+  cursor: pointer; transition: all var(--transition-fast); color: var(--text-secondary); position: relative;
+}
+.effect:hover { background: var(--glass-bg-heavy); color: var(--text-primary); transform: translateY(-2px); }
+.effect.active { background: var(--accent-gradient); border-color: transparent; color: white; }
+.effect svg { transition: transform var(--transition-fast); }
+.effect:hover svg { transform: scale(1.1); }
+.effect span { font-size: 11px; font-weight: 500; }
+.checkIcon { position: absolute; top: 4px; right: 4px; color: white; opacity: 0.9; }
+
+@media (max-width: 480px) {
+  .picker { min-width: auto; width: calc(100vw - 32px); }
+  .effects { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* 底部按钮 */
+.footer {
+  flex-shrink: 0; display: flex; gap: 10px; padding: 14px 24px 20px;
+  border-top: 1px solid var(--glass-border);
+}
+.footerBtn {
+  flex: 1; padding: 11px 0; border-radius: 10px; font-size: 14px;
+  font-weight: 600; cursor: pointer; transition: all 0.15s ease; border: none;
+  font-family: inherit;
+}
+.cancelBtn {
+  background: rgba(127,127,127,0.08); color: var(--text-secondary);
+  border: 1.5px solid var(--glass-border);
+}
+.cancelBtn:hover { background: rgba(127,127,127,0.14); }
+.confirmBtn {
+  background: var(--accent-primary); color: #fff;
+}
+.confirmBtn:hover { filter: brightness(1.1); }
+
+/* 按动动画 */
+.pressable { transition: all 0.12s cubic-bezier(.34,1.56,.64,1); }
+.pressable:active { transform: scale(0.9); filter: brightness(0.85); }

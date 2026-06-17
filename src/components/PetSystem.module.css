@@ -1,0 +1,602 @@
+/* ==================== 系统容器 - 只在宽屏显示 ==================== */
+.systemContainer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .systemContainer {
+    display: block;
+  }
+}
+
+/* ==================== 宠物活动区域 ==================== */
+.petArea {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ==================== 单个宠物 ==================== */
+.petCreature {
+  position: absolute;
+  pointer-events: auto;
+  user-select: none;
+  z-index: 10;
+  transition: filter 0.3s ease;
+}
+
+.petCreature:hover {
+  filter: brightness(1.1);
+  z-index: 20;
+}
+
+.petCreature:hover .petName {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.petCreature:hover .closeBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.petCreature:hover .statusBar {
+  opacity: 1;
+}
+
+/* 拖拽中 */
+.petCreature.dragging {
+  z-index: 100;
+  filter: brightness(1.15) drop-shadow(0 8px 20px rgba(0,0,0,0.3));
+}
+
+.petCreature.dragging .plushBody {
+  animation: wiggle 0.15s ease-in-out infinite alternate;
+}
+
+@keyframes wiggle {
+  0% { transform: rotate(-8deg) scale(1.05); }
+  100% { transform: rotate(8deg) scale(1.05); }
+}
+
+/* 跳跃 */
+.petCreature.jumping .plushBody {
+  animation: petJump 0.5s ease;
+}
+
+@keyframes petJump {
+  0% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-30px) scale(1.1, 0.9); }
+  50% { transform: translateY(-40px) scale(0.95, 1.05); }
+  70% { transform: translateY(-20px) scale(1.02); }
+  85% { transform: translateY(0) scale(1.1, 0.9); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* 兴奋 */
+.petCreature.excited .plushBody {
+  animation: bounce 0.4s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(-5deg); }
+  75% { transform: translateY(-8px) rotate(5deg); }
+}
+
+/* 睡觉 */
+.petCreature.sleeping .plushBody {
+  animation: sleep 2s ease-in-out infinite;
+}
+
+@keyframes sleep {
+  0%, 100% { transform: scale(1) rotate(-2deg); }
+  50% { transform: scale(1.02) rotate(2deg); }
+}
+
+.petCreature.sleeping .petEmoji {
+  animation: zzz 2s ease-in-out infinite;
+}
+
+@keyframes zzz {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* 追逐 */
+.petCreature.chasing .plushBody {
+  animation: run 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes run {
+  0% { transform: translateY(0) rotate(-3deg) scaleX(0.95); }
+  100% { transform: translateY(-5px) rotate(3deg) scaleX(1.05); }
+}
+
+/* 玩耍 */
+.petCreature.playful .plushBody {
+  animation: playSpin 0.6s ease;
+}
+
+@keyframes playSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(10deg) scale(1.05); }
+  50% { transform: rotate(-10deg) scale(0.95); }
+  75% { transform: rotate(5deg) scale(1.02); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* ==================== 3D毛绒身体 ==================== */
+.plushBody {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(
+    ellipse at 35% 30%,
+    var(--pet-color) 0%,
+    var(--pet-color-dark) 60%,
+    color-mix(in srgb, var(--pet-color-dark) 70%, black) 100%
+  );
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 4px 8px rgba(255, 255, 255, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.plushInner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.petEmoji {
+  font-size: 36px;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+  transition: transform 0.2s ease;
+}
+
+/* 毛绒纹理覆盖 */
+.furOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(255,255,255,0.1) 0%, transparent 30%),
+    radial-gradient(circle at 50% 80%, rgba(0,0,0,0.05) 0%, transparent 40%);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* 光泽 */
+.sheen {
+  position: absolute;
+  top: 8%;
+  left: 15%;
+  width: 35%;
+  height: 25%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  z-index: 4;
+  pointer-events: none;
+  animation: sheenMove 4s ease-in-out infinite;
+}
+
+@keyframes sheenMove {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.8; }
+  50% { transform: translate(3px, 2px) rotate(5deg); opacity: 1; }
+}
+
+/* ==================== 阴影 ==================== */
+.petShadow {
+  width: 50px;
+  height: 14px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  margin: 4px auto 0;
+  transition: all 0.3s ease;
+}
+
+.petCreature.jumping .petShadow {
+  width: 40px;
+  opacity: 0.5;
+}
+
+.petCreature.sleeping .petShadow {
+  width: 55px;
+  opacity: 0.8;
+}
+
+/* ==================== 气泡消息 ==================== */
+.bubble {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #333;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+  animation: bubbleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 50;
+  pointer-events: none;
+}
+
+.bubbleTail {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(255, 255, 255, 0.95);
+}
+
+@keyframes bubbleIn {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.6) translateY(8px); }
+  100% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+}
+
+/* ==================== 状态栏 ==================== */
+.statusBar {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 30;
+}
+
+.statusIcon {
+  font-size: 14px;
+  animation: float 1.5s ease-in-out infinite;
+}
+
+.statusIcon:nth-child(2) { animation-delay: 0.3s; }
+.statusIcon:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ==================== 名字 ==================== */
+.petName {
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+}
+
+/* ==================== 关闭按钮 ==================== */
+.closeBtn {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 100, 100, 0.9);
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  line-height: 1;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 60, 60, 1);
+  transform: scale(1.1);
+}
+
+/* ==================== 控制栏 ==================== */
+.controlBar {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 1001;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.toggleBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  font-size: 22px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggleBtn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.panelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.mainBtn {
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mainBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* ==================== 已激活列表 ==================== */
+.activeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 200px;
+}
+
+.activeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+  color: #555;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tagClose {
+  border: none;
+  background: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.tagClose:hover {
+  color: #ff4444;
+}
+
+/* ==================== 选择面板 ==================== */
+.pickerPanel {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 16px;
+  width: 240px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  animation: panelIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes panelIn {
+  0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.pickerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.pickerClose {
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.pickerClose:hover {
+  color: #333;
+}
+
+.pickerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pickerCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.pickerCard:hover {
+  background: rgba(102, 126, 234, 0.08);
+  border-color: rgba(102, 126, 234, 0.2);
+}
+
+.pickerActive {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.4);
+}
+
+.pickerEmoji {
+  font-size: 28px;
+}
+
+.pickerName {
+  font-size: 12px;
+  color: #555;
+  font-weight: 500;
+}
+
+.pickerCheck {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 14px;
+  color: #667eea;
+  font-weight: bold;
+}
+
+.pickerTip {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+}
+
+/* ==================== 暗色主题 ==================== */
+@media (prefers-color-scheme: dark) {
+  .bubble {
+    background: rgba(40, 40, 55, 0.95);
+    color: #eee;
+  }
+
+  .bubbleTail {
+    border-top-color: rgba(40, 40, 55, 0.95);
+  }
+
+  .petName {
+    color: #aaa;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  }
+
+  .toggleBtn {
+    background: rgba(40, 40, 55, 0.85);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .mainBtn {
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  }
+
+  .activeTag {
+    background: rgba(40, 40, 55, 0.85);
+    color: #ccc;
+  }
+
+  .pickerPanel {
+    background: rgba(30, 30, 45, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .pickerHeader {
+    color: #eee;
+  }
+
+  .pickerClose {
+    color: #777;
+  }
+
+  .pickerClose:hover {
+    color: #fff;
+  }
+
+  .pickerCard {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .pickerCard:hover {
+    background: rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.3);
+  }
+
+  .pickerActive {
+    background: rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.5);
+  }
+
+  .pickerName {
+    color: #ccc;
+  }
+
+  .pickerTip {
+    color: #666;
+  }
+}

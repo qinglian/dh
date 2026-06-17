@@ -1,0 +1,407 @@
+.backupBtn {
+  position: fixed;
+  right: 24px;
+  bottom: 100px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #667eea;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.25s ease;
+}
+
+.backupBtn:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 25px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* 备份面板 */
+.backupPanel {
+  position: fixed;
+  right: 24px;
+  bottom: 156px;
+  z-index: 100;
+  width: 320px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  animation: panelIn 0.3s ease;
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  color: #999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #666;
+}
+
+/* 消息提示 */
+.message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* 配置区域 */
+.configHint {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.inputGroup {
+  margin-bottom: 12px;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  color: #333;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.inputGroup input:focus {
+  border-color: #667eea;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.helpText {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.connectBtn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.connectBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.connectBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 已连接区域 */
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(34, 197, 94, 0.08);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #16a34a;
+  margin-bottom: 12px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.backupInfo {
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.backupInfo p {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #555;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(102, 126, 234, 0.3);
+  color: #667eea;
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 设置区域 */
+.settingsSection {
+  padding: 12px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 12px;
+}
+
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+}
+
+.toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s ease;
+  padding: 0;
+}
+
+.toggleOn {
+  background: #667eea;
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggleOn .toggleThumb {
+  transform: translateX(18px);
+}
+
+/* 断开连接 */
+.disconnectBtn {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.disconnectBtn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* 加载动画 */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 暗色主题 */
+@media (prefers-color-scheme: dark) {
+  .backupBtn {
+    background: rgba(40, 40, 55, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #8b9cf7;
+  }
+
+  .backupBtn:hover {
+    background: rgba(50, 50, 65, 0.8);
+  }
+
+  .backupPanel {
+    background: rgba(30, 30, 40, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .panelTitle {
+    color: #eee;
+  }
+
+  .closeBtn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #888;
+  }
+
+  .closeBtn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ccc;
+  }
+
+  .inputGroup input {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #eee;
+  }
+
+  .inputGroup input:focus {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .actionBtn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #bbb;
+  }
+
+  .actionBtn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    color: #8b9cf7;
+  }
+
+  .backupInfo {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .backupInfo p {
+    color: #aaa;
+  }
+
+  .toggleRow {
+    color: #bbb;
+  }
+
+  .toggle {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}

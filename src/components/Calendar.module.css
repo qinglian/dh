@@ -1,0 +1,252 @@
+/* 日历容器 - Mac玻璃风格 */
+.calendar {
+  position: fixed;
+  left: 30px;
+  bottom: 220px; /* 在宠物上方 */
+  z-index: 100;
+  width: 220px;
+  padding: 16px;
+  border-radius: 16px;
+  display: none;
+  
+  /* Mac毛玻璃效果 */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* 宽屏显示（电脑） */
+@media (min-width: 1024px) {
+  .calendar {
+    display: block;
+  }
+}
+
+/* 头部 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 12px;
+}
+
+.dateDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weekday {
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+}
+
+.fullDate {
+  font-size: 13px;
+  color: #333;
+  font-weight: 600;
+}
+
+.timeDisplay {
+  font-size: 24px;
+  font-weight: 300;
+  color: #333;
+  letter-spacing: -1px;
+}
+
+/* 月份导航 */
+.monthNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.navBtn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.navBtn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.monthTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.monthTitle:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 星期标题 */
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.weekdayLabel {
+  font-size: 10px;
+  color: #999;
+  text-align: center;
+  padding: 4px 0;
+  font-weight: 500;
+}
+
+/* 日期网格 */
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #333;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.day:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.otherMonth {
+  color: transparent;
+  cursor: default;
+}
+
+.otherMonth:hover {
+  background: transparent;
+}
+
+.today {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.today:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transform: scale(1.05);
+}
+
+/* 今天按钮 */
+.todayBtn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.todayBtn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .calendar {
+    background: rgba(30, 30, 40, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .weekday {
+    color: #aaa;
+  }
+  
+  .fullDate {
+    color: #fff;
+  }
+  
+  .timeDisplay {
+    color: #fff;
+  }
+  
+  .navBtn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+  }
+  
+  .navBtn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+  
+  .monthTitle {
+    color: #fff;
+  }
+  
+  .monthTitle:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .weekdayLabel {
+    color: #777;
+  }
+  
+  .day {
+    color: #ddd;
+  }
+  
+  .day:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .todayBtn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+  }
+  
+  .todayBtn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+}

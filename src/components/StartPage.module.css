@@ -1,0 +1,1247 @@
+/* ==================== 起始页容器 ==================== */
+.container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 12.5vh;
+  gap: 16px;
+  z-index: 50;
+  animation: fadeIn 0.5s ease;
+}
+
+/* 无快捷按钮时，内容整体下移一点 */
+.containerCentered {
+  padding-top: 25vh;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ==================== 顶部工具栏 - 默认隐藏 hover 显示 ==================== */
+.topBar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: auto;
+  min-width: 280px;
+  height: 80px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  z-index: 60;
+  padding: 20px 24px 0 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: auto;
+  transition: opacity 0.35s ease 5s, transform 0.35s ease 5s;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+
+/* 鼠标划过或编辑模式时显示（0s 延迟 = 立即显示） */
+.topBar:hover,
+.topBarVisible {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+/* 按钮默认不可见但可交互（5s 延迟 = 移开后 5 秒才隐藏） */
+.topBar .topBtn,
+.topBar .navBtn {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.35s ease 5s, transform 0.35s ease 5s;
+}
+
+/* 鼠标划过或编辑模式时按钮立即显示 */
+.topBar:hover .topBtn,
+.topBar:hover .navBtn,
+.topBarVisible .topBtn,
+.topBarVisible .navBtn {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+/* 统一圆形按钮 */
+.topBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.25s ease;
+}
+
+.topBtn:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow:
+    0 6px 25px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* 编辑模式激活状态 */
+.topBtnActive {
+  background: var(--accent-gradient) !important;
+  color: white !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 12px rgba(0, 122, 255, 0.4) !important;
+}
+
+/* 导航按钮 -  pill 形状 */
+.navBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 16px;
+  border-radius: 18px;
+  border: none;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #555;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.25s ease;
+}
+
+.navBtn:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 6px 25px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+/* 主题选择器 */
+.themePickerWrapper {
+  position: relative;
+}
+
+.themeDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 150px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  z-index: 200;
+  animation: fadeIn 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.themeOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.themeOption:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.themeOptionActive {
+  background: rgba(0, 122, 255, 0.15);
+  color: #007aff;
+  font-weight: 600;
+}
+
+.themeOptionIcon {
+  display: flex;
+  align-items: center;
+}
+
+.themeOptionCheck {
+  margin-left: auto;
+  font-size: 12px;
+  color: #007aff;
+}
+
+:global([data-theme="dark"]) .themeDropdown {
+  background: rgba(40, 40, 40, 0.92);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .themeOption {
+  color: #ccc;
+}
+
+:global([data-theme="dark"]) .themeOption:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:global([data-theme="dark"]) .themeOptionActive {
+  background: rgba(0, 122, 255, 0.15);
+  color: #4da3ff;
+}
+
+/* ==================== 中间内容 ==================== */
+.centerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 问候语 */
+.greeting {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.35);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  animation: slideDown 0.6s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== 时间区域 ==================== */
+.timeSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: slideDown 0.6s ease 0.1s both;
+}
+
+.time {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  line-height: 1;
+}
+
+.timeHour,
+.timeMinute {
+  font-size: 108px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.82);
+  letter-spacing: -6px;
+  font-variant-numeric: tabular-nums;
+  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+.timeColon {
+  font-size: 90px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.3);
+  margin: 0 2px;
+  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+}
+
+.timeSecond {
+  font-size: 36px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.25);
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+}
+
+.dateInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: rgba(0, 0, 0, 0.35);
+  font-weight: 500;
+  letter-spacing: 1px;
+  font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+.dateDivider {
+  color: rgba(0, 0, 0, 0.2);
+}
+
+/* ==================== 搜索框 ==================== */
+.searchWrapper {
+  width: 44vw;
+  max-width: none;
+  padding: 0;
+  margin-top: 16px;
+  animation: slideUp 0.6s ease 0.2s both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.searchBox {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  overflow: visible;
+  transition: all 0.3s ease;
+}
+
+.searchBox:focus-within {
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.01);
+}
+
+.engineSelector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px 0 10px;
+}
+
+.engineBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.engineBtn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.engineDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.engineName {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+.chevron {
+  color: #999;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.engineDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 4px;
+  min-width: 160px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 6px;
+  z-index: 200;
+  animation: dropIn 0.2s ease;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.engineOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: background 0.15s ease;
+}
+
+.engineOption:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.engineOptionActive {
+  background: rgba(102, 126, 234, 0.08);
+  color: #667eea;
+  font-weight: 600;
+}
+
+.engineCheck {
+  margin-left: auto;
+  color: #667eea;
+  font-size: 12px;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  padding: 4px 18px 14px;
+  gap: 10px;
+}
+
+.searchIcon {
+  color: #999;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 17px;
+  color: #333;
+  outline: none;
+  font-weight: 400;
+}
+
+.searchInput::placeholder {
+  color: #bbb;
+  font-weight: 300;
+}
+
+.clearBtn {
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  color: #999;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.clearBtn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #666;
+}
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 6px;
+  z-index: 100;
+  animation: suggestIn 0.2s ease;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+@keyframes suggestIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.suggestionItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.suggestionItem:hover,
+.suggestionActive {
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.suggestionIcon {
+  color: #bbb;
+  flex-shrink: 0;
+}
+
+.suggestionActive .suggestionIcon {
+  color: #667eea;
+}
+
+.suggestionText {
+  flex: 1;
+  font-size: 14px;
+  color: #555;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestionActive .suggestionText {
+  color: #333;
+  font-weight: 500;
+}
+
+.suggestionArrow {
+  color: #ccc;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.suggestionItem:hover .suggestionArrow,
+.suggestionActive .suggestionArrow {
+  opacity: 1;
+  color: #667eea;
+}
+
+/* ==================== 快捷网页 ==================== */
+.shortcutsWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: slideUp 0.6s ease 0.3s both;
+}
+
+.shortcutsList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  max-width: 600px;
+}
+
+/* 自由布局容器 */
+.shortcutsFreeMode {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+  max-width: 100%;
+  display: block;
+}
+
+/* 编辑模式下显示网格 */
+.shortcutsFreeModeEdit {
+  background-image:
+    linear-gradient(rgba(128, 128, 128, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128, 128, 128, 0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+  border: 1px dashed rgba(128, 128, 128, 0.25);
+  border-radius: 8px;
+}
+
+.shortcutsFreeMode .shortcutItemFree {
+  position: absolute;
+}
+
+.shortcutItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+
+
+/* 拖动时的实时预览样式 */
+.dragOver {
+  transform: scale(1.05);
+  transition: transform 0.15s ease;
+}
+
+.shortcutItem.dragOver .shortcutIcon {
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.4);
+}
+
+.shortcutLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  padding: 6px;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+}
+
+.shortcutLink:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.shortcutIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  transition: all 0.25s ease;
+  font-size: 16px;
+  font-weight: 700;
+  color: #555;
+}
+
+.shortcutLink:hover .shortcutIcon {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+}
+
+.shortcutIcon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.shortcutName {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.55);
+  max-width: 60px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* 编辑模式操作按钮 */
+.shortcutActions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.shortcutItem:hover .shortcutActions {
+  opacity: 1;
+}
+
+.shortcutActionBtn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.shortcutActionBtn:hover {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007aff;
+}
+
+.shortcutActionBtn:last-child:hover {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+}
+
+/* 编辑表单 */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  min-width: 160px;
+}
+
+.editInput {
+  padding: 5px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  font-size: 11px;
+  color: #333;
+  outline: none;
+}
+
+.editInput::placeholder {
+  color: #999;
+}
+
+.editActions {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.editCancel,
+.editSave {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editCancel {
+  background: rgba(0, 0, 0, 0.06);
+  color: #666;
+}
+
+.editCancel:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.editSave {
+  background: var(--accent-gradient);
+  color: white;
+}
+
+.editSave:hover {
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+/* 添加按钮 */
+.shortcutAdd {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  border: 1.5px dashed rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.3);
+  color: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  margin-top: 6px;
+}
+
+.shortcutAdd:hover {
+  border-color: rgba(0, 122, 255, 0.4);
+  color: rgba(0, 122, 255, 0.7);
+  background: rgba(0, 122, 255, 0.05);
+}
+
+/* 添加表单 */
+.shortcutForm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.shortcutInput {
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #333;
+  outline: none;
+  width: 100px;
+}
+
+.shortcutInput::placeholder {
+  color: #999;
+}
+
+.shortcutConfirm {
+  padding: 6px 12px;
+  border: none;
+  background: var(--accent-gradient);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shortcutConfirm:hover {
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+/* ==================== 底部提示 ==================== */
+.hint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.2);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  animation: slideUp 0.6s ease 0.3s both;
+}
+
+/* ==================== 暗色主题 - 使用 data-theme="dark" ==================== */
+:global([data-theme="dark"]) .greeting {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+:global([data-theme="dark"]) .timeHour,
+:global([data-theme="dark"]) .timeMinute {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global([data-theme="dark"]) .timeColon {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+:global([data-theme="dark"]) .timeSecond {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+:global([data-theme="dark"]) .dateInfo {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+:global([data-theme="dark"]) .dateDivider {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+:global([data-theme="dark"]) .topBtn {
+  background: rgba(40, 40, 55, 0.65);
+  color: #aaa;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme="dark"]) .topBtn:hover {
+  background: rgba(50, 50, 65, 0.75);
+  box-shadow:
+    0 6px 25px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .navBtn {
+  background: rgba(40, 40, 55, 0.65);
+  color: #aaa;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme="dark"]) .navBtn:hover {
+  background: rgba(50, 50, 65, 0.75);
+  box-shadow:
+    0 6px 25px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .searchBox {
+  background: rgba(40, 40, 55, 0.55);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme="dark"]) .searchBox:focus-within {
+  background: rgba(45, 45, 60, 0.65);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:global([data-theme="dark"]) .engineBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:global([data-theme="dark"]) .engineName {
+  color: #bbb;
+}
+
+:global([data-theme="dark"]) .chevron {
+  color: #666;
+}
+
+:global([data-theme="dark"]) .engineDropdown {
+  background: rgba(35, 35, 50, 0.9);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+:global([data-theme="dark"]) .engineOption {
+  color: #bbb;
+}
+
+:global([data-theme="dark"]) .engineOption:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:global([data-theme="dark"]) .engineOptionActive {
+  background: rgba(102, 126, 234, 0.15);
+  color: #8b9cf7;
+}
+
+:global([data-theme="dark"]) .engineCheck {
+  color: #8b9cf7;
+}
+
+:global([data-theme="dark"]) .searchIcon {
+  color: #666;
+}
+
+:global([data-theme="dark"]) .searchInput {
+  color: #eee;
+}
+
+:global([data-theme="dark"]) .searchInput::placeholder {
+  color: #555;
+}
+
+:global([data-theme="dark"]) .clearBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #666;
+}
+
+:global([data-theme="dark"]) .clearBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #999;
+}
+
+:global([data-theme="dark"]) .suggestions {
+  background: rgba(35, 35, 50, 0.9);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+:global([data-theme="dark"]) .suggestionItem:hover,
+:global([data-theme="dark"]) .suggestionActive {
+  background: rgba(102, 126, 234, 0.12);
+}
+
+:global([data-theme="dark"]) .suggestionIcon {
+  color: #555;
+}
+
+:global([data-theme="dark"]) .suggestionActive .suggestionIcon {
+  color: #8b9cf7;
+}
+
+:global([data-theme="dark"]) .suggestionText {
+  color: #bbb;
+}
+
+:global([data-theme="dark"]) .suggestionActive .suggestionText {
+  color: #eee;
+}
+
+:global([data-theme="dark"]) .suggestionArrow {
+  color: #555;
+}
+
+:global([data-theme="dark"]) .suggestionItem:hover .suggestionArrow,
+:global([data-theme="dark"]) .suggestionActive .suggestionArrow {
+  color: #8b9cf7;
+}
+
+:global([data-theme="dark"]) .hint {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* 快捷网页暗色 */
+:global([data-theme="dark"]) .shortcutLink:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global([data-theme="dark"]) .shortcutIcon {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: #aaa;
+}
+
+:global([data-theme="dark"]) .shortcutLink:hover .shortcutIcon {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .shortcutName {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+:global([data-theme="dark"]) .shortcutAdd {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+:global([data-theme="dark"]) .shortcutAdd:hover {
+  border-color: rgba(138, 180, 248, 0.4);
+  color: rgba(138, 180, 248, 0.7);
+  background: rgba(138, 180, 248, 0.08);
+}
+
+:global([data-theme="dark"]) .shortcutForm {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .shortcutInput {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  color: #eee;
+}
+
+:global([data-theme="dark"]) .shortcutInput::placeholder {
+  color: #666;
+}
+
+:global([data-theme="dark"]) .editForm {
+  background: rgba(40, 40, 55, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .editInput {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  color: #eee;
+}
+
+:global([data-theme="dark"]) .editCancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: #aaa;
+}
+
+:global([data-theme="dark"]) .editCancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:global([data-theme="dark"]) .shortcutActionBtn {
+  background: rgba(255, 255, 255, 0.06);
+  color: #888;
+}
+
+:global([data-theme="dark"]) .shortcutActionBtn:hover {
+  background: rgba(0, 122, 255, 0.15);
+  color: #5ac8fa;
+}
+
+:global([data-theme="dark"]) .shortcutActionBtn:last-child:hover {
+  background: rgba(255, 59, 48, 0.15);
+  color: #ff453a;
+}
+
+:global([data-theme="dark"]) .dragHandle {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==================== 历史搜索记录 ==================== */
+.searchHistory {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 14px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  animation: slideUp 0.5s ease 0.3s both;
+}
+
+.searchHistoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.searchHistoryTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.searchHistoryClear {
+  padding: 2px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.searchHistoryClear:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+}
+
+.searchHistoryList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.searchHistoryTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: none;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.searchHistoryTag:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
+}
+
+.searchHistoryRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  transition: all 0.15s ease;
+}
+
+.searchHistoryRemove:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+:global([data-theme="dark"]) .searchHistory {
+  background: rgba(40, 40, 55, 0.4);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 1px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+:global([data-theme="dark"]) .searchHistoryTag {
+  background: rgba(255, 255, 255, 0.06);
+  color: #aaa;
+}
+
+:global([data-theme="dark"]) .searchHistoryTag:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #eee;
+}
+
+:global([data-theme="dark"]) .searchHistoryClear:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ff6b6b;
+}

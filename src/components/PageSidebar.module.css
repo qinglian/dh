@@ -1,0 +1,525 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+}
+
+.trigger {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  cursor: pointer;
+  z-index: 1;
+  transition: width 0.3s ease;
+}
+
+.content {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease,
+              background 0.3s ease,
+              padding 0.3s ease;
+}
+
+/* ========== 小图标模式 (compact) ========== */
+.compactMode .content {
+  width: 52px;
+  padding: 170px 0 24px;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-right: none;
+  box-shadow: none;
+}
+
+.compactMode .trigger {
+  width: 52px;
+  pointer-events: none;
+}
+
+.compactMode.expanded .content {
+  width: 220px;
+  padding: 16px 0 20px;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: var(--glass-blur-heavy);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+  border-right: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+/* ========== 完整模式 (full) ========== */
+.fullMode .content {
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  background: transparent;
+  border-right: none;
+  pointer-events: none;
+}
+
+.fullMode .trigger {
+  width: 14px;
+  min-width: 14px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.fullMode:hover .trigger {
+  opacity: 0.3;
+}
+
+.fullMode.expanded .content {
+  width: 220px;
+  padding: 16px 0 20px;
+  opacity: 1;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: var(--glass-blur-heavy);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+  border-right: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  pointer-events: auto;
+}
+
+/* ====== 顶部编辑按钮 ====== */
+.topActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* 非 compact 默认占位 */
+.fullMode .topActions {
+  padding: 0 12px 12px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 8px;
+}
+
+/* compact 始终绝对定位不占空间 */
+.compactMode .topActions {
+  position: absolute;
+  top: 16px;
+  right: 6px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  z-index: 2;
+}
+
+.sidebar:hover .topActions,
+.expanded .topActions,
+.hovered .topActions {
+  opacity: 1;
+}
+
+.compactMode.hovered .topActions {
+  opacity: 1;
+}
+
+.compactMode.expanded .topActions {
+  position: static;
+  padding: 0 12px 12px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 8px;
+}
+
+.editToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 50%;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editToggleBtn:hover {
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  border-color: var(--text-secondary);
+}
+
+.editToggleActive {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 0 8px rgba(0, 122, 255, 0.4);
+}
+
+.editToggleActive:hover {
+  background: var(--accent-gradient);
+  color: white;
+  opacity: 0.9;
+}
+
+/* ====== 页面列表 ====== */
+.pageList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 10px;
+  overflow-y: auto;
+}
+
+/* compact 模式 — 列表贴边，仅保留上下间距 */
+.compactMode .pageList {
+  padding: 0 3px;
+  gap: 4px;
+}
+
+.expanded .pageList {
+  padding: 0 12px;
+  gap: 6px;
+}
+
+/* ====== 页面条目 ====== */
+.pageItem {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 7px 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-secondary);
+  position: relative;
+  min-width: 0;
+  overflow: visible;
+  justify-content: center;
+}
+
+/* compact 条目不设内边距，让图标直接撑满 */
+.compactMode .pageItem {
+  padding: 4px 0;
+  overflow: visible;
+}
+
+.expanded .pageItem {
+  gap: 8px;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.pageItem:hover {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+}
+
+/* compact 悬停不缩放列表背景，仅缩放图标 */
+.compactMode .pageItem:hover {
+  background: transparent;
+  transform: none;
+}
+
+.expanded .pageItem:hover {
+  background: var(--glass-bg);
+  transform: none;
+}
+
+.pageItem.active {
+  background: var(--accent-gradient);
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+}
+
+.compactMode .pageItem.active {
+  background: transparent;
+  box-shadow: none;
+}
+
+.expanded .pageItem.active {
+  background: var(--accent-gradient);
+}
+
+/* ====== 图标 — compact 模式重构 ====== */
+.pageIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-secondary);
+}
+
+/* compact 图标：更大、居中卡片式 */
+.compactMode .pageIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  color: var(--text-secondary);
+}
+
+.compactMode .pageItem:hover .pageIcon {
+  background: var(--glass-bg-heavy);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,122,255,0.15);
+}
+
+/* compact active 图标 */
+.compactMode .pageItem.active .pageIcon {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 18px rgba(0, 122, 255, 0.4);
+}
+
+.compactMode .pageItem.active:hover .pageIcon {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.5);
+}
+
+.expanded .pageItem:hover .pageIcon {
+  transform: none;
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+}
+
+.pageItem.active .pageIcon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.pageItem.dragging {
+  opacity: 0.5;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.pageName {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  opacity: 0;
+  width: 0;
+  transition: opacity 0.2s ease, width 0.3s ease;
+}
+
+.expanded .pageName {
+  opacity: 1;
+  width: auto;
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  opacity: 0.4;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.editInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.pageActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease, width 0.3s ease;
+}
+
+.expanded .pageActions {
+  opacity: 1;
+  width: auto;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.5;
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  transition: all 0.15s ease;
+}
+
+.actionBtn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.deleteBtn:hover {
+  background: rgba(255, 59, 48, 0.2);
+  color: #ff453a;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 12px 0;
+  padding: 10px;
+  background: var(--glass-bg);
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.expanded .addBtn {
+  opacity: 1;
+  width: auto;
+}
+
+.addBtn:hover {
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  border-style: solid;
+}
+
+/* ====== 弹窗 ====== */
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease;
+}
+
+.dialog {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: var(--glass-blur-heavy);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: scaleIn 0.2s ease;
+}
+
+.dialog h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dialogInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.dialogInput:focus {
+  border-color: var(--accent-primary);
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialogCancelBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dialogCancelBtn:hover {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+}
+
+.dialogConfirmBtn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent-gradient);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dialogConfirmBtn:hover {
+  opacity: 0.9;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

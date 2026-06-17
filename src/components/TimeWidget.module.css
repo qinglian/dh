@@ -1,0 +1,316 @@
+.widget {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto 16px;
+  padding: 14px 20px;
+  background: var(--glass-bg-section);
+  backdrop-filter: var(--glass-blur-heavy-container, var(--glass-blur-heavy));
+  -webkit-backdrop-filter: var(--glass-blur-heavy-container, var(--glass-blur-heavy));
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  overflow: hidden;
+  transition: background 0.8s ease, border-color 0.8s ease;
+}
+
+/* 内容层 */
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+}
+
+/* 无天气时的布局 */
+.contentNoWeather {
+  justify-content: space-between;
+}
+
+/* 天气动画 Canvas 层 */
+.weatherCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--radius-xl);
+}
+
+/* ==================== 天气主题背景 ==================== */
+.weatherSunny {
+  background: linear-gradient(135deg, rgba(255, 210, 100, 0.15) 0%, rgba(255, 190, 70, 0.08) 40%, rgba(255, 230, 140, 0.12) 100%);
+  border-color: rgba(255, 200, 100, 0.25);
+}
+
+.weatherCloudyDay {
+  background: linear-gradient(135deg, rgba(210, 220, 230, 0.18) 0%, rgba(190, 205, 220, 0.1) 50%, rgba(200, 215, 230, 0.14) 100%);
+  border-color: rgba(180, 200, 220, 0.25);
+}
+
+.weatherCloudyNight {
+  background: linear-gradient(135deg, rgba(100, 110, 130, 0.15) 0%, rgba(80, 90, 110, 0.1) 50%, rgba(90, 100, 120, 0.12) 100%);
+  border-color: rgba(100, 110, 130, 0.2);
+}
+
+.weatherOvercast {
+  background: linear-gradient(135deg, rgba(140, 150, 160, 0.2) 0%, rgba(120, 130, 140, 0.14) 50%, rgba(130, 140, 150, 0.18) 100%);
+  border-color: rgba(120, 130, 140, 0.3);
+}
+
+.weatherRainDay {
+  background: linear-gradient(180deg, rgba(100, 120, 150, 0.12) 0%, rgba(80, 100, 130, 0.18) 40%, rgba(70, 90, 120, 0.1) 100%);
+  border-color: rgba(100, 130, 180, 0.25);
+}
+
+.weatherRainNight {
+  background: linear-gradient(180deg, rgba(50, 60, 80, 0.2) 0%, rgba(40, 50, 70, 0.28) 40%, rgba(35, 45, 65, 0.15) 100%);
+  border-color: rgba(60, 80, 120, 0.3);
+}
+
+.weatherSnow {
+  background: linear-gradient(135deg, rgba(210, 220, 240, 0.22) 0%, rgba(190, 205, 230, 0.14) 50%, rgba(200, 215, 235, 0.18) 100%);
+  border-color: rgba(200, 215, 240, 0.3);
+}
+
+.weatherFog {
+  background: linear-gradient(135deg, rgba(170, 175, 180, 0.22) 0%, rgba(160, 165, 170, 0.14) 50%, rgba(165, 170, 175, 0.18) 100%);
+  border-color: rgba(160, 165, 170, 0.3);
+}
+
+/* ==================== 左侧：问候+日期 ==================== */
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.greeting {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+
+.date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ==================== 中间：翻页时钟（天气开启时居中） ==================== */
+.center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+/* ==================== 右侧：翻页时钟（天气关闭时靠右） ==================== */
+.rightTime {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* ==================== 数字时钟样式 ==================== */
+.digitalClock {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.digit {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.colon {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  opacity: 0.4;
+  animation: colonBlink 1s ease-in-out infinite;
+  margin: 0 2px;
+}
+
+@keyframes colonBlink {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ==================== 右侧：天气 ==================== */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 140px;
+  justify-content: flex-end;
+}
+
+/* 天气信息 */
+.weatherInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weatherEmoji {
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  user-select: none;
+}
+
+.weatherEmoji:hover {
+  transform: scale(1.15);
+}
+
+.weatherEmoji.refreshing {
+  animation: weatherSpin 0.8s ease-in-out;
+}
+
+@keyframes weatherSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.weatherDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: flex-end;
+}
+
+.weatherTemp {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.weatherText {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* 天气元信息（城市和更新时间）- 高可见性设计 */
+.weatherMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.weatherCity {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.weatherFetchTime {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* 深色主题下的天气元信息 */
+:global([data-theme="dark"]) .weatherCity,
+:global([data-theme="dark"]) .weatherFetchTime {
+  background: rgba(30, 35, 45, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+:global([data-theme="dark"]) .weatherFetchTime {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.weatherLoading {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.weatherError {
+  font-size: 11px;
+  color: #f59e0b;
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 640px) {
+  .widget {
+    margin: 0 12px 12px;
+    padding: 12px 16px;
+  }
+
+  .content {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .left {
+    width: 100%;
+  }
+
+  .center,
+  .rightTime {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .greeting {
+    font-size: 16px;
+  }
+
+  .digit {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .colon {
+    font-size: 18px;
+  }
+
+  .weatherEmoji {
+    font-size: 24px;
+  }
+
+  .weatherTemp {
+    font-size: 16px;
+  }
+}

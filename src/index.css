@@ -1,0 +1,192 @@
+/* iOS Frosted Glass Navigation Portal */
+
+:root {
+  /* Colors - Light Mode */
+  --bg-primary: #f2f2f7;
+  --bg-secondary: rgba(255, 255, 255, 0.65);
+  --bg-card: rgba(255, 255, 255, 0.55);
+  --bg-hover: rgba(255, 255, 255, 0.75);
+  
+  --text-primary: #1c1c1e;
+  --text-secondary: #3a3a3c;
+  --text-tertiary: #8e8e93;
+  --text-white: #ffffff;
+  
+  --border-primary: rgba(0, 0, 0, 0.06);
+  --border-secondary: rgba(0, 0, 0, 0.04);
+  
+  /* Accent - iOS Blue */
+  --accent-primary: #007aff;
+  --accent-secondary: #5856d6;
+  --accent-gradient: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+  
+  /* Glass Effect */
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.45);
+  --glass-bg-section: rgba(255, 255, 255, 0.35);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  /* containers (blur slider controls these) */
+  --glass-blur-container: blur(20px);
+  --glass-blur-heavy-container: blur(40px);
+  /* inner cards / popups (stay at default 20/40px, NOT controlled by slider) */
+  --glass-blur: blur(20px);
+  --glass-blur-heavy: blur(40px);
+  --glass-opacity: 1;
+  
+  /* Shadows - iOS Style */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-glass: 0 4px 16px rgba(0,0,0,0.06), inset 0 0.5px 0 rgba(255,255,255,0.5);
+  
+  /* Radius - iOS Style */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  
+  /* Transitions */
+  --transition-fast: 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-normal: 300ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Background */
+  --page-bg: var(--bg-primary);
+  --card-bg: var(--glass-bg);
+}
+
+/* Dark Theme - iOS Dark Glass */
+[data-theme="dark"] {
+  --bg-primary: #000000;
+  --bg-secondary: rgba(28, 28, 30, 0.65);
+  --bg-card: rgba(44, 44, 46, 0.55);
+  --bg-hover: rgba(58, 58, 60, 0.65);
+  
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1a6;
+  --text-tertiary: #636366;
+  
+  --border-primary: rgba(255, 255, 255, 0.08);
+  --border-secondary: rgba(255, 255, 255, 0.05);
+  
+  --accent-primary: #0a84ff;
+  --accent-secondary: #5e5ce6;
+  --accent-gradient: linear-gradient(135deg, #0a84ff 0%, #5e5ce6 100%);
+  
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.06);
+  --glass-bg-section: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-glass: 0 4px 16px rgba(0,0,0,0.3), inset 0 0.5px 0 rgba(255,255,255,0.08);
+  
+  --page-bg: var(--bg-primary);
+  --card-bg: var(--glass-bg);
+}
+
+/* Custom Background Mode */
+[data-bg="custom"] {
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.4);
+  --glass-bg-section: rgba(255, 255, 255, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --text-primary: #1c1c1e;
+  --text-secondary: #3a3a3c;
+  --border-primary: rgba(255, 255, 255, 0.3);
+  --shadow-glass: 0 4px 16px rgba(0,0,0,0.08), inset 0 0.5px 0 rgba(255,255,255,0.6);
+}
+
+[data-bg="custom"][data-theme="dark"] {
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.06);
+  --glass-bg-section: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1a6;
+  --border-primary: rgba(255, 255, 255, 0.08);
+  --shadow-glass: 0 4px 16px rgba(0,0,0,0.3), inset 0 0.5px 0 rgba(255,255,255,0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar - iOS Minimal */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.5);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-primary);
+  color: white;
+}
+
+/* Drag & Drop - 屏蔽🚫禁止光标 */
+html.dragging, html.dragging * {
+  cursor: default !important;
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s var(--transition-spring) forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s var(--transition-spring) forwards;
+}
