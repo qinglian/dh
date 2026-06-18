@@ -1006,10 +1006,26 @@ function AppContent() {
 
   // 视图切换
   const handleViewChange = (view) => {
-    setCurrentView(view)
-    if (view === 'start' && pages.length > 1) {
-      setShowSidebar(true)
+    if (view === 'nav') {
+      // 导航页始终使用 'default' 页面，不受起始页多页切换影响
+      // 保存起始页当前页面以便切换回来时恢复
+      if (currentPageId !== 'default') {
+        localStorage.setItem('nav-startpage-prev-page', currentPageId)
+      }
+      setCurrentPageId('default')
     }
+    if (view === 'start') {
+      // 恢复起始页之前选择的页面
+      const prev = localStorage.getItem('nav-startpage-prev-page')
+      if (prev && pages.some(p => p.id === prev)) {
+        setCurrentPageId(prev)
+        localStorage.removeItem('nav-startpage-prev-page')
+      }
+      if (pages.length > 1) {
+        setShowSidebar(true)
+      }
+    }
+    setCurrentView(view)
   }
 
   // 起始页视图
