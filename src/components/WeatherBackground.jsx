@@ -375,60 +375,98 @@ export default function WeatherBackground({ theme }) {
       ctx.restore();
     };
 
-    /** 闪电 - 主干+分支+全屏闪光 */
+    /** 闪电 - 多样化：主闪、片状闪、远闪 */
     const drawLightning = () => {
       if (state.lightning <= 0) return;
       ctx.save();
 
       // 全屏环境闪白（降低亮度避免晃眼）
-      ctx.globalAlpha = state.lightning * 0.06;
-      ctx.fillStyle = 'rgba(200,225,255,0.4)';
+      ctx.globalAlpha = state.lightning * 0.05;
+      ctx.fillStyle = 'rgba(200,225,255,0.35)';
       ctx.fillRect(0, 0, w, h);
 
-      // 主干
-      ctx.globalAlpha = state.lightning * 0.95;
-      ctx.strokeStyle = 'rgba(245,250,255,0.98)';
-      ctx.lineWidth = 3.5;
-      ctx.shadowColor = 'rgba(150,190,255,0.95)';
-      ctx.shadowBlur = 45;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+      const style = state.lightningStyle || 'main';
 
-      const lx = w * 0.1 + Math.random() * w * 0.8;
-      let cx2 = lx, cy2 = 0;
-      const pts = [{ x: cx2, y: cy2 }];
-      while (cy2 < h * 0.85) {
-        cx2 += (Math.random() - 0.5) * 70;
-        cy2 += 8 + Math.random() * 40;
-        pts.push({ x: cx2, y: cy2 });
-      }
+      if (style === 'main') {
+        // 主闪 - 粗主干+多分支
+        ctx.globalAlpha = state.lightning * 0.95;
+        ctx.strokeStyle = 'rgba(245,250,255,0.98)';
+        ctx.lineWidth = 3.5;
+        ctx.shadowColor = 'rgba(150,190,255,0.95)';
+        ctx.shadowBlur = 45;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
-      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-      ctx.stroke();
-
-      // 细核心
-      ctx.globalAlpha = state.lightning;
-      ctx.lineWidth = 1.2;
-      ctx.shadowBlur = 18;
-      ctx.strokeStyle = 'rgba(255,255,255,1)';
-      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x + (Math.random() - 0.5) * 4, pts[i].y);
-      ctx.stroke();
-
-      // 分支闪
-      ctx.globalAlpha = state.lightning * 0.65;
-      ctx.lineWidth = 1.8;
-      ctx.shadowBlur = 22;
-      for (let b = 0; b < 4; b++) {
-        const si = 2 + Math.floor(Math.random() * (pts.length - 5));
-        let bx = pts[si].x, by = pts[si].y;
-        ctx.beginPath(); ctx.moveTo(bx, by);
-        for (let s = 0; s < 6; s++) {
-          bx += (Math.random() - 0.5) * 50;
-          by += 6 + Math.random() * 22;
-          ctx.lineTo(bx, by);
+        const lx = w * 0.1 + Math.random() * w * 0.8;
+        let cx2 = lx, cy2 = 0;
+        const pts = [{ x: cx2, y: cy2 }];
+        while (cy2 < h * 0.85) {
+          cx2 += (Math.random() - 0.5) * 70;
+          cy2 += 8 + Math.random() * 40;
+          pts.push({ x: cx2, y: cy2 });
         }
+
+        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+
+        // 细核心
+        ctx.globalAlpha = state.lightning;
+        ctx.lineWidth = 1.2;
+        ctx.shadowBlur = 18;
+        ctx.strokeStyle = 'rgba(255,255,255,1)';
+        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x + (Math.random() - 0.5) * 4, pts[i].y);
+        ctx.stroke();
+
+        // 分支闪
+        ctx.globalAlpha = state.lightning * 0.65;
+        ctx.lineWidth = 1.8;
+        ctx.shadowBlur = 22;
+        for (let b = 0; b < 4; b++) {
+          const si = 2 + Math.floor(Math.random() * (pts.length - 5));
+          let bx = pts[si].x, by = pts[si].y;
+          ctx.beginPath(); ctx.moveTo(bx, by);
+          for (let s = 0; s < 6; s++) {
+            bx += (Math.random() - 0.5) * 50;
+            by += 6 + Math.random() * 22;
+            ctx.lineTo(bx, by);
+          }
+          ctx.stroke();
+        }
+      } else if (style === 'sheet') {
+        // 片状闪 - 云层间弥漫闪光
+        ctx.globalAlpha = state.lightning * 0.4;
+        ctx.fillStyle = 'rgba(200,215,255,0.15)';
+        for (let i = 0; i < 8; i++) {
+          const sx = Math.random() * w;
+          const sy = Math.random() * h * 0.35;
+          const sr = 80 + Math.random() * 200;
+          const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+          grad.addColorStop(0, 'rgba(220,235,255,0.2)');
+          grad.addColorStop(1, 'rgba(220,235,255,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (style === 'distant') {
+        // 远闪 - 细弱遥远的闪电
+        ctx.globalAlpha = state.lightning * 0.5;
+        ctx.strokeStyle = 'rgba(200,220,255,0.6)';
+        ctx.lineWidth = 1;
+        ctx.shadowColor = 'rgba(150,190,255,0.4)';
+        ctx.shadowBlur = 20;
+        ctx.lineCap = 'round';
+
+        const lx = w * 0.2 + Math.random() * w * 0.6;
+        let cx2 = lx, cy2 = h * 0.1;
+        const pts = [{ x: cx2, y: cy2 }];
+        while (cy2 < h * 0.5) {
+          cx2 += (Math.random() - 0.5) * 40;
+          cy2 += 10 + Math.random() * 30;
+          pts.push({ x: cx2, y: cy2 });
+        }
+        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
         ctx.stroke();
       }
       ctx.restore();
@@ -616,8 +654,12 @@ export default function WeatherBackground({ theme }) {
           });
         }
 
-        // 云朵
-        state.clouds.forEach(c => { c.x += c.speed; if (c.x > w + 500) c.x = -500; drawCloud(c); });
+        // 蓝天白云 - 晴天云朵更白更亮
+        state.clouds.forEach(c => {
+          c.x += c.speed * 1.2;
+          if (c.x > w + 500) c.x = -500;
+          drawCloud(c);
+        });
 
         // 浮尘
         state.dustMotes.forEach(m => {
@@ -647,7 +689,7 @@ export default function WeatherBackground({ theme }) {
         state.clouds.forEach(c => { c.x += c.speed; if (c.x > w + 500) c.x = -500; drawCloud(c); });
       }
       if (type === 'overcast') {
-        state.clouds.forEach(c => { c.x += c.speed * 0.35; if (c.x > w + 550) c.x = -550; drawCloud(c); });
+        state.clouds.forEach(c => { c.x += c.speed * 0.65; if (c.x > w + 550) c.x = -550; drawCloud(c); });
       }
 
       /* ===== 雨天 ===== */
@@ -710,16 +752,19 @@ export default function WeatherBackground({ theme }) {
           return true;
         });
 
-        // 闪电 - 偶尔随机触发
+        // 闪电 - 偶尔随机触发，多样化样式
         state.lightningTimer++;
         if (state.lightningTimer >= state.nextLightningAt) {
           state.lightning = 1;
           state.lightningTimer = 0;
+          // 随机选择闪电样式：主闪60%、片状闪25%、远闪15%
+          const r = Math.random();
+          state.lightningStyle = r < 0.6 ? 'main' : r < 0.85 ? 'sheet' : 'distant';
           // 下次闪电间隔：8~25秒（480~1500帧）
           state.nextLightningAt = 480 + Math.random() * 1020;
         }
         if (state.lightning > 0) {
-          state.lightning -= 0.025;
+          state.lightning -= 0.018;
           if (state.lightning < 0) state.lightning = 0;
         }
         drawLightning();
