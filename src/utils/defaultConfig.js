@@ -8,7 +8,7 @@
 
 /**
  * DEFAULT_CONFIG - 内置默认配置
- * 从用户导出的 清炼导航_配置_2026-6-19.json 转换而来
+ * 从用户导出的 清炼导航_配置_2026-6-19.json 转换而来（不含天气数据）
  */
 export const DEFAULT_CONFIG = {
   // 主题模式
@@ -82,11 +82,6 @@ export const DEFAULT_CONFIG = {
 
   // 版权
   'nav-copyright-text': '清炼',
-
-  // 天气缓存（苏州）
-  'nav-weather-city': '{"id":"31.30408,120.59538","name":"苏州","lat":31.30408,"lon":120.59538}',
-  'nav-weather-cache': '{"cacheKey":"31.3041,120.5954","data":{"temp":26,"feelsLike":30,"humidity":93,"windSpeed":20,"windDir":200,"text":"小阵雨","icon":"🌦️","type":"rain","code":80,"sunrise":"04:53","sunset":"19:04"}}',
-  'nav-weather-cache-time': '1781865540784',
 }
 
 /**

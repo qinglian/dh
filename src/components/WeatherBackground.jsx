@@ -238,6 +238,9 @@ export default function WeatherBackground({ theme }) {
       state.snowGround = [];
       state.transitionAlpha = 0;
       state.prevType = type;
+      state.lightning = 0;
+      state.lightningTimer = 0;
+      state.nextLightningAt = 480 + Math.random() * 1020;
 
       switch (type) {
         case 'rain':
@@ -377,9 +380,9 @@ export default function WeatherBackground({ theme }) {
       if (state.lightning <= 0) return;
       ctx.save();
 
-      // 全屏环境闪白
-      ctx.globalAlpha = state.lightning * 0.22;
-      ctx.fillStyle = 'rgba(200,225,255,0.7)';
+      // 全屏环境闪白（降低亮度避免晃眼）
+      ctx.globalAlpha = state.lightning * 0.06;
+      ctx.fillStyle = 'rgba(200,225,255,0.4)';
       ctx.fillRect(0, 0, w, h);
 
       // 主干
@@ -707,14 +710,16 @@ export default function WeatherBackground({ theme }) {
           return true;
         });
 
-        // 闪电
+        // 闪电 - 偶尔随机触发
         state.lightningTimer++;
-        if (state.lightningTimer > 60 + Math.random() * 220) {
+        if (state.lightningTimer >= state.nextLightningAt) {
           state.lightning = 1;
           state.lightningTimer = 0;
+          // 下次闪电间隔：8~25秒（480~1500帧）
+          state.nextLightningAt = 480 + Math.random() * 1020;
         }
         if (state.lightning > 0) {
-          state.lightning -= 0.04;
+          state.lightning -= 0.025;
           if (state.lightning < 0) state.lightning = 0;
         }
         drawLightning();
