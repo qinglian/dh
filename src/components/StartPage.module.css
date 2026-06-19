@@ -306,8 +306,8 @@
 
 /* ==================== 搜索框 ==================== */
 .searchWrapper {
-  width: 32vw;
-  max-width: 520px;
+  width: 38vw;
+  max-width: 600px;
   padding: 0;
   margin-top: 16px;
   animation: slideUp 0.6s ease 0.2s both;
