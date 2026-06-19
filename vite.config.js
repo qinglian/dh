@@ -12,12 +12,12 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        entryFileNames: 'assets/app.js',
-        chunkFileNames: 'assets/[name].js',
+        entryFileNames: 'assets/app.[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name.split('.');
           const ext = info[info.length - 1];
-          return `assets/[name][extname]`;
+          return `assets/[name].[hash][extname]`;
         },
         manualChunks: {
           three: ['three'],

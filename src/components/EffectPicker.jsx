@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Sparkles, Star, Waves, Snowflake, Circle, Bug, Zap, Mountain, Hexagon, RotateCw, Flame, CloudRain, Atom, CloudSun, Check, Lasso, Gauge, Grid3x3, Grid, Droplets } from 'lucide-react';
+import { useEffect } from 'react';
+import { Sparkles, Star, Waves, Snowflake, Circle, Bug, Zap, Mountain, Hexagon, RotateCw, Flame, CloudRain, Atom, CloudSun, Check, Lasso, Gauge, Grid3x3, Grid } from 'lucide-react';
 import styles from './EffectPicker.module.css';
 
 const effects = [
@@ -24,8 +24,6 @@ const effects = [
 const weatherEffect = { id: 'weather', name: '实时天气', icon: CloudSun, group: '天气' };
 
 export default function EffectPicker({ currentEffects, enabled, multiMode, onToggle, onToggleMulti, onToggleEffect, onCancel, onConfirm }) {
-  const [cardRain, setCardRain] = useState(() => localStorage.getItem('nav-card-rain-enabled') !== 'false')
-
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -89,27 +87,6 @@ export default function EffectPicker({ currentEffects, enabled, multiMode, onTog
               </div>
             </div>
           ))}
-
-          {/* 卡片雨滴效果开关 */}
-          {enabled && (
-            <div className={styles.group}>
-              <div className={styles.groupTitle}>附加效果</div>
-              <div className={styles.effects}>
-                <button
-                  className={`${styles.effect} ${cardRain ? styles.active : ''}`}
-                  onClick={() => {
-                    const newVal = !cardRain
-                    setCardRain(newVal)
-                    localStorage.setItem('nav-card-rain-enabled', String(newVal))
-                    window.dispatchEvent(new CustomEvent('cardRainToggleChanged'))
-                  }}>
-                  <Droplets size={22} />
-                  <span>卡片雨滴</span>
-                  {cardRain && <Check size={14} className={styles.checkIcon} />}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* 底部确认/取消 */}

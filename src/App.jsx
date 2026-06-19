@@ -32,7 +32,6 @@ import ConfirmDialog from './components/ConfirmDialog'
 import WallpaperPicker from './components/WallpaperPicker'
 import EffectPicker from './components/EffectPicker'
 import AnimatedBackground from './components/AnimatedBackground'
-import CardRainEffect from './components/CardRainEffect'
 import PageSidebar from './components/PageSidebar'
 import MouseSpotlight from './components/MouseSpotlight'
 import ContextMenu from './components/ContextMenu'
@@ -1038,7 +1037,6 @@ function AppContent() {
     return (
       <div className={styles.app} style={getWallpaperStyle()}>
         <AnimatedBackground enabled={animatedBg} theme={theme} effects={bgEffects} multiMode={bgMultiMode} />
-        <CardRainEffect />
         {MediaBg}
         <MouseSpotlight enabled={mouseSpotlight} size={spotlightSize} opacity={spotlightOpacity} maskMode={spotlightMaskMode} color1={spotlightColor1} color2={spotlightColor2} colorMix={spotlightColorMix} />
         {showSidebar && (

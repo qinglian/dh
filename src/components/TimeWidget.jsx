@@ -314,18 +314,6 @@ function WeatherEffect({ type, isDay = true }) {
           const bPts = generateBoltPath(sp.x, sp.y, bex, bey, 0, 3)
           drawBoltPath(bPts, state.lightning * 0.4, 0.8)
         }
-      } else if (style === 'fork') {
-        // 双叉闪电
-        const sx = w * 0.2 + Math.random() * w * 0.6
-        const forkY = h * (0.2 + Math.random() * 0.15)
-        const trunkPts = generateBoltPath(sx, 0, sx + (Math.random() - 0.5) * 20, forkY, 0, 3)
-        drawBoltPath(trunkPts, state.lightning, 2)
-        const lx = sx + (Math.random() - 0.5) * w * 0.2
-        const ly = h * (0.55 + Math.random() * 0.2)
-        drawBoltPath(generateBoltPath(trunkPts[trunkPts.length - 1].x, forkY, lx, ly, 0, 4), state.lightning * 0.7, 1.3)
-        const rx = sx + (Math.random() - 0.5) * w * 0.2
-        const ry = h * (0.5 + Math.random() * 0.25)
-        drawBoltPath(generateBoltPath(trunkPts[trunkPts.length - 1].x, forkY, rx, ry, 0, 4), state.lightning * 0.6, 1.1)
       } else if (style === 'sheet') {
         // 片状闪
         ctx.globalAlpha = state.lightning * 0.3

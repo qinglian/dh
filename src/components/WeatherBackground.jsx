@@ -466,29 +466,6 @@ export default function WeatherBackground({ theme }) {
         // 2~4条分支
         const branches = generateBranches(mainPts, 2 + Math.floor(Math.random() * 3), 0.4, 1);
         branches.forEach(bp => drawBoltPath(bp, state.lightning * 0.5, 1.2));
-      } else if (style === 'fork') {
-        // 双叉闪电 - 从同一点分叉
-        const sx = w * 0.2 + Math.random() * w * 0.6;
-        const sy = 0;
-        // 主干到分叉点
-        const forkY = h * (0.2 + Math.random() * 0.2);
-        const trunkPts = generateBoltPath(sx, sy, sx + (Math.random() - 0.5) * 30, forkY, 0, 4);
-        drawBoltPath(trunkPts, state.lightning, 2.8);
-        // 左叉
-        const lx = sx + (Math.random() - 0.5) * w * 0.25;
-        const ly = h * (0.6 + Math.random() * 0.2);
-        const leftPts = generateBoltPath(trunkPts[trunkPts.length - 1].x, forkY, lx, ly, 0, 5);
-        drawBoltPath(leftPts, state.lightning * 0.8, 2);
-        // 右叉
-        const rx = sx + (Math.random() - 0.5) * w * 0.25;
-        const ry = h * (0.55 + Math.random() * 0.25);
-        const rightPts = generateBoltPath(trunkPts[trunkPts.length - 1].x, forkY, rx, ry, 0, 5);
-        drawBoltPath(rightPts, state.lightning * 0.7, 1.8);
-        // 分支
-        [leftPts, rightPts].forEach(pts => {
-          const br = generateBranches(pts, 1 + Math.floor(Math.random() * 2), 0.35, 1);
-          br.forEach(bp => drawBoltPath(bp, state.lightning * 0.35, 0.8));
-        });
       } else if (style === 'sheet') {
         // 片状闪 - 云层弥漫光
         ctx.globalAlpha = state.lightning * 0.35;
