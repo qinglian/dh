@@ -245,30 +245,104 @@ function WeatherEffect({ type, isDay = true }) {
       ctx.restore()
     }
 
-    /* 绘制闪电效果：全屏闪烁 + 随机曲折的闪电路径 */
+    /* 绘制闪电效果：多样化 - 单条劈下/片状闪/远闪 */
     const drawLightning = () => {
       if (state.lightning <= 0) return
       ctx.save()
-      ctx.globalAlpha = state.lightning * 0.3
-      ctx.fillStyle = 'rgba(220,230,255,0.8)'
+
+      const style = state.lightningStyle || 'main'
+
+      // 柔和环境闪光（不晃眼）
+      ctx.globalAlpha = state.lightning * 0.06
+      ctx.fillStyle = 'rgba(220,230,255,0.3)'
       ctx.fillRect(0, 0, w, h)
 
-      // 闪电路径
-      ctx.globalAlpha = state.lightning * 0.9
-      ctx.strokeStyle = 'rgba(240,250,255,0.95)'
-      ctx.lineWidth = 2
-      ctx.shadowColor = 'rgba(200,220,255,0.8)'
-      ctx.shadowBlur = 20
-      let lx = w * 0.3 + Math.random() * w * 0.4
-      let ly = 0
-      ctx.beginPath()
-      ctx.moveTo(lx, ly)
-      while (ly < h * 0.7) {
-        lx += (Math.random() - 0.5) * 40
-        ly += 15 + Math.random() * 25
-        ctx.lineTo(lx, ly)
+      if (style === 'main') {
+        // 单条从上方劈下的闪电
+        ctx.globalAlpha = state.lightning * 0.9
+        ctx.strokeStyle = 'rgba(240,250,255,0.95)'
+        ctx.lineWidth = 2
+        ctx.shadowColor = 'rgba(200,220,255,0.8)'
+        ctx.shadowBlur = 20
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+
+        // 从顶部随机位置开始
+        let lx = w * 0.15 + Math.random() * w * 0.7
+        let ly = 0
+        const pts = [{ x: lx, y: ly }]
+        while (ly < h * 0.75) {
+          lx += (Math.random() - 0.5) * 35
+          ly += 10 + Math.random() * 20
+          pts.push({ x: lx, y: ly })
+        }
+        ctx.beginPath()
+        ctx.moveTo(pts[0].x, pts[0].y)
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y)
+        ctx.stroke()
+
+        // 细核心
+        ctx.globalAlpha = state.lightning * 0.95
+        ctx.lineWidth = 0.8
+        ctx.shadowBlur = 10
+        ctx.strokeStyle = 'rgba(255,255,255,1)'
+        ctx.beginPath()
+        ctx.moveTo(pts[0].x, pts[0].y)
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x + (Math.random() - 0.5) * 3, pts[i].y)
+        ctx.stroke()
+
+        // 1~2条分支
+        ctx.globalAlpha = state.lightning * 0.5
+        ctx.lineWidth = 1
+        ctx.shadowBlur = 12
+        const branchCount = 1 + Math.floor(Math.random() * 2)
+        for (let b = 0; b < branchCount; b++) {
+          const si = 1 + Math.floor(Math.random() * (pts.length - 3))
+          let bx = pts[si].x, by = pts[si].y
+          ctx.beginPath()
+          ctx.moveTo(bx, by)
+          for (let s = 0; s < 4; s++) {
+            bx += (Math.random() - 0.5) * 30
+            by += 8 + Math.random() * 15
+            ctx.lineTo(bx, by)
+          }
+          ctx.stroke()
+        }
+      } else if (style === 'sheet') {
+        // 片状闪 - 云层弥漫光
+        ctx.globalAlpha = state.lightning * 0.3
+        for (let i = 0; i < 5; i++) {
+          const sx = Math.random() * w
+          const sy = Math.random() * h * 0.3
+          const sr = 40 + Math.random() * 100
+          const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr)
+          grad.addColorStop(0, 'rgba(220,235,255,0.15)')
+          grad.addColorStop(1, 'rgba(220,235,255,0)')
+          ctx.fillStyle = grad
+          ctx.beginPath()
+          ctx.arc(sx, sy, sr, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      } else if (style === 'distant') {
+        // 远闪 - 细弱
+        ctx.globalAlpha = state.lightning * 0.4
+        ctx.strokeStyle = 'rgba(200,220,255,0.5)'
+        ctx.lineWidth = 0.8
+        ctx.shadowColor = 'rgba(180,200,255,0.3)'
+        ctx.shadowBlur = 12
+        ctx.lineCap = 'round'
+
+        let lx = w * 0.2 + Math.random() * w * 0.6
+        let ly = h * 0.05
+        ctx.beginPath()
+        ctx.moveTo(lx, ly)
+        while (ly < h * 0.4) {
+          lx += (Math.random() - 0.5) * 25
+          ly += 8 + Math.random() * 18
+          ctx.lineTo(lx, ly)
+        }
+        ctx.stroke()
       }
-      ctx.stroke()
       ctx.restore()
     }
 
@@ -311,7 +385,7 @@ function WeatherEffect({ type, isDay = true }) {
         })
 
         state.clouds.forEach(cloud => {
-          cloud.x += cloud.speed * 1.5
+          cloud.x += cloud.speed * 2
           if (cloud.x > w + 200) cloud.x = -250
           drawCloud(cloud)
         })
@@ -320,7 +394,7 @@ function WeatherEffect({ type, isDay = true }) {
       // 多云：多层云朵飘动
       if (type === 'cloudy') {
         state.clouds.forEach(cloud => {
-          cloud.x += cloud.speed * 1.5
+          cloud.x += cloud.speed * 2
           if (cloud.x > w + 200) cloud.x = -250
           drawCloud(cloud)
         })
@@ -329,7 +403,7 @@ function WeatherEffect({ type, isDay = true }) {
       // 阴天：厚重灰云缓慢移动
       if (type === 'overcast') {
         state.clouds.forEach(cloud => {
-          cloud.x += cloud.speed * 0.9
+          cloud.x += cloud.speed * 1.2
           if (cloud.x > w + 300) cloud.x = -300
           drawCloud(cloud)
         })
@@ -391,7 +465,7 @@ function WeatherEffect({ type, isDay = true }) {
             state.nextLightningAt = 480 + Math.random() * 1020
           }
           if (state.lightning > 0) {
-            state.lightning -= 0.018
+            state.lightning -= 0.012
             if (state.lightning < 0) state.lightning = 0
           }
           drawLightning()
