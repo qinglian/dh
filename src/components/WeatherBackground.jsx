@@ -33,6 +33,7 @@ export default function WeatherBackground({ theme }) {
       dustMotes: [],    // 晴天浮尘
       splashParticles: [], // 雨滴溅落粒子
       snowGround: [],   // 雪地堆积点
+      meteors: [],      // 流星
       transitionAlpha: 0,
       prevType: 'sunny',
     };
@@ -190,15 +191,21 @@ export default function WeatherBackground({ theme }) {
     });
 
     /** 星星 */
-    const createStar = () => ({
-      x: Math.random() * w,
-      y: Math.random() * h * 0.52,
-      radius: 0.3 + Math.random() * 1.8,
-      opacity: 0.25 + Math.random() * 0.75,
-      twinkleSpeed: 0.005 + Math.random() * 0.03,
-      twinklePhase: Math.random() * Math.PI * 2,
-      hasSpikes: Math.random() > 0.6,
-    });
+    const createStar = () => {
+      const temp = Math.random();
+      const color = temp < 0.7 ? 'rgba(255,255,255,0.95)' :
+                    temp < 0.85 ? 'rgba(255,245,200,0.95)' : 'rgba(200,220,255,0.95)';
+      return {
+        x: Math.random() * w,
+        y: Math.random() * h * 0.6,
+        radius: 0.3 + Math.random() * 2.2,
+        opacity: 0.2 + Math.random() * 0.8,
+        twinkleSpeed: 0.003 + Math.random() * 0.025,
+        twinklePhase: Math.random() * Math.PI * 2,
+        hasSpikes: Math.random() > 0.65,
+        color,
+      };
+    };
 
     /** 极光带 */
     const createAuroraBand = () => ({
@@ -236,6 +243,7 @@ export default function WeatherBackground({ theme }) {
       state.dustMotes = [];
       state.splashParticles = [];
       state.snowGround = [];
+      state.meteors = [];
       state.transitionAlpha = 0;
       state.prevType = type;
       state.lightning = 0;
@@ -273,7 +281,7 @@ export default function WeatherBackground({ theme }) {
       }
 
       if (!isDay && type !== 'rain' && type !== 'snow') {
-        for (let i = 0; i < 100; i++) state.stars.push(createStar());
+        for (let i = 0; i < 180; i++) state.stars.push(createStar());
         if (type === 'sunny') {
           for (let i = 0; i < 4; i++) state.aurora.push(createAuroraBand());
         }
@@ -561,15 +569,25 @@ export default function WeatherBackground({ theme }) {
       if (!isDay && type !== 'rain' && type !== 'snow') {
         state.stars.forEach(star => {
           star.twinklePhase += star.twinkleSpeed;
-          const twinkle = 0.45 + 0.55 * Math.sin(star.twinklePhase);
+          const twinkle = 0.3 + 0.7 * Math.sin(star.twinklePhase);
           ctx.save();
           ctx.globalAlpha = star.opacity * twinkle;
-          ctx.fillStyle = 'rgba(255,255,255,0.95)';
+          // 星星颜色微偏黄/蓝，更自然
+          ctx.fillStyle = star.color || 'rgba(255,255,255,0.95)';
           ctx.beginPath(); ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); ctx.fill();
+          // 大星星带柔和光晕
+          if (star.radius > 1.2) {
+            ctx.globalAlpha = star.opacity * twinkle * 0.25;
+            const glow = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.radius * 4);
+            glow.addColorStop(0, star.color || 'rgba(255,255,255,0.4)');
+            glow.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath(); ctx.arc(star.x, star.y, star.radius * 4, 0, Math.PI * 2); ctx.fill();
+          }
           if (star.hasSpikes) {
-            ctx.globalAlpha = star.opacity * twinkle * 0.35;
-            ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-            ctx.lineWidth = 0.5;
+            ctx.globalAlpha = star.opacity * twinkle * 0.45;
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+            ctx.lineWidth = 0.6;
             ctx.beginPath();
             ctx.moveTo(star.x - star.radius * 3, star.y);
             ctx.lineTo(star.x + star.radius * 3, star.y);
@@ -578,6 +596,38 @@ export default function WeatherBackground({ theme }) {
             ctx.stroke();
           }
           ctx.restore();
+        });
+
+        // 流星
+        if (Math.random() < 0.003 && state.meteors.length < 2) {
+          state.meteors.push({
+            x: Math.random() * w * 0.8 + w * 0.1,
+            y: Math.random() * h * 0.25,
+            length: 60 + Math.random() * 100,
+            speed: 4 + Math.random() * 6,
+            angle: Math.PI / 4 + (Math.random() - 0.5) * 0.3,
+            opacity: 1,
+          });
+        }
+        state.meteors = state.meteors.filter(m => {
+          m.x += Math.cos(m.angle) * m.speed;
+          m.y += Math.sin(m.angle) * m.speed;
+          m.opacity -= 0.008;
+          if (m.opacity <= 0) return false;
+          ctx.save();
+          ctx.globalAlpha = m.opacity;
+          const tailX = m.x - Math.cos(m.angle) * m.length;
+          const tailY = m.y - Math.sin(m.angle) * m.length;
+          const grad = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
+          grad.addColorStop(0, 'rgba(255,255,255,1)');
+          grad.addColorStop(0.3, 'rgba(200,220,255,0.6)');
+          grad.addColorStop(1, 'rgba(200,220,255,0)');
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 1.5;
+          ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tailX, tailY); ctx.stroke();
+          ctx.restore();
+          return true;
         });
       }
 
@@ -615,23 +665,38 @@ export default function WeatherBackground({ theme }) {
         if (isDay) {
           const pulse = 1 + Math.sin(state.time * 0.012) * 0.06;
           // 多层光晕
-          for (let i = 7; i >= 0; i--) {
-            const r = 25 + i * 38 * pulse;
+          for (let i = 9; i >= 0; i--) {
+            const r = 20 + i * 32 * pulse;
             const sunGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, r);
-            const alpha = (0.13 - i * 0.015) * pulse;
-            sunGrad.addColorStop(0, `rgba(255,220,100,${alpha})`);
-            sunGrad.addColorStop(0.5, `rgba(255,200,80,${alpha * 0.5})`);
-            sunGrad.addColorStop(1, 'rgba(255,180,60,0)');
+            const alpha = (0.12 - i * 0.01) * pulse;
+            sunGrad.addColorStop(0, `rgba(255,230,120,${alpha})`);
+            sunGrad.addColorStop(0.4, `rgba(255,210,90,${alpha * 0.5})`);
+            sunGrad.addColorStop(1, 'rgba(255,190,60,0)');
             ctx.fillStyle = sunGrad;
             ctx.beginPath(); ctx.arc(sunX, sunY, r, 0, Math.PI * 2); ctx.fill();
           }
+          // 日冕射线
           ctx.save();
-          ctx.globalAlpha = 0.15; ctx.fillStyle = 'rgba(255,220,80,0.5)';
-          ctx.beginPath(); ctx.arc(sunX, sunY, 30, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 0.28; ctx.fillStyle = 'rgba(255,230,120,0.6)';
-          ctx.beginPath(); ctx.arc(sunX, sunY, 20, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 0.55; ctx.fillStyle = 'rgba(255,245,200,0.8)';
-          ctx.beginPath(); ctx.arc(sunX, sunY, 12, 0, Math.PI * 2); ctx.fill();
+          for (let i = 0; i < 16; i++) {
+            const angle = (i / 16) * Math.PI * 2 + state.time * 0.002;
+            const rayLen = 60 + Math.sin(state.time * 0.008 + i) * 20;
+            const rx = sunX + Math.cos(angle) * 35;
+            const ry = sunY + Math.sin(angle) * 35;
+            const ex = sunX + Math.cos(angle) * rayLen;
+            const ey = sunY + Math.sin(angle) * rayLen;
+            ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(ex, ey);
+            ctx.strokeStyle = `rgba(255,230,150,${0.08 + Math.sin(state.time * 0.01 + i) * 0.04})`;
+            ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+          }
+          ctx.restore();
+          // 太阳本体
+          ctx.save();
+          ctx.globalAlpha = 0.12; ctx.fillStyle = 'rgba(255,220,80,0.5)';
+          ctx.beginPath(); ctx.arc(sunX, sunY, 32, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 0.25; ctx.fillStyle = 'rgba(255,230,120,0.6)';
+          ctx.beginPath(); ctx.arc(sunX, sunY, 22, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 0.5; ctx.fillStyle = 'rgba(255,245,200,0.9)';
+          ctx.beginPath(); ctx.arc(sunX, sunY, 14, 0, Math.PI * 2); ctx.fill();
           ctx.restore();
 
           // 阳光射线
@@ -652,6 +717,33 @@ export default function WeatherBackground({ theme }) {
             ctx.strokeStyle = `rgba(255,240,180,${p.opacity * pulseVal * 0.55})`;
             ctx.lineWidth = p.width; ctx.lineCap = 'round'; ctx.stroke();
           });
+        }
+
+        // 夜晚显示月亮
+        if (!isDay) {
+          const moonX = w * 0.82;
+          const moonY = h * 0.12;
+          // 月光晕
+          for (let i = 5; i >= 0; i--) {
+            const r = 18 + i * 22;
+            const mg = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, r);
+            mg.addColorStop(0, `rgba(220,230,255,${0.06 - i * 0.008})`);
+            mg.addColorStop(1, 'rgba(220,230,255,0)');
+            ctx.fillStyle = mg;
+            ctx.beginPath(); ctx.arc(moonX, moonY, r, 0, Math.PI * 2); ctx.fill();
+          }
+          // 月亮本体
+          ctx.save();
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = 'rgba(240,242,255,1)';
+          ctx.beginPath(); ctx.arc(moonX, moonY, 16, 0, Math.PI * 2); ctx.fill();
+          // 月海阴影
+          ctx.globalAlpha = 0.12;
+          ctx.fillStyle = 'rgba(180,190,220,1)';
+          ctx.beginPath(); ctx.arc(moonX - 4, moonY + 2, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(moonX + 3, moonY - 3, 3.5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(moonX + 1, moonY + 5, 2.5, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
         }
 
         // 蓝天白云 - 晴天云朵更白更亮
