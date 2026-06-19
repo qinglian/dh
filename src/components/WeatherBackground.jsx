@@ -80,16 +80,6 @@ export default function WeatherBackground({ theme }) {
       }
     };
 
-    // 监听天气更新事件（来自 TimeWidget），实现即时同步
-    const handleWeatherUpdate = () => {
-      const newWeather = getWeatherCache()?.data;
-      if (newWeather && newWeather.type !== targetType) {
-        targetType = newWeather.type;
-        state.transitionAlpha = 0;
-      }
-    };
-    window.addEventListener('weatherDataUpdated', handleWeatherUpdate);
-
     /* ==================== 粒子工厂 ==================== */
 
     /** 雨滴 - 斜向快速下落 */
@@ -248,9 +238,6 @@ export default function WeatherBackground({ theme }) {
       state.snowGround = [];
       state.transitionAlpha = 0;
       state.prevType = type;
-      state.lightning = 0;
-      state.lightningTimer = 0;
-      state.nextLightningAt = 180 + Math.random() * 420;
 
       switch (type) {
         case 'rain':
@@ -390,9 +377,9 @@ export default function WeatherBackground({ theme }) {
       if (state.lightning <= 0) return;
       ctx.save();
 
-      // 全屏环境闪白（降低亮度避免晃眼）
-      ctx.globalAlpha = state.lightning * 0.08;
-      ctx.fillStyle = 'rgba(200,225,255,0.5)';
+      // 全屏环境闪白
+      ctx.globalAlpha = state.lightning * 0.22;
+      ctx.fillStyle = 'rgba(200,225,255,0.7)';
       ctx.fillRect(0, 0, w, h);
 
       // 主干
@@ -720,16 +707,14 @@ export default function WeatherBackground({ theme }) {
           return true;
         });
 
-        // 闪电 - 偶尔随机触发
+        // 闪电
         state.lightningTimer++;
-        if (state.lightningTimer >= state.nextLightningAt) {
+        if (state.lightningTimer > 60 + Math.random() * 220) {
           state.lightning = 1;
           state.lightningTimer = 0;
-          // 下次闪电间隔：5~18秒（300~1080帧）
-          state.nextLightningAt = 300 + Math.random() * 780;
         }
         if (state.lightning > 0) {
-          state.lightning -= 0.045;
+          state.lightning -= 0.04;
           if (state.lightning < 0) state.lightning = 0;
         }
         drawLightning();
@@ -837,7 +822,6 @@ export default function WeatherBackground({ theme }) {
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('weatherDataUpdated', handleWeatherUpdate);
     };
   }, [theme]);
 

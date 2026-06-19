@@ -40,7 +40,11 @@ import StartPage from './components/StartPage'
 import StartPageSettings from './components/StartPageSettings'
 import { getSettings } from './utils/startPageSettings'
 import NavPageSettings from './components/NavPageSettings'
+import { applyDefaultConfig } from './utils/defaultConfig'
 import styles from './App.module.css'
+
+// 应用首次加载时，若 localStorage 无配置，写入内置默认值
+applyDefaultConfig()
 
 function AppContent() {
   const { data, setData, addCategory, updateCategory, deleteCategory, addSite, updateSite, deleteSite, reorderSites, reorderCategories, reorderTags } = useData()
