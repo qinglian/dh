@@ -679,6 +679,8 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
         setWeather(weatherData)
         setWeatherError('')
         setWeatherFetchTime(Date.now())
+        // 通知 WeatherBackground 即时同步天气背景
+        window.dispatchEvent(new Event('weatherDataUpdated'))
       }
     } catch (err) {
       console.error('Weather error:', err)

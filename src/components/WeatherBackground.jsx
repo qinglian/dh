@@ -80,6 +80,16 @@ export default function WeatherBackground({ theme }) {
       }
     };
 
+    // 监听天气更新事件（来自 TimeWidget），实现即时同步
+    const handleWeatherUpdate = () => {
+      const newWeather = getWeatherCache()?.data;
+      if (newWeather && newWeather.type !== targetType) {
+        targetType = newWeather.type;
+        state.transitionAlpha = 0;
+      }
+    };
+    window.addEventListener('weatherDataUpdated', handleWeatherUpdate);
+
     /* ==================== 粒子工厂 ==================== */
 
     /** 雨滴 - 斜向快速下落 */
@@ -827,6 +837,7 @@ export default function WeatherBackground({ theme }) {
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('weatherDataUpdated', handleWeatherUpdate);
     };
   }, [theme]);
 
