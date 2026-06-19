@@ -35,7 +35,7 @@ function WeatherEffect({ type, isDay = true }) {
   /* requestAnimationFrame ID，用于取消动画 */
   const animRef = useRef(null)
   /* 动画状态引用（粒子、云朵、闪电等），使用 ref 避免高频渲染时 state 更新带来的性能问题 */
-  const stateRef = useRef({ particles: [], clouds: [], lightning: 0, lightningTimer: 0, time: 0, splashParticles: [] })
+  const stateRef = useRef({ particles: [], clouds: [], lightning: 0, lightningTimer: 0, nextLightningAt: 480 + Math.random() * 1020, lightningStyle: 'main', time: 0, splashParticles: [] })
 
   /* 初始化 Canvas 和动画循环，天气类型变更时重新初始化 */
   useEffect(() => {
@@ -311,7 +311,7 @@ function WeatherEffect({ type, isDay = true }) {
         })
 
         state.clouds.forEach(cloud => {
-          cloud.x += cloud.speed
+          cloud.x += cloud.speed * 1.5
           if (cloud.x > w + 200) cloud.x = -250
           drawCloud(cloud)
         })
@@ -320,16 +320,16 @@ function WeatherEffect({ type, isDay = true }) {
       // 多云：多层云朵飘动
       if (type === 'cloudy') {
         state.clouds.forEach(cloud => {
-          cloud.x += cloud.speed
+          cloud.x += cloud.speed * 1.5
           if (cloud.x > w + 200) cloud.x = -250
           drawCloud(cloud)
         })
       }
 
-      // 阴天：厚重灰云缓慢移动（速度减半）
+      // 阴天：厚重灰云缓慢移动
       if (type === 'overcast') {
         state.clouds.forEach(cloud => {
-          cloud.x += cloud.speed * 0.5
+          cloud.x += cloud.speed * 0.9
           if (cloud.x > w + 300) cloud.x = -300
           drawCloud(cloud)
         })
@@ -381,12 +381,17 @@ function WeatherEffect({ type, isDay = true }) {
         // 雷暴额外添加闪电（仅夜间显示）
         if (isDay === false) {
           state.lightningTimer++
-          if (state.lightningTimer > 120 + Math.random() * 300) {
+          if (state.lightningTimer >= state.nextLightningAt) {
             state.lightning = 1
             state.lightningTimer = 0
+            // 随机选择闪电样式
+            const r = Math.random()
+            state.lightningStyle = r < 0.6 ? 'main' : r < 0.85 ? 'sheet' : 'distant'
+            // 下次闪电间隔：8~25秒（与页面背景一致）
+            state.nextLightningAt = 480 + Math.random() * 1020
           }
           if (state.lightning > 0) {
-            state.lightning -= 0.08
+            state.lightning -= 0.018
             if (state.lightning < 0) state.lightning = 0
           }
           drawLightning()
