@@ -1038,7 +1038,7 @@ function AppContent() {
     return (
       <div className={styles.app} style={getWallpaperStyle()}>
         <AnimatedBackground enabled={animatedBg} theme={theme} effects={bgEffects} multiMode={bgMultiMode} />
-        <CardRainEffect enabled={animatedBg && bgEffects.includes('weather')} />
+        <CardRainEffect />
         {MediaBg}
         <MouseSpotlight enabled={mouseSpotlight} size={spotlightSize} opacity={spotlightOpacity} maskMode={spotlightMaskMode} color1={spotlightColor1} color2={spotlightColor2} colorMix={spotlightColorMix} />
         {showSidebar && (

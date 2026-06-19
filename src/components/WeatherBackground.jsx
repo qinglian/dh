@@ -883,9 +883,9 @@ export default function WeatherBackground({ theme }) {
         if (state.lightningTimer >= state.nextLightningAt) {
           state.lightning = 1;
           state.lightningTimer = 0;
-          // 随机选择闪电样式：单根40%、双叉25%、片状闪20%、远闪15%
+          // 随机选择闪电样式：远闪40%、单根锯齿35%、片状闪25%
             const r = Math.random();
-            state.lightningStyle = r < 0.4 ? 'bolt' : r < 0.65 ? 'fork' : r < 0.85 ? 'sheet' : 'distant';
+            state.lightningStyle = r < 0.4 ? 'distant' : r < 0.75 ? 'bolt' : 'sheet';
           // 下次闪电间隔：8~25秒（480~1500帧）
           state.nextLightningAt = 480 + Math.random() * 1020;
         }
