@@ -124,6 +124,9 @@ export default function NavPageSettings({
   const [weatherAnimationEnabled, setWeatherAnimationEnabled] = useState(() => {
     return localStorage.getItem('nav-weather-animation-enabled') !== 'false'
   })
+  const [cardRainEnabled, setCardRainEnabled] = useState(() => {
+    return localStorage.getItem('nav-card-rain-enabled') !== 'false'
+  })
   const [siteInfoEnabled, setSiteInfoEnabled] = useState(() => {
     return localStorage.getItem('nav-site-info-enabled') !== 'false'
   })
@@ -891,6 +894,24 @@ export default function NavPageSettings({
                           setWeatherAnimationEnabled(newVal)
                           localStorage.setItem('nav-weather-animation-enabled', String(newVal))
                           window.dispatchEvent(new CustomEvent('weatherAnimationToggleChanged'))
+                        }}
+                      >
+                        <span className={styles.toggleThumb} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 卡片雨滴效果 */}
+                  <div className={styles.settingItem}>
+                    <div className={styles.toggleRow}>
+                      <span className={styles.toggleLabel}>卡片雨滴效果</span>
+                      <button
+                        className={`${styles.toggle} ${cardRainEnabled ? styles.toggleOn : styles.toggleOff}`}
+                        onClick={() => {
+                          const newVal = !cardRainEnabled
+                          setCardRainEnabled(newVal)
+                          localStorage.setItem('nav-card-rain-enabled', String(newVal))
+                          window.dispatchEvent(new CustomEvent('cardRainToggleChanged'))
                         }}
                       >
                         <span className={styles.toggleThumb} />

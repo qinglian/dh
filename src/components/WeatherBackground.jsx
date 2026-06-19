@@ -453,7 +453,7 @@ export default function WeatherBackground({ theme }) {
       ctx.fillStyle = 'rgba(200,220,255,0.3)';
       ctx.fillRect(0, 0, w, h);
 
-      const style = state.lightningStyle || 'main';
+      const style = state.lightningStyle || 'bolt';
 
       if (style === 'bolt') {
         // 单根锯齿闪电 - 参考真实照片风格
