@@ -142,7 +142,7 @@ export default function WeatherBackground({ theme }) {
       return {
         x: randomX ? Math.random() * w : -600,
         y: 10 + Math.random() * h * 0.48,
-        speed: 0.03 + Math.random() * 0.2,
+        speed: 0.08 + Math.random() * 0.45,
         scale, puffs,
         opacity: 0.18 + Math.random() * 0.35,
         layer: scale < 0.8 ? 'far' : 'near',
@@ -383,72 +383,119 @@ export default function WeatherBackground({ theme }) {
       ctx.restore();
     };
 
-    /** 闪电 - 多样化：主闪、片状闪、远闪 */
+    /** 生成锯齿闪电路径（递归中点位移） */
+    const generateBoltPath = (x1, y1, x2, y2, depth, maxDepth) => {
+      if (depth >= maxDepth) return [{ x: x1, y: y1 }, { x: x2, y: y2 }];
+      const mx = (x1 + x2) / 2 + (Math.random() - 0.5) * (y2 - y1) * 0.35;
+      const my = (y1 + y2) / 2 + (Math.random() - 0.5) * Math.abs(x2 - x1) * 0.1;
+      const left = generateBoltPath(x1, y1, mx, my, depth + 1, maxDepth);
+      const right = generateBoltPath(mx, my, x2, y2, depth + 1, maxDepth);
+      return [...left, ...right.slice(1)];
+    };
+
+    /** 绘制闪电路径（多层辉光） */
+    const drawBoltPath = (pts, alpha, baseWidth) => {
+      if (pts.length < 2) return;
+      // 外层辉光（蓝紫色）
+      ctx.globalAlpha = alpha * 0.3;
+      ctx.strokeStyle = 'rgba(100,140,255,0.8)';
+      ctx.lineWidth = baseWidth * 4;
+      ctx.shadowColor = 'rgba(80,120,255,0.6)';
+      ctx.shadowBlur = 30;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.stroke();
+      // 中层辉光（青白色）
+      ctx.globalAlpha = alpha * 0.6;
+      ctx.strokeStyle = 'rgba(200,220,255,0.9)';
+      ctx.lineWidth = baseWidth * 2;
+      ctx.shadowColor = 'rgba(180,210,255,0.8)';
+      ctx.shadowBlur = 15;
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.stroke();
+      // 核心亮白
+      ctx.globalAlpha = alpha * 0.95;
+      ctx.strokeStyle = 'rgba(255,255,255,1)';
+      ctx.lineWidth = baseWidth;
+      ctx.shadowColor = 'rgba(220,240,255,0.9)';
+      ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.stroke();
+    };
+
+    /** 生成分支 */
+    const generateBranches = (mainPts, count, lengthRatio, depth) => {
+      const branches = [];
+      for (let b = 0; b < count; b++) {
+        const si = 1 + Math.floor(Math.random() * (mainPts.length - 2));
+        const sp = mainPts[si];
+        const angle = (Math.random() - 0.5) * 1.2 + (sp.y > mainPts[0].y ? 0.3 : -0.3);
+        const len = (h * 0.15 + Math.random() * h * 0.25) * lengthRatio;
+        const ex = sp.x + Math.sin(angle) * len;
+        const ey = sp.y + Math.cos(angle) * len * 0.6 + len * 0.4;
+        const bPts = generateBoltPath(sp.x, sp.y, ex, ey, 0, 3 + depth);
+        branches.push(bPts);
+      }
+      return branches;
+    };
+
+    /** 闪电 - 多种样式 */
     const drawLightning = () => {
       if (state.lightning <= 0) return;
       ctx.save();
 
-      // 全屏环境闪白（降低亮度避免晃眼）
-      ctx.globalAlpha = state.lightning * 0.05;
-      ctx.fillStyle = 'rgba(200,225,255,0.35)';
+      // 柔和环境闪光
+      ctx.globalAlpha = state.lightning * 0.04;
+      ctx.fillStyle = 'rgba(200,220,255,0.3)';
       ctx.fillRect(0, 0, w, h);
 
       const style = state.lightningStyle || 'main';
 
-      if (style === 'main') {
-        // 单股闪电 - 从顶部随机位置劈下
-        ctx.globalAlpha = state.lightning * 0.85;
-        ctx.strokeStyle = 'rgba(245,250,255,0.95)';
-        ctx.lineWidth = 2.5;
-        ctx.shadowColor = 'rgba(150,190,255,0.9)';
-        ctx.shadowBlur = 35;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        // 从顶部随机位置开始
-        const lx = w * 0.1 + Math.random() * w * 0.8;
-        let cx2 = lx, cy2 = 0;
-        const pts = [{ x: cx2, y: cy2 }];
-        while (cy2 < h * 0.8) {
-          cx2 += (Math.random() - 0.5) * 50;
-          cy2 += 10 + Math.random() * 30;
-          pts.push({ x: cx2, y: cy2 });
-        }
-
-        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.stroke();
-
-        // 细核心
-        ctx.globalAlpha = state.lightning * 0.9;
-        ctx.lineWidth = 1;
-        ctx.shadowBlur = 12;
-        ctx.strokeStyle = 'rgba(255,255,255,1)';
-        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x + (Math.random() - 0.5) * 3, pts[i].y);
-        ctx.stroke();
-
-        // 仅1条短分支
-        ctx.globalAlpha = state.lightning * 0.45;
-        ctx.lineWidth = 1.2;
-        ctx.shadowBlur = 15;
-        const si = 2 + Math.floor(Math.random() * (pts.length - 4));
-        let bx = pts[si].x, by = pts[si].y;
-        ctx.beginPath(); ctx.moveTo(bx, by);
-        for (let s = 0; s < 4; s++) {
-          bx += (Math.random() - 0.5) * 35;
-          by += 8 + Math.random() * 18;
-          ctx.lineTo(bx, by);
-        }
-        ctx.stroke();
+      if (style === 'bolt') {
+        // 单根锯齿闪电 - 参考真实照片风格
+        const sx = w * 0.1 + Math.random() * w * 0.8;
+        const sy = 0;
+        const ex = sx + (Math.random() - 0.5) * w * 0.3;
+        const ey = h * (0.5 + Math.random() * 0.35);
+        const mainPts = generateBoltPath(sx, sy, ex, ey, 0, 6);
+        drawBoltPath(mainPts, state.lightning, 2.5);
+        // 2~4条分支
+        const branches = generateBranches(mainPts, 2 + Math.floor(Math.random() * 3), 0.4, 1);
+        branches.forEach(bp => drawBoltPath(bp, state.lightning * 0.5, 1.2));
+      } else if (style === 'fork') {
+        // 双叉闪电 - 从同一点分叉
+        const sx = w * 0.2 + Math.random() * w * 0.6;
+        const sy = 0;
+        // 主干到分叉点
+        const forkY = h * (0.2 + Math.random() * 0.2);
+        const trunkPts = generateBoltPath(sx, sy, sx + (Math.random() - 0.5) * 30, forkY, 0, 4);
+        drawBoltPath(trunkPts, state.lightning, 2.8);
+        // 左叉
+        const lx = sx + (Math.random() - 0.5) * w * 0.25;
+        const ly = h * (0.6 + Math.random() * 0.2);
+        const leftPts = generateBoltPath(trunkPts[trunkPts.length - 1].x, forkY, lx, ly, 0, 5);
+        drawBoltPath(leftPts, state.lightning * 0.8, 2);
+        // 右叉
+        const rx = sx + (Math.random() - 0.5) * w * 0.25;
+        const ry = h * (0.55 + Math.random() * 0.25);
+        const rightPts = generateBoltPath(trunkPts[trunkPts.length - 1].x, forkY, rx, ry, 0, 5);
+        drawBoltPath(rightPts, state.lightning * 0.7, 1.8);
+        // 分支
+        [leftPts, rightPts].forEach(pts => {
+          const br = generateBranches(pts, 1 + Math.floor(Math.random() * 2), 0.35, 1);
+          br.forEach(bp => drawBoltPath(bp, state.lightning * 0.35, 0.8));
+        });
       } else if (style === 'sheet') {
-        // 片状闪 - 云层间弥漫闪光
-        ctx.globalAlpha = state.lightning * 0.4;
-        ctx.fillStyle = 'rgba(200,215,255,0.15)';
-        for (let i = 0; i < 8; i++) {
+        // 片状闪 - 云层弥漫光
+        ctx.globalAlpha = state.lightning * 0.35;
+        for (let i = 0; i < 6; i++) {
           const sx = Math.random() * w;
-          const sy = Math.random() * h * 0.35;
-          const sr = 80 + Math.random() * 200;
+          const sy = Math.random() * h * 0.3;
+          const sr = 60 + Math.random() * 180;
           const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
           grad.addColorStop(0, 'rgba(220,235,255,0.2)');
           grad.addColorStop(1, 'rgba(220,235,255,0)');
@@ -456,25 +503,13 @@ export default function WeatherBackground({ theme }) {
           ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
         }
       } else if (style === 'distant') {
-        // 远闪 - 细弱遥远的闪电
-        ctx.globalAlpha = state.lightning * 0.5;
-        ctx.strokeStyle = 'rgba(200,220,255,0.6)';
-        ctx.lineWidth = 1;
-        ctx.shadowColor = 'rgba(150,190,255,0.4)';
-        ctx.shadowBlur = 20;
-        ctx.lineCap = 'round';
-
-        const lx = w * 0.2 + Math.random() * w * 0.6;
-        let cx2 = lx, cy2 = h * 0.1;
-        const pts = [{ x: cx2, y: cy2 }];
-        while (cy2 < h * 0.5) {
-          cx2 += (Math.random() - 0.5) * 40;
-          cy2 += 10 + Math.random() * 30;
-          pts.push({ x: cx2, y: cy2 });
-        }
-        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.stroke();
+        // 远闪 - 细弱
+        const sx = w * 0.15 + Math.random() * w * 0.7;
+        const sy = h * 0.05;
+        const ex = sx + (Math.random() - 0.5) * 60;
+        const ey = h * (0.25 + Math.random() * 0.15);
+        const pts = generateBoltPath(sx, sy, ex, ey, 0, 4);
+        drawBoltPath(pts, state.lightning * 0.4, 0.8);
       }
       ctx.restore();
     };
@@ -848,9 +883,9 @@ export default function WeatherBackground({ theme }) {
         if (state.lightningTimer >= state.nextLightningAt) {
           state.lightning = 1;
           state.lightningTimer = 0;
-          // 随机选择闪电样式：主闪60%、片状闪25%、远闪15%
-          const r = Math.random();
-          state.lightningStyle = r < 0.6 ? 'main' : r < 0.85 ? 'sheet' : 'distant';
+          // 随机选择闪电样式：单根40%、双叉25%、片状闪20%、远闪15%
+            const r = Math.random();
+            state.lightningStyle = r < 0.4 ? 'bolt' : r < 0.65 ? 'fork' : r < 0.85 ? 'sheet' : 'distant';
           // 下次闪电间隔：8~25秒（480~1500帧）
           state.nextLightningAt = 480 + Math.random() * 1020;
         }
