@@ -390,9 +390,9 @@ export default function WeatherBackground({ theme }) {
       if (state.lightning <= 0) return;
       ctx.save();
 
-      // 全屏环境闪白
-      ctx.globalAlpha = state.lightning * 0.22;
-      ctx.fillStyle = 'rgba(200,225,255,0.7)';
+      // 全屏环境闪白（降低亮度避免晃眼）
+      ctx.globalAlpha = state.lightning * 0.08;
+      ctx.fillStyle = 'rgba(200,225,255,0.5)';
       ctx.fillRect(0, 0, w, h);
 
       // 主干
@@ -725,11 +725,11 @@ export default function WeatherBackground({ theme }) {
         if (state.lightningTimer >= state.nextLightningAt) {
           state.lightning = 1;
           state.lightningTimer = 0;
-          // 下次闪电间隔：3~12秒（180~720帧）
-          state.nextLightningAt = 180 + Math.random() * 540;
+          // 下次闪电间隔：5~18秒（300~1080帧）
+          state.nextLightningAt = 300 + Math.random() * 780;
         }
         if (state.lightning > 0) {
-          state.lightning -= 0.12;
+          state.lightning -= 0.045;
           if (state.lightning < 0) state.lightning = 0;
         }
         drawLightning();
