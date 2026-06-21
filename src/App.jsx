@@ -52,6 +52,7 @@ function applyCardHighlightColor() {
   const theme = document.documentElement.getAttribute('data-theme') || 'light'
   const root = document.documentElement
   if (enabled) {
+    root.classList.remove('no-card-hl')
     const k = (base) => `nav-hl-${theme}-${base}`
     const bc = localStorage.getItem(k('border-color')) || '#007aff'
     const bo = localStorage.getItem(k('border-opacity')) || '50'
@@ -70,7 +71,7 @@ function applyCardHighlightColor() {
     root.style.setProperty('--card-hl-desc-color', dc)
     root.style.setProperty('--card-hl-desc-opacity', do_ + '%')
   } else {
-    // 关闭时将所有不透明度设为0%，确保立即无效果（不能removeProperty，否则会回退到CSS默认值）
+    root.classList.add('no-card-hl')
     root.style.setProperty('--card-hl-border-opacity', '0%')
     root.style.setProperty('--card-hl-bg-opacity', '0%')
     root.style.setProperty('--card-hl-title-opacity', '0%')
