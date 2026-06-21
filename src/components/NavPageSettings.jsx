@@ -1152,6 +1152,58 @@ export default function NavPageSettings({
                   </>
                 )}
 
+                {/* 按钮颜色高亮 */}
+                <div className={styles.settingItem}>
+                  <div className={styles.toggleRow}>
+                    <span className={styles.toggleLabel}>按钮颜色高亮</span>
+                    <button
+                      className={`${styles.toggle} ${cardHighlightEnabled ? styles.toggleOn : styles.toggleOff}`}
+                      onClick={() => {
+                        const newVal = !cardHighlightEnabled
+                        setCardHighlightEnabled(newVal)
+                        localStorage.setItem('nav-card-highlight-enabled', String(newVal))
+                        window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
+                      }}
+                    >
+                      <span className={styles.toggleThumb} />
+                    </button>
+                  </div>
+                  {cardHighlightEnabled && (
+                    <div style={{ marginTop: 10, paddingLeft: 4 }}>
+                      <HlRow label="边框" color={hlBorderColor} opacity={hlBorderOpacity}
+                        onColorChange={(c) => { setHlBorderColor(c); localStorage.setItem(hlKey('border-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlBorderOpacity(v); localStorage.setItem(hlKey('border-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpenPicker={() => setHlPickerTarget('border')}
+                      />
+                      <HlRow label="背景" color={hlBgColor} opacity={hlBgOpacity}
+                        onColorChange={(c) => { setHlBgColor(c); localStorage.setItem(hlKey('bg-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlBgOpacity(v); localStorage.setItem(hlKey('bg-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpenPicker={() => setHlPickerTarget('bg')}
+                      />
+                      <HlRow label="标题" color={hlTitleColor} opacity={hlTitleOpacity}
+                        onColorChange={(c) => { setHlTitleColor(c); localStorage.setItem(hlKey('title-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlTitleOpacity(v); localStorage.setItem(hlKey('title-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpenPicker={() => setHlPickerTarget('title')}
+                      />
+                      <HlRow label="副标题" color={hlDescColor} opacity={hlDescOpacity}
+                        onColorChange={(c) => { setHlDescColor(c); localStorage.setItem(hlKey('desc-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlDescOpacity(v); localStorage.setItem(hlKey('desc-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpenPicker={() => setHlPickerTarget('desc')}
+                      />
+                      {/* 预览 */}
+                      <div style={{
+                        marginTop: 4, height: 60, width: '66.6%', margin: '4px auto 0', borderRadius: 8, padding: '0 12px',
+                        border: `1px solid color-mix(in srgb, ${hlBorderColor} ${hlBorderOpacity}%, var(--glass-border))`,
+                        background: `color-mix(in srgb, ${hlBgColor} ${hlBgOpacity}%, var(--glass-bg))`,
+                        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12,
+                      }}>
+                        <div style={{ flex: 1, fontSize: 13, fontWeight: 600, lineHeight: 1.3, color: hlTitleOpacity > 0 ? `color-mix(in srgb, ${hlTitleColor} ${hlTitleOpacity}%, var(--text-primary))` : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>标题预览</div>
+                        <div style={{ flex: 1, fontSize: 11, lineHeight: 1.3, color: hlDescOpacity > 0 ? `color-mix(in srgb, ${hlDescColor} ${hlDescOpacity}%, var(--text-tertiary))` : 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>副标题预览</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <h3 className={styles.groupTitle}>玻璃效果</h3>
 
                 {/* 模糊度控制 */}
@@ -1255,58 +1307,6 @@ export default function NavPageSettings({
                           </div>
                         )
                       })}
-                    </div>
-                  )}
-                </div>
-
-                {/* 按钮颜色高亮 */}
-                <div className={styles.settingItem}>
-                  <div className={styles.toggleRow}>
-                    <span className={styles.toggleLabel}>按钮颜色高亮</span>
-                    <button
-                      className={`${styles.toggle} ${cardHighlightEnabled ? styles.toggleOn : styles.toggleOff}`}
-                      onClick={() => {
-                        const newVal = !cardHighlightEnabled
-                        setCardHighlightEnabled(newVal)
-                        localStorage.setItem('nav-card-highlight-enabled', String(newVal))
-                        window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
-                      }}
-                    >
-                      <span className={styles.toggleThumb} />
-                    </button>
-                  </div>
-                  {cardHighlightEnabled && (
-                    <div style={{ marginTop: 10, paddingLeft: 4 }}>
-                      <HlRow label="边框" color={hlBorderColor} opacity={hlBorderOpacity}
-                        onColorChange={(c) => { setHlBorderColor(c); localStorage.setItem(hlKey('border-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpacityChange={(v) => { setHlBorderOpacity(v); localStorage.setItem(hlKey('border-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpenPicker={() => setHlPickerTarget('border')}
-                      />
-                      <HlRow label="背景" color={hlBgColor} opacity={hlBgOpacity}
-                        onColorChange={(c) => { setHlBgColor(c); localStorage.setItem(hlKey('bg-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpacityChange={(v) => { setHlBgOpacity(v); localStorage.setItem(hlKey('bg-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpenPicker={() => setHlPickerTarget('bg')}
-                      />
-                      <HlRow label="标题" color={hlTitleColor} opacity={hlTitleOpacity}
-                        onColorChange={(c) => { setHlTitleColor(c); localStorage.setItem(hlKey('title-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpacityChange={(v) => { setHlTitleOpacity(v); localStorage.setItem(hlKey('title-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpenPicker={() => setHlPickerTarget('title')}
-                      />
-                      <HlRow label="副标题" color={hlDescColor} opacity={hlDescOpacity}
-                        onColorChange={(c) => { setHlDescColor(c); localStorage.setItem(hlKey('desc-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpacityChange={(v) => { setHlDescOpacity(v); localStorage.setItem(hlKey('desc-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpenPicker={() => setHlPickerTarget('desc')}
-                      />
-                      {/* 预览 */}
-                      <div style={{
-                        marginTop: 4, height: 60, width: '66.6%', margin: '4px auto 0', borderRadius: 8, padding: '0 12px',
-                        border: `1px solid color-mix(in srgb, ${hlBorderColor} ${hlBorderOpacity}%, var(--glass-border))`,
-                        background: `color-mix(in srgb, ${hlBgColor} ${hlBgOpacity}%, var(--glass-bg))`,
-                        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12,
-                      }}>
-                        <div style={{ flex: 1, fontSize: 13, fontWeight: 600, lineHeight: 1.3, color: hlTitleOpacity > 0 ? `color-mix(in srgb, ${hlTitleColor} ${hlTitleOpacity}%, var(--text-primary))` : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>标题预览</div>
-                        <div style={{ flex: 1, fontSize: 11, lineHeight: 1.3, color: hlDescOpacity > 0 ? `color-mix(in srgb, ${hlDescColor} ${hlDescOpacity}%, var(--text-tertiary))` : 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>副标题预览</div>
-                      </div>
                     </div>
                   )}
                 </div>
