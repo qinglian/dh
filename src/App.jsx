@@ -50,11 +50,14 @@ applyDefaultConfig()
 function applyCardHighlightColor() {
   const enabled = localStorage.getItem('nav-card-highlight-enabled') !== 'false'
   const color = localStorage.getItem('nav-card-highlight-color')
+  const opacity = localStorage.getItem('nav-card-highlight-opacity') || '40'
   const root = document.documentElement
   if (enabled && color) {
     root.style.setProperty('--card-highlight-color', color)
+    root.style.setProperty('--card-highlight-opacity', opacity + '%')
   } else {
     root.style.removeProperty('--card-highlight-color')
+    root.style.removeProperty('--card-highlight-opacity')
   }
 }
 applyCardHighlightColor()

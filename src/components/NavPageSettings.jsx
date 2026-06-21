@@ -133,6 +133,10 @@ export default function NavPageSettings({
   const [safeBoxSettingUp, setSafeBoxSettingUp] = useState(false)
   const [cardHighlightColor, setCardHighlightColor] = useState(() => localStorage.getItem('nav-card-highlight-color') || '')
   const [cardHighlightEnabled, setCardHighlightEnabled] = useState(() => localStorage.getItem('nav-card-highlight-enabled') !== 'false')
+  const [cardHighlightOpacity, setCardHighlightOpacity] = useState(() => {
+    const v = localStorage.getItem('nav-card-highlight-opacity')
+    return v !== null ? parseInt(v) : 40
+  })
   const [searchHistoryEnabled, setSearchHistoryEnabled] = useState(() => localStorage.getItem('nav-search-history-enabled') !== 'false')
   const [tagShape, setTagShape] = useState(() => localStorage.getItem('nav-tag-shape') === 'rect' ? 'rect' : 'capsule')
   const [showTagShapeDropdown, setShowTagShapeDropdown] = useState(false)
@@ -841,28 +845,100 @@ export default function NavPageSettings({
                     </button>
                   </div>
                   {cardHighlightEnabled && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, paddingLeft: 4 }}>
-                      <input
-                        type="color"
-                        value={cardHighlightColor || '#007aff'}
-                        onChange={(e) => {
-                          setCardHighlightColor(e.target.value)
-                          localStorage.setItem('nav-card-highlight-color', e.target.value)
-                          window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
-                        }}
-                        style={{ width: 32, height: 32, border: 'none', borderRadius: 8, cursor: 'pointer', padding: 0, background: 'transparent' }}
-                      />
-                      <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>选择高亮颜色</span>
-                      {cardHighlightColor && (
-                        <button
-                          onClick={() => {
-                            setCardHighlightColor('')
-                            localStorage.removeItem('nav-card-highlight-color')
+                    <div style={{ marginTop: 10, paddingLeft: 4 }}>
+                      {/* 预设颜色 + 自定义 */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        {['#007aff','#34c759','#ff9500','#ff3b30','#af52de','#5ac8fa','#ff2d55','#ffd60a','#30d158','#64d2ff'].map(c => (
+                          <div
+                            key={c}
+                            onClick={() => {
+                              setCardHighlightColor(c)
+                              localStorage.setItem('nav-card-highlight-color', c)
+                              window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
+                            }}
+                            style={{
+                              width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
+                              background: c,
+                              border: cardHighlightColor === c ? '2.5px solid var(--text-primary)' : '2px solid var(--glass-border)',
+                              transition: 'border-color .15s, transform .1s',
+                              flexShrink: 0,
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                          />
+                        ))}
+                        {/* 自定义颜色按钮 */}
+                        <div style={{ position: 'relative', width: 28, height: 28, flexShrink: 0 }}>
+                          <input
+                            type="color"
+                            value={cardHighlightColor || '#007aff'}
+                            onChange={(e) => {
+                              setCardHighlightColor(e.target.value)
+                              localStorage.setItem('nav-card-highlight-color', e.target.value)
+                              window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
+                            }}
+                            style={{
+                              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                              opacity: 0, cursor: 'pointer', border: 'none',
+                            }}
+                          />
+                          <div style={{
+                            width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
+                            background: 'conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)',
+                            border: '2px solid var(--glass-border)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            pointerEvents: 'none',
+                          }}>
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'white', border: '1px solid rgba(0,0,0,0.1)' }} />
+                          </div>
+                        </div>
+                        {cardHighlightColor && (
+                          <button
+                            onClick={() => {
+                              setCardHighlightColor('')
+                              localStorage.removeItem('nav-card-highlight-color')
+                              window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
+                            }}
+                            style={{
+                              fontSize: 11, color: 'var(--text-tertiary)', background: 'var(--glass-bg)',
+                              border: '1px solid var(--glass-border)', cursor: 'pointer',
+                              padding: '3px 8px', borderRadius: 6, flexShrink: 0,
+                            }}
+                          >重置</button>
+                        )}
+                      </div>
+                      {/* 不透明度滑块 */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-tertiary)', whiteSpace: 'nowrap', minWidth: 48 }}>不透明度</span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={cardHighlightOpacity}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value)
+                            setCardHighlightOpacity(v)
+                            localStorage.setItem('nav-card-highlight-opacity', String(v))
                             window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
                           }}
-                          style={{ fontSize: 11, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: 4 }}
-                        >重置</button>
-                      )}
+                          style={{
+                            flex: 1, height: 4, borderRadius: 2,
+                            WebkitAppearance: 'none', appearance: 'none',
+                            background: `linear-gradient(to right, transparent, ${cardHighlightColor || 'var(--accent-primary)'})`,
+                            outline: 'none', cursor: 'pointer',
+                          }}
+                        />
+                        <span style={{ fontSize: 11, color: 'var(--text-tertiary)', minWidth: 28, textAlign: 'right' }}>{cardHighlightOpacity}%</span>
+                      </div>
+                      {/* 实时预览 */}
+                      <div style={{
+                        marginTop: 8, height: 32, borderRadius: 8,
+                        border: `1px solid color-mix(in srgb, ${cardHighlightColor || 'var(--accent-primary)'} ${cardHighlightOpacity}%, var(--glass-border))`,
+                        boxShadow: `0 0 0 1px color-mix(in srgb, ${cardHighlightColor || 'var(--accent-primary)'} ${cardHighlightOpacity}%, transparent)`,
+                        background: 'var(--glass-bg)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 11, color: 'var(--text-tertiary)',
+                      }}>预览效果</div>
                     </div>
                   )}
                 </div>
