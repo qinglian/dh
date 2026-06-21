@@ -789,15 +789,15 @@ export default function WeatherBackground({ theme }) {
 
       /* ===== 多云 / 阴天 ===== */
       if (type === 'cloudy') {
-        state.clouds.forEach(c => { c.x += c.speed; if (c.x > w + 500) c.x = -500; drawCloud(c); });
+        state.clouds.forEach(c => { c.x += c.speed; if (c.x > w + 500) c.x = -800; drawCloud(c); });
       }
       if (type === 'overcast') {
-        state.clouds.forEach(c => { c.x += c.speed * 1.0; if (c.x > w + 550) c.x = -550; drawCloud(c); });
+        state.clouds.forEach(c => { c.x += c.speed * 1.0; if (c.x > w + 550) c.x = -800; drawCloud(c); });
       }
 
       /* ===== 雨天 ===== */
       if (type === 'rain') {
-        state.clouds.forEach(c => { c.x += c.speed * 0.4; if (c.x > w + 550) c.x = -550; drawCloud(c); });
+        state.clouds.forEach(c => { c.x += c.speed * 0.4; if (c.x > w + 550) c.x = -800; drawCloud(c); });
 
         state.particles.forEach(p => {
           const isFar = p.layer === 'far';
@@ -860,9 +860,9 @@ export default function WeatherBackground({ theme }) {
         if (state.lightningTimer >= state.nextLightningAt) {
           state.lightning = 1;
           state.lightningTimer = 0;
-          // 随机选择闪电样式：远闪40%、单根锯齿35%、片状闪25%
+          // 随机选择闪电样式：单根锯齿50%、远闪30%、片状闪20%
             const r = Math.random();
-            state.lightningStyle = r < 0.4 ? 'distant' : r < 0.75 ? 'bolt' : 'sheet';
+            state.lightningStyle = r < 0.5 ? 'bolt' : r < 0.8 ? 'distant' : 'sheet';
           // 下次闪电间隔：8~25秒（480~1500帧）
           state.nextLightningAt = 480 + Math.random() * 1020;
         }
@@ -875,7 +875,7 @@ export default function WeatherBackground({ theme }) {
 
       /* ===== 雪天 ===== */
       if (type === 'snow') {
-        state.clouds.forEach(c => { c.x += c.speed * 0.25; if (c.x > w + 500) c.x = -500; drawCloud(c); });
+        state.clouds.forEach(c => { c.x += c.speed * 0.25; if (c.x > w + 500) c.x = -800; drawCloud(c); });
 
         state.particles.forEach(p => {
           const isFar = p.layer === 'far';
@@ -971,10 +971,26 @@ export default function WeatherBackground({ theme }) {
     draw();
 
     window.addEventListener('resize', resize);
+    // 监听城市变更，强制重新初始化天气效果
+    const onCityChanged = () => {
+      // 清除旧缓存检测状态，强制下一帧重新读取
+      lastCacheTime = null;
+      state.transitionAlpha = 0;
+      // 延迟一帧让新缓存写入后再初始化
+      setTimeout(() => {
+        const newWeather = getWeatherCache()?.data;
+        if (newWeather && newWeather.type !== type) {
+          targetType = newWeather.type;
+          initParticles(targetType);
+        }
+      }, 2000);
+    };
+    window.addEventListener('weatherCityChanged', onCityChanged);
 
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('weatherCityChanged', onCityChanged);
     };
   }, [theme]);
 

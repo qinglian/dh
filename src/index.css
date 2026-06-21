@@ -19,6 +19,7 @@
   --accent-primary: #007aff;
   --accent-secondary: #5856d6;
   --accent-gradient: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+  --card-highlight-color: var(--accent-primary);
   
   /* Glass Effect */
   --glass-bg: rgba(255, 255, 255, 0.82);
@@ -73,6 +74,7 @@
   --accent-primary: #0a84ff;
   --accent-secondary: #5e5ce6;
   --accent-gradient: linear-gradient(135deg, #0a84ff 0%, #5e5ce6 100%);
+  --card-highlight-color: var(--accent-primary);
   
   --glass-bg: rgba(255, 255, 255, 0.12);
   --glass-bg-heavy: rgba(255, 255, 255, 0.06);

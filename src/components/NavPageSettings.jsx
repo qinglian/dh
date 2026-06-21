@@ -131,6 +131,8 @@ export default function NavPageSettings({
   const [safeBoxEnabled, setSafeBoxEnabled] = useState(() => getSafeBoxEnabled())
   const [safeBoxPasswordInput, setSafeBoxPasswordInput] = useState('')
   const [safeBoxSettingUp, setSafeBoxSettingUp] = useState(false)
+  const [cardHighlightColor, setCardHighlightColor] = useState(() => localStorage.getItem('nav-card-highlight-color') || '')
+  const [cardHighlightEnabled, setCardHighlightEnabled] = useState(() => localStorage.getItem('nav-card-highlight-enabled') !== 'false')
   const [searchHistoryEnabled, setSearchHistoryEnabled] = useState(() => localStorage.getItem('nav-search-history-enabled') !== 'false')
   const [tagShape, setTagShape] = useState(() => localStorage.getItem('nav-tag-shape') === 'rect' ? 'rect' : 'capsule')
   const [showTagShapeDropdown, setShowTagShapeDropdown] = useState(false)
@@ -820,6 +822,49 @@ export default function NavPageSettings({
                       )}
                     </div>
                   </div>
+                </div>
+
+                {/* 卡片高亮颜色 */}
+                <div className={styles.settingItem}>
+                  <div className={styles.toggleRow}>
+                    <span className={styles.toggleLabel}>卡片高亮颜色</span>
+                    <button
+                      className={`${styles.toggle} ${cardHighlightEnabled ? styles.toggleOn : styles.toggleOff}`}
+                      onClick={() => {
+                        const newVal = !cardHighlightEnabled
+                        setCardHighlightEnabled(newVal)
+                        localStorage.setItem('nav-card-highlight-enabled', String(newVal))
+                        window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
+                      }}
+                    >
+                      <span className={styles.toggleThumb} />
+                    </button>
+                  </div>
+                  {cardHighlightEnabled && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, paddingLeft: 4 }}>
+                      <input
+                        type="color"
+                        value={cardHighlightColor || '#007aff'}
+                        onChange={(e) => {
+                          setCardHighlightColor(e.target.value)
+                          localStorage.setItem('nav-card-highlight-color', e.target.value)
+                          window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
+                        }}
+                        style={{ width: 32, height: 32, border: 'none', borderRadius: 8, cursor: 'pointer', padding: 0, background: 'transparent' }}
+                      />
+                      <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>选择高亮颜色</span>
+                      {cardHighlightColor && (
+                        <button
+                          onClick={() => {
+                            setCardHighlightColor('')
+                            localStorage.removeItem('nav-card-highlight-color')
+                            window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
+                          }}
+                          style={{ fontSize: 11, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: 4 }}
+                        >重置</button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* 天气 */}

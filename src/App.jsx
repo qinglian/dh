@@ -46,6 +46,20 @@ import styles from './App.module.css'
 // 应用首次加载时，若 localStorage 无配置，写入内置默认值
 applyDefaultConfig()
 
+// 应用卡片高亮颜色
+function applyCardHighlightColor() {
+  const enabled = localStorage.getItem('nav-card-highlight-enabled') !== 'false'
+  const color = localStorage.getItem('nav-card-highlight-color')
+  const root = document.documentElement
+  if (enabled && color) {
+    root.style.setProperty('--card-highlight-color', color)
+  } else {
+    root.style.removeProperty('--card-highlight-color')
+  }
+}
+applyCardHighlightColor()
+window.addEventListener('cardHighlightChanged', applyCardHighlightColor)
+
 function AppContent() {
   const { data, setData, addCategory, updateCategory, deleteCategory, addSite, updateSite, deleteSite, reorderSites, reorderCategories, reorderTags } = useData()
   const { theme } = useTheme()
