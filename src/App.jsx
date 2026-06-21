@@ -55,15 +55,27 @@ function applyCardHighlightColor() {
     const bo = localStorage.getItem('nav-hl-border-opacity') || '50'
     const bgc = localStorage.getItem('nav-hl-bg-color') || '#007aff'
     const bgo = localStorage.getItem('nav-hl-bg-opacity') || '8'
+    const tc = localStorage.getItem('nav-hl-title-color') || '#007aff'
+    const to = localStorage.getItem('nav-hl-title-opacity') || '0'
+    const dc = localStorage.getItem('nav-hl-desc-color') || '#007aff'
+    const do_ = localStorage.getItem('nav-hl-desc-opacity') || '0'
     root.style.setProperty('--card-hl-border-color', bc)
     root.style.setProperty('--card-hl-border-opacity', bo + '%')
     root.style.setProperty('--card-hl-bg-color', bgc)
     root.style.setProperty('--card-hl-bg-opacity', bgo + '%')
+    root.style.setProperty('--card-hl-title-color', tc)
+    root.style.setProperty('--card-hl-title-opacity', to + '%')
+    root.style.setProperty('--card-hl-desc-color', dc)
+    root.style.setProperty('--card-hl-desc-opacity', do_ + '%')
   } else {
     root.style.removeProperty('--card-hl-border-color')
     root.style.removeProperty('--card-hl-border-opacity')
     root.style.removeProperty('--card-hl-bg-color')
     root.style.removeProperty('--card-hl-bg-opacity')
+    root.style.removeProperty('--card-hl-title-color')
+    root.style.removeProperty('--card-hl-title-opacity')
+    root.style.removeProperty('--card-hl-desc-color')
+    root.style.removeProperty('--card-hl-desc-opacity')
   }
 }
 applyCardHighlightColor()

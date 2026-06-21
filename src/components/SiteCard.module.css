@@ -26,6 +26,14 @@
   border-color: color-mix(in srgb, var(--card-hl-border-color) var(--card-hl-border-opacity, 50%), var(--glass-border));
 }
 
+.card:hover .name {
+  color: color-mix(in srgb, var(--card-hl-title-color) var(--card-hl-title-opacity, 0%), var(--text-primary));
+}
+
+.card:hover .description {
+  color: color-mix(in srgb, var(--card-hl-desc-color) var(--card-hl-desc-opacity, 0%), var(--text-tertiary));
+}
+
 /* 拖动时的目标位置高亮 */
 .dragOver {
   transform: scale(1.03);

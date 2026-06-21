@@ -24,6 +24,10 @@
   --card-hl-border-opacity: 50%;
   --card-hl-bg-color: var(--accent-primary);
   --card-hl-bg-opacity: 8%;
+  --card-hl-title-color: var(--accent-primary);
+  --card-hl-title-opacity: 0%;
+  --card-hl-desc-color: var(--accent-primary);
+  --card-hl-desc-opacity: 0%;
   
   /* Glass Effect */
   --glass-bg: rgba(255, 255, 255, 0.82);
@@ -83,6 +87,10 @@
   --card-hl-border-opacity: 50%;
   --card-hl-bg-color: var(--accent-primary);
   --card-hl-bg-opacity: 8%;
+  --card-hl-title-color: var(--accent-primary);
+  --card-hl-title-opacity: 0%;
+  --card-hl-desc-color: var(--accent-primary);
+  --card-hl-desc-opacity: 0%;
   
   --glass-bg: rgba(255, 255, 255, 0.12);
   --glass-bg-heavy: rgba(255, 255, 255, 0.06);

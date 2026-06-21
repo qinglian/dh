@@ -4,71 +4,29 @@ import { X, Settings, Plus, Trash2, GripVertical, Pencil, Eye, EyeOff, RotateCcw
 import styles from './StartPageSettings.module.css'
 import ConfirmDialog from './ConfirmDialog'
 
-/* 颜色选择+不透明度滑块行组件 */
-const PRESET_COLORS = ['#007aff','#34c759','#ff9500','#ff3b30','#af52de','#5ac8fa','#ff2d55','#ffd60a','#30d158','#64d2ff','#bf5af2','#66d4cf']
-
-function ColorOpacityRow({ label, color, opacity, onColorChange, onOpacityChange }) {
-  const [showPicker, setShowPicker] = useState(false)
-  const pickerRef = useRef(null)
-
-  useEffect(() => {
-    if (!showPicker) return
-    const handler = (e) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target)) setShowPicker(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [showPicker])
-
+/* 卡片高亮颜色行组件 - 颜色按钮 + 不透明度滑块 */
+function HlRow({ label, color, opacity, onColorChange, onOpacityChange, onOpenPicker }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-      <span style={{ fontSize: 11, color: 'var(--text-tertiary)', minWidth: 28, flexShrink: 0 }}>{label}</span>
-      {/* 颜色选择按钮 */}
-      <div ref={pickerRef} style={{ position: 'relative', flexShrink: 0 }}>
-        <div
-          onClick={() => setShowPicker(!showPicker)}
-          style={{
-            width: 26, height: 26, borderRadius: 6, cursor: 'pointer',
-            background: color,
-            border: '2px solid var(--glass-border)',
-            transition: 'transform .1s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-        />
-        {showPicker && createPortal(
-          <div style={{
-            position: 'fixed', zIndex: 99999,
-            left: pickerRef.current?.getBoundingClientRect().left - 4,
-            top: pickerRef.current?.getBoundingClientRect().bottom + 6,
-            background: 'var(--glass-bg)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid var(--glass-border)', borderRadius: 12,
-            padding: 10, display: 'flex', flexWrap: 'wrap', gap: 5, width: 160,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-          }}>
-            {PRESET_COLORS.map(c => (
-              <div
-                key={c}
-                onClick={() => { onColorChange(c); setShowPicker(false) }}
-                style={{
-                  width: 26, height: 26, borderRadius: 6, cursor: 'pointer',
-                  background: c,
-                  border: color === c ? '2.5px solid var(--text-primary)' : '2px solid transparent',
-                  transition: 'border-color .12s, transform .1s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-              />
-            ))}
-          </div>,
-          document.body
-        )}
-      </div>
-      {/* 不透明度滑块 */}
+      <span style={{ fontSize: 11, color: 'var(--text-tertiary)', minWidth: 36, flexShrink: 0 }}>{label}</span>
+      <button
+        onClick={onOpenPicker}
+        title={color}
+        style={{
+          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+          background: color,
+          border: '2px solid var(--glass-border)',
+          cursor: 'pointer', padding: 0,
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.08)',
+          transition: 'transform .12s cubic-bezier(.34,1.56,.64,1), filter .15s ease',
+        }}
+        onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.85)'; e.currentTarget.style.filter = 'brightness(0.85)' }}
+        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'none' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'none' }}
+      />
       <input
         type="range"
-        min={0}
-        max={100}
+        min={0} max={100} step={1}
         value={opacity}
         onChange={(e) => onOpacityChange(parseInt(e.target.value))}
         style={{
@@ -212,15 +170,14 @@ export default function NavPageSettings({
   const [safeBoxSettingUp, setSafeBoxSettingUp] = useState(false)
   const [cardHighlightEnabled, setCardHighlightEnabled] = useState(() => localStorage.getItem('nav-card-highlight-enabled') !== 'false')
   const [hlBorderColor, setHlBorderColor] = useState(() => localStorage.getItem('nav-hl-border-color') || '#007aff')
-  const [hlBorderOpacity, setHlBorderOpacity] = useState(() => {
-    const v = localStorage.getItem('nav-hl-border-opacity')
-    return v !== null ? parseInt(v) : 50
-  })
+  const [hlBorderOpacity, setHlBorderOpacity] = useState(() => { const v = localStorage.getItem('nav-hl-border-opacity'); return v !== null ? parseInt(v) : 50 })
   const [hlBgColor, setHlBgColor] = useState(() => localStorage.getItem('nav-hl-bg-color') || '#007aff')
-  const [hlBgOpacity, setHlBgOpacity] = useState(() => {
-    const v = localStorage.getItem('nav-hl-bg-opacity')
-    return v !== null ? parseInt(v) : 8
-  })
+  const [hlBgOpacity, setHlBgOpacity] = useState(() => { const v = localStorage.getItem('nav-hl-bg-opacity'); return v !== null ? parseInt(v) : 8 })
+  const [hlTitleColor, setHlTitleColor] = useState(() => localStorage.getItem('nav-hl-title-color') || '#007aff')
+  const [hlTitleOpacity, setHlTitleOpacity] = useState(() => { const v = localStorage.getItem('nav-hl-title-opacity'); return v !== null ? parseInt(v) : 0 })
+  const [hlDescColor, setHlDescColor] = useState(() => localStorage.getItem('nav-hl-desc-color') || '#007aff')
+  const [hlDescOpacity, setHlDescOpacity] = useState(() => { const v = localStorage.getItem('nav-hl-desc-opacity'); return v !== null ? parseInt(v) : 0 })
+  const [hlPickerTarget, setHlPickerTarget] = useState(null)
   const [searchHistoryEnabled, setSearchHistoryEnabled] = useState(() => localStorage.getItem('nav-search-history-enabled') !== 'false')
   const [tagShape, setTagShape] = useState(() => localStorage.getItem('nav-tag-shape') === 'rect' ? 'rect' : 'capsule')
   const [showTagShapeDropdown, setShowTagShapeDropdown] = useState(false)
@@ -930,28 +887,36 @@ export default function NavPageSettings({
                   </div>
                   {cardHighlightEnabled && (
                     <div style={{ marginTop: 10, paddingLeft: 4 }}>
-                      <ColorOpacityRow
-                        label="边框"
-                        color={hlBorderColor}
-                        opacity={hlBorderOpacity}
+                      <HlRow label="边框" color={hlBorderColor} opacity={hlBorderOpacity}
                         onColorChange={(c) => { setHlBorderColor(c); localStorage.setItem('nav-hl-border-color', c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
                         onOpacityChange={(v) => { setHlBorderOpacity(v); localStorage.setItem('nav-hl-border-opacity', String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpenPicker={() => setHlPickerTarget('border')}
                       />
-                      <ColorOpacityRow
-                        label="背景"
-                        color={hlBgColor}
-                        opacity={hlBgOpacity}
+                      <HlRow label="背景" color={hlBgColor} opacity={hlBgOpacity}
                         onColorChange={(c) => { setHlBgColor(c); localStorage.setItem('nav-hl-bg-color', c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
                         onOpacityChange={(v) => { setHlBgOpacity(v); localStorage.setItem('nav-hl-bg-opacity', String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpenPicker={() => setHlPickerTarget('bg')}
+                      />
+                      <HlRow label="标题" color={hlTitleColor} opacity={hlTitleOpacity}
+                        onColorChange={(c) => { setHlTitleColor(c); localStorage.setItem('nav-hl-title-color', c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlTitleOpacity(v); localStorage.setItem('nav-hl-title-opacity', String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpenPicker={() => setHlPickerTarget('title')}
+                      />
+                      <HlRow label="副标题" color={hlDescColor} opacity={hlDescOpacity}
+                        onColorChange={(c) => { setHlDescColor(c); localStorage.setItem('nav-hl-desc-color', c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlDescOpacity(v); localStorage.setItem('nav-hl-desc-opacity', String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpenPicker={() => setHlPickerTarget('desc')}
                       />
                       {/* 预览 */}
                       <div style={{
-                        marginTop: 8, height: 36, borderRadius: 8,
+                        marginTop: 4, height: 40, borderRadius: 8, padding: '0 10px',
                         border: `1px solid color-mix(in srgb, ${hlBorderColor} ${hlBorderOpacity}%, var(--glass-border))`,
                         background: `color-mix(in srgb, ${hlBgColor} ${hlBgOpacity}%, var(--glass-bg))`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, color: 'var(--text-tertiary)',
-                      }}>预览效果</div>
+                        display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2,
+                      }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: hlTitleOpacity > 0 ? `color-mix(in srgb, ${hlTitleColor} ${hlTitleOpacity}%, var(--text-primary))` : 'var(--text-primary)' }}>标题预览</div>
+                        <div style={{ fontSize: 10, color: hlDescOpacity > 0 ? `color-mix(in srgb, ${hlDescColor} ${hlDescOpacity}%, var(--text-tertiary))` : 'var(--text-tertiary)' }}>副标题预览</div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1905,6 +1870,21 @@ export default function NavPageSettings({
             else if (colorPickerMode === 'text-tertiary') onUpdateTextColor3(c)
           }}
           onClose={() => { setColorPickerMode(null); setTempColor('') }}
+        />
+      )}
+
+      {/* 卡片高亮颜色选择器弹窗 */}
+      {hlPickerTarget && (
+        <ColorPicker
+          value={hlPickerTarget === 'border' ? hlBorderColor : hlPickerTarget === 'bg' ? hlBgColor : hlPickerTarget === 'title' ? hlTitleColor : hlDescColor}
+          onChange={(c) => {
+            if (hlPickerTarget === 'border') { setHlBorderColor(c); localStorage.setItem('nav-hl-border-color', c) }
+            else if (hlPickerTarget === 'bg') { setHlBgColor(c); localStorage.setItem('nav-hl-bg-color', c) }
+            else if (hlPickerTarget === 'title') { setHlTitleColor(c); localStorage.setItem('nav-hl-title-color', c) }
+            else { setHlDescColor(c); localStorage.setItem('nav-hl-desc-color', c) }
+            window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
+          }}
+          onClose={() => setHlPickerTarget(null)}
         />
       )}
     </div>
