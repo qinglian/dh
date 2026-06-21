@@ -916,7 +916,7 @@ export default function NavPageSettings({
                       />
                       {/* 预览 */}
                       <div style={{
-                        marginTop: 4, height: 27, borderRadius: 8, padding: '0 10px',
+                        marginTop: 4, height: 60, width: '66.6%', margin: '4px auto 0', borderRadius: 8, padding: '0 10px',
                         border: `1px solid color-mix(in srgb, ${hlBorderColor} ${hlBorderOpacity}%, var(--glass-border))`,
                         background: `color-mix(in srgb, ${hlBgColor} ${hlBgOpacity}%, var(--glass-bg))`,
                         display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 0,
