@@ -921,8 +921,8 @@ export default function NavPageSettings({
                         background: `color-mix(in srgb, ${hlBgColor} ${hlBgOpacity}%, var(--glass-bg))`,
                         display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 0,
                       }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.2, color: hlTitleOpacity > 0 ? `color-mix(in srgb, ${hlTitleColor} ${hlTitleOpacity}%, var(--text-primary))` : 'var(--text-primary)' }}>标题</div>
-                        <div style={{ fontSize: 9, lineHeight: 1.2, color: hlDescOpacity > 0 ? `color-mix(in srgb, ${hlDescColor} ${hlDescOpacity}%, var(--text-tertiary))` : 'var(--text-tertiary)' }}>副标题</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, color: hlTitleOpacity > 0 ? `color-mix(in srgb, ${hlTitleColor} ${hlTitleOpacity}%, var(--text-primary))` : 'var(--text-primary)' }}>标题</div>
+                        <div style={{ fontSize: 11, lineHeight: 1.3, color: hlDescOpacity > 0 ? `color-mix(in srgb, ${hlDescColor} ${hlDescOpacity}%, var(--text-tertiary))` : 'var(--text-tertiary)' }}>副标题</div>
                       </div>
                     </div>
                   )}

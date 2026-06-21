@@ -70,14 +70,11 @@ function applyCardHighlightColor() {
     root.style.setProperty('--card-hl-desc-color', dc)
     root.style.setProperty('--card-hl-desc-opacity', do_ + '%')
   } else {
-    root.style.removeProperty('--card-hl-border-color')
-    root.style.removeProperty('--card-hl-border-opacity')
-    root.style.removeProperty('--card-hl-bg-color')
-    root.style.removeProperty('--card-hl-bg-opacity')
-    root.style.removeProperty('--card-hl-title-color')
-    root.style.removeProperty('--card-hl-title-opacity')
-    root.style.removeProperty('--card-hl-desc-color')
-    root.style.removeProperty('--card-hl-desc-opacity')
+    // 关闭时将所有不透明度设为0%，确保立即无效果（不能removeProperty，否则会回退到CSS默认值）
+    root.style.setProperty('--card-hl-border-opacity', '0%')
+    root.style.setProperty('--card-hl-bg-opacity', '0%')
+    root.style.setProperty('--card-hl-title-opacity', '0%')
+    root.style.setProperty('--card-hl-desc-opacity', '0%')
   }
 }
 applyCardHighlightColor()
