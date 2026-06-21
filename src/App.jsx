@@ -46,19 +46,21 @@ import styles from './App.module.css'
 // 应用首次加载时，若 localStorage 无配置，写入内置默认值
 applyDefaultConfig()
 
-// 应用卡片高亮颜色
+// 应用卡片高亮颜色（深色/浅色模式隔离）
 function applyCardHighlightColor() {
   const enabled = localStorage.getItem('nav-card-highlight-enabled') !== 'false'
+  const theme = document.documentElement.getAttribute('data-theme') || 'light'
   const root = document.documentElement
   if (enabled) {
-    const bc = localStorage.getItem('nav-hl-border-color') || '#007aff'
-    const bo = localStorage.getItem('nav-hl-border-opacity') || '50'
-    const bgc = localStorage.getItem('nav-hl-bg-color') || '#007aff'
-    const bgo = localStorage.getItem('nav-hl-bg-opacity') || '8'
-    const tc = localStorage.getItem('nav-hl-title-color') || '#007aff'
-    const to = localStorage.getItem('nav-hl-title-opacity') || '0'
-    const dc = localStorage.getItem('nav-hl-desc-color') || '#007aff'
-    const do_ = localStorage.getItem('nav-hl-desc-opacity') || '0'
+    const k = (base) => `nav-hl-${theme}-${base}`
+    const bc = localStorage.getItem(k('border-color')) || '#007aff'
+    const bo = localStorage.getItem(k('border-opacity')) || '50'
+    const bgc = localStorage.getItem(k('bg-color')) || '#007aff'
+    const bgo = localStorage.getItem(k('bg-opacity')) || '8'
+    const tc = localStorage.getItem(k('title-color')) || '#007aff'
+    const to = localStorage.getItem(k('title-opacity')) || '0'
+    const dc = localStorage.getItem(k('desc-color')) || '#007aff'
+    const do_ = localStorage.getItem(k('desc-opacity')) || '0'
     root.style.setProperty('--card-hl-border-color', bc)
     root.style.setProperty('--card-hl-border-opacity', bo + '%')
     root.style.setProperty('--card-hl-bg-color', bgc)

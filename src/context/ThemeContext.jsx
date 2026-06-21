@@ -97,6 +97,8 @@ export function ThemeProvider({ children }) {
     setResolvedTheme(resolved)
     document.documentElement.setAttribute('data-theme', resolved)
     localStorage.setItem('nav-theme-mode', themeMode)
+    // 主题切换后重新应用卡片高亮颜色（深色/浅色数据隔离）
+    window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
   }, [themeMode])
 
   // system 模式监听 OS 主题变化

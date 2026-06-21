@@ -40,6 +40,13 @@ function HlRow({ label, color, opacity, onColorChange, onOpacityChange, onOpenPi
     </div>
   )
 }
+
+/* 卡片高亮颜色 localStorage key 工具：深色/浅色模式隔离 */
+function hlKey(base) {
+  const theme = document.documentElement.getAttribute('data-theme') || 'light'
+  return `nav-hl-${theme}-${base}`
+}
+
 import ColorPicker from './ColorPicker'
 import { getWeatherEnabled, saveWeatherEnabled, getSavedCity, saveCity as saveWeatherCity, searchCity } from '../utils/weather'
 import { getQuickAccessEnabled, saveQuickAccessEnabled } from '../utils/quickAccess'
@@ -169,14 +176,14 @@ export default function NavPageSettings({
   const [safeBoxPasswordInput, setSafeBoxPasswordInput] = useState('')
   const [safeBoxSettingUp, setSafeBoxSettingUp] = useState(false)
   const [cardHighlightEnabled, setCardHighlightEnabled] = useState(() => localStorage.getItem('nav-card-highlight-enabled') !== 'false')
-  const [hlBorderColor, setHlBorderColor] = useState(() => localStorage.getItem('nav-hl-border-color') || '#007aff')
-  const [hlBorderOpacity, setHlBorderOpacity] = useState(() => { const v = localStorage.getItem('nav-hl-border-opacity'); return v !== null ? parseInt(v) : 50 })
-  const [hlBgColor, setHlBgColor] = useState(() => localStorage.getItem('nav-hl-bg-color') || '#007aff')
-  const [hlBgOpacity, setHlBgOpacity] = useState(() => { const v = localStorage.getItem('nav-hl-bg-opacity'); return v !== null ? parseInt(v) : 8 })
-  const [hlTitleColor, setHlTitleColor] = useState(() => localStorage.getItem('nav-hl-title-color') || '#007aff')
-  const [hlTitleOpacity, setHlTitleOpacity] = useState(() => { const v = localStorage.getItem('nav-hl-title-opacity'); return v !== null ? parseInt(v) : 0 })
-  const [hlDescColor, setHlDescColor] = useState(() => localStorage.getItem('nav-hl-desc-color') || '#007aff')
-  const [hlDescOpacity, setHlDescOpacity] = useState(() => { const v = localStorage.getItem('nav-hl-desc-opacity'); return v !== null ? parseInt(v) : 0 })
+  const [hlBorderColor, setHlBorderColor] = useState(() => localStorage.getItem(hlKey('border-color')) || '#007aff')
+  const [hlBorderOpacity, setHlBorderOpacity] = useState(() => { const v = localStorage.getItem(hlKey('border-opacity')); return v !== null ? parseInt(v) : 50 })
+  const [hlBgColor, setHlBgColor] = useState(() => localStorage.getItem(hlKey('bg-color')) || '#007aff')
+  const [hlBgOpacity, setHlBgOpacity] = useState(() => { const v = localStorage.getItem(hlKey('bg-opacity')); return v !== null ? parseInt(v) : 8 })
+  const [hlTitleColor, setHlTitleColor] = useState(() => localStorage.getItem(hlKey('title-color')) || '#007aff')
+  const [hlTitleOpacity, setHlTitleOpacity] = useState(() => { const v = localStorage.getItem(hlKey('title-opacity')); return v !== null ? parseInt(v) : 0 })
+  const [hlDescColor, setHlDescColor] = useState(() => localStorage.getItem(hlKey('desc-color')) || '#007aff')
+  const [hlDescOpacity, setHlDescOpacity] = useState(() => { const v = localStorage.getItem(hlKey('desc-opacity')); return v !== null ? parseInt(v) : 0 })
   const [hlPickerTarget, setHlPickerTarget] = useState(null)
   const [searchHistoryEnabled, setSearchHistoryEnabled] = useState(() => localStorage.getItem('nav-search-history-enabled') !== 'false')
   const [tagShape, setTagShape] = useState(() => localStorage.getItem('nav-tag-shape') === 'rect' ? 'rect' : 'capsule')
@@ -888,34 +895,34 @@ export default function NavPageSettings({
                   {cardHighlightEnabled && (
                     <div style={{ marginTop: 10, paddingLeft: 4 }}>
                       <HlRow label="边框" color={hlBorderColor} opacity={hlBorderOpacity}
-                        onColorChange={(c) => { setHlBorderColor(c); localStorage.setItem('nav-hl-border-color', c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpacityChange={(v) => { setHlBorderOpacity(v); localStorage.setItem('nav-hl-border-opacity', String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onColorChange={(c) => { setHlBorderColor(c); localStorage.setItem(hlKey('border-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlBorderOpacity(v); localStorage.setItem(hlKey('border-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
                         onOpenPicker={() => setHlPickerTarget('border')}
                       />
                       <HlRow label="背景" color={hlBgColor} opacity={hlBgOpacity}
-                        onColorChange={(c) => { setHlBgColor(c); localStorage.setItem('nav-hl-bg-color', c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpacityChange={(v) => { setHlBgOpacity(v); localStorage.setItem('nav-hl-bg-opacity', String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onColorChange={(c) => { setHlBgColor(c); localStorage.setItem(hlKey('bg-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlBgOpacity(v); localStorage.setItem(hlKey('bg-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
                         onOpenPicker={() => setHlPickerTarget('bg')}
                       />
                       <HlRow label="标题" color={hlTitleColor} opacity={hlTitleOpacity}
-                        onColorChange={(c) => { setHlTitleColor(c); localStorage.setItem('nav-hl-title-color', c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpacityChange={(v) => { setHlTitleOpacity(v); localStorage.setItem('nav-hl-title-opacity', String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onColorChange={(c) => { setHlTitleColor(c); localStorage.setItem(hlKey('title-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlTitleOpacity(v); localStorage.setItem(hlKey('title-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
                         onOpenPicker={() => setHlPickerTarget('title')}
                       />
                       <HlRow label="副标题" color={hlDescColor} opacity={hlDescOpacity}
-                        onColorChange={(c) => { setHlDescColor(c); localStorage.setItem('nav-hl-desc-color', c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
-                        onOpacityChange={(v) => { setHlDescOpacity(v); localStorage.setItem('nav-hl-desc-opacity', String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onColorChange={(c) => { setHlDescColor(c); localStorage.setItem(hlKey('desc-color'), c); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
+                        onOpacityChange={(v) => { setHlDescOpacity(v); localStorage.setItem(hlKey('desc-opacity'), String(v)); window.dispatchEvent(new CustomEvent('cardHighlightChanged')) }}
                         onOpenPicker={() => setHlPickerTarget('desc')}
                       />
                       {/* 预览 */}
                       <div style={{
-                        marginTop: 4, height: 40, borderRadius: 8, padding: '0 10px',
+                        marginTop: 4, height: 27, borderRadius: 8, padding: '0 10px',
                         border: `1px solid color-mix(in srgb, ${hlBorderColor} ${hlBorderOpacity}%, var(--glass-border))`,
                         background: `color-mix(in srgb, ${hlBgColor} ${hlBgOpacity}%, var(--glass-bg))`,
-                        display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2,
+                        display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 0,
                       }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: hlTitleOpacity > 0 ? `color-mix(in srgb, ${hlTitleColor} ${hlTitleOpacity}%, var(--text-primary))` : 'var(--text-primary)' }}>标题预览</div>
-                        <div style={{ fontSize: 10, color: hlDescOpacity > 0 ? `color-mix(in srgb, ${hlDescColor} ${hlDescOpacity}%, var(--text-tertiary))` : 'var(--text-tertiary)' }}>副标题预览</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.2, color: hlTitleOpacity > 0 ? `color-mix(in srgb, ${hlTitleColor} ${hlTitleOpacity}%, var(--text-primary))` : 'var(--text-primary)' }}>标题</div>
+                        <div style={{ fontSize: 9, lineHeight: 1.2, color: hlDescOpacity > 0 ? `color-mix(in srgb, ${hlDescColor} ${hlDescOpacity}%, var(--text-tertiary))` : 'var(--text-tertiary)' }}>副标题</div>
                       </div>
                     </div>
                   )}
@@ -1878,10 +1885,10 @@ export default function NavPageSettings({
         <ColorPicker
           value={hlPickerTarget === 'border' ? hlBorderColor : hlPickerTarget === 'bg' ? hlBgColor : hlPickerTarget === 'title' ? hlTitleColor : hlDescColor}
           onChange={(c) => {
-            if (hlPickerTarget === 'border') { setHlBorderColor(c); localStorage.setItem('nav-hl-border-color', c) }
-            else if (hlPickerTarget === 'bg') { setHlBgColor(c); localStorage.setItem('nav-hl-bg-color', c) }
-            else if (hlPickerTarget === 'title') { setHlTitleColor(c); localStorage.setItem('nav-hl-title-color', c) }
-            else { setHlDescColor(c); localStorage.setItem('nav-hl-desc-color', c) }
+            const keyMap = { border: 'border-color', bg: 'bg-color', title: 'title-color', desc: 'desc-color' }
+            const setterMap = { border: setHlBorderColor, bg: setHlBgColor, title: setHlTitleColor, desc: setHlDescColor }
+            localStorage.setItem(hlKey(keyMap[hlPickerTarget]), c)
+            setterMap[hlPickerTarget](c)
             window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
           }}
           onClose={() => setHlPickerTarget(null)}
