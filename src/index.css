@@ -20,6 +20,10 @@
   --accent-secondary: #5856d6;
   --accent-gradient: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
   --card-highlight-color: var(--accent-primary);
+  --card-hl-border-color: var(--accent-primary);
+  --card-hl-border-opacity: 50%;
+  --card-hl-bg-color: var(--accent-primary);
+  --card-hl-bg-opacity: 8%;
   
   /* Glass Effect */
   --glass-bg: rgba(255, 255, 255, 0.82);
@@ -75,6 +79,10 @@
   --accent-secondary: #5e5ce6;
   --accent-gradient: linear-gradient(135deg, #0a84ff 0%, #5e5ce6 100%);
   --card-highlight-color: var(--accent-primary);
+  --card-hl-border-color: var(--accent-primary);
+  --card-hl-border-opacity: 50%;
+  --card-hl-bg-color: var(--accent-primary);
+  --card-hl-bg-opacity: 8%;
   
   --glass-bg: rgba(255, 255, 255, 0.12);
   --glass-bg-heavy: rgba(255, 255, 255, 0.06);

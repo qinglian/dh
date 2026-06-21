@@ -21,16 +21,16 @@
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md), 0 0 0 1px color-mix(in srgb, var(--card-highlight-color) var(--card-highlight-opacity, 40%), transparent);
-  background: var(--glass-bg-heavy);
-  border-color: color-mix(in srgb, var(--card-highlight-color) var(--card-highlight-opacity, 40%), var(--glass-border));
+  box-shadow: var(--shadow-md), 0 0 0 1px color-mix(in srgb, var(--card-hl-border-color) var(--card-hl-border-opacity, 50%), transparent);
+  background: color-mix(in srgb, var(--card-hl-bg-color) var(--card-hl-bg-opacity, 8%), var(--glass-bg-heavy));
+  border-color: color-mix(in srgb, var(--card-hl-border-color) var(--card-hl-border-opacity, 50%), var(--glass-border));
 }
 
 /* 拖动时的目标位置高亮 */
 .dragOver {
   transform: scale(1.03);
-  border-color: var(--card-highlight-color);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--card-highlight-color) 20%, transparent);
+  border-color: var(--card-hl-border-color, var(--accent-primary));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--card-hl-border-color, var(--accent-primary)) 20%, transparent);
 }
 
 /* 1:1 正方形图标 */

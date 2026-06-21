@@ -49,15 +49,21 @@ applyDefaultConfig()
 // 应用卡片高亮颜色
 function applyCardHighlightColor() {
   const enabled = localStorage.getItem('nav-card-highlight-enabled') !== 'false'
-  const color = localStorage.getItem('nav-card-highlight-color')
-  const opacity = localStorage.getItem('nav-card-highlight-opacity') || '40'
   const root = document.documentElement
-  if (enabled && color) {
-    root.style.setProperty('--card-highlight-color', color)
-    root.style.setProperty('--card-highlight-opacity', opacity + '%')
+  if (enabled) {
+    const bc = localStorage.getItem('nav-hl-border-color') || '#007aff'
+    const bo = localStorage.getItem('nav-hl-border-opacity') || '50'
+    const bgc = localStorage.getItem('nav-hl-bg-color') || '#007aff'
+    const bgo = localStorage.getItem('nav-hl-bg-opacity') || '8'
+    root.style.setProperty('--card-hl-border-color', bc)
+    root.style.setProperty('--card-hl-border-opacity', bo + '%')
+    root.style.setProperty('--card-hl-bg-color', bgc)
+    root.style.setProperty('--card-hl-bg-opacity', bgo + '%')
   } else {
-    root.style.removeProperty('--card-highlight-color')
-    root.style.removeProperty('--card-highlight-opacity')
+    root.style.removeProperty('--card-hl-border-color')
+    root.style.removeProperty('--card-hl-border-opacity')
+    root.style.removeProperty('--card-hl-bg-color')
+    root.style.removeProperty('--card-hl-bg-opacity')
   }
 }
 applyCardHighlightColor()
