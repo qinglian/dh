@@ -200,7 +200,7 @@ export default function WeatherBackground({ theme }) {
         y: Math.random() * h * 0.6,
         radius: 0.3 + Math.random() * 2.2,
         opacity: 0.2 + Math.random() * 0.8,
-        twinkleSpeed: 0.003 + Math.random() * 0.025,
+        twinkleSpeed: 0.001 + Math.random() * 0.008,
         twinklePhase: Math.random() * Math.PI * 2,
         hasSpikes: Math.random() > 0.65,
         color,
