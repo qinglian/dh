@@ -425,8 +425,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }
 
   /*
-   * 计算鼠标相对于 CSS grid 内容区域的网格坐标
-   * 考虑 grid 在容器内水平居中的偏移
+   * 计算鼠标相对于 shortcutsList 网格的网格坐标
+   * shortcutsList 是快捷网页的实际渲染位置
+   * 水平方向考虑 grid 在 shortcutsList 内居中的偏移
+   * 垂直方向：鼠标在 shortcutsList 上方时 row=0，下方时按 cellTotal 递增
    */
   const getGridPos = (clientX, clientY) => {
     const gap = 8
@@ -436,7 +438,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const rect = gridEl.getBoundingClientRect()
     // grid 内容总宽度（不含最右边 gap）
     const gridContentWidth = GRID_COLS * cellTotal - gap
-    // grid 内容在容器内的水平居中偏移
+    // grid 内容在 shortcutsList 内的居中偏移
     const gridOffsetX = (rect.width - gridContentWidth) / 2
     const offsetX = clientX - rect.left - gridOffsetX
     const offsetY = clientY - rect.top
@@ -760,23 +762,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       )}
 
       {/* 快捷网页区域 */}
-      <div className={styles.shortcutsWrapper} style={{ pointerEvents: 'none' }}>
-        {/* 添加快捷网页表单 */}
-        {isEditShortcuts && showAddShortcut && (
-          <div className={styles.shortcutForm} style={{ pointerEvents: 'auto' }}>
-            <input type="text" placeholder="名称" value={newShortcut.name} onChange={(e) => setNewShortcut({ ...newShortcut, name: e.target.value })} className={styles.shortcutInput} />
-            <input type="text" placeholder="网址" value={newShortcut.url} onChange={(e) => setNewShortcut({ ...newShortcut, url: e.target.value })} className={styles.shortcutInput} />
-            <input type="text" placeholder="图标URL（可选，留空自动获取）" value={newShortcut.iconUrl} onChange={(e) => setNewShortcut({ ...newShortcut, iconUrl: e.target.value })} className={styles.shortcutInput} />
-            <button className={styles.shortcutConfirm} onClick={handleAddShortcut}>添加</button>
-          </div>
-        )}
-      </div>
-
-      {/*
-       * 网格布局列表：快捷网页 + 小部件混合排列
-       * 直接放在 container 内部（position: absolute），确保 inset: 0 正确工作
-       * 编辑模式下网格不可见，拖拽时显示占位
-       */}
+      <div className={styles.shortcutsWrapper}>
+        {/*
+         * 网格布局列表：快捷网页 + 小部件混合排列
+         * 使用正常文档流，保持原有布局
+         */}
         <div
           className={styles.shortcutsList}
           ref={gridRef}
@@ -786,14 +776,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             gridAutoRows: `${CELL_SIZE}px`,
             gap: 8,
             justifyContent: 'center',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            paddingTop: '12.5vh',
-            maxWidth: 'none',
-            pointerEvents: 'none',
           }}
         >
           {gridItems.map((item, index) => {
@@ -810,7 +792,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                 style={{
                   gridColumn: `${col + 1} / span ${cols}`,
                   gridRow: `${row + 1} / span ${rows}`,
-                  pointerEvents: 'auto',
                 }}
                 draggable={isEditShortcuts && !isWidget ? editingId !== item.id : isEditShortcuts}
                 onDragStart={(e) => handleDragStart(e, index)}
@@ -911,26 +892,52 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           })}
           {/* 编辑模式：显示"添加"按钮 */}
           {isEditShortcuts && (
-            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页" style={{ pointerEvents: 'auto' }}>
+            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页">
               <Plus size={18} />
             </button>
           )}
-          {/* 拖拽悬浮占位预览：使用 CSS grid 定位，坐标与快捷网页一致 */}
-          {dropTarget && dragItemData.current && (
-            <div
-              className={styles.dropPlaceholder}
-              style={{
-                gridColumnStart: dropTarget.col + 1,
-                gridRowStart: dropTarget.row + 1,
-                gridColumnEnd: `span ${dragItemData.current.cols || 1}`,
-                gridRowEnd: `span ${dragItemData.current.rows || 1}`,
-                pointerEvents: 'none',
-              }}
-            />
-          )}
         </div>
+        {/* 添加快捷网页表单 */}
+        {isEditShortcuts && showAddShortcut && (
+          <div className={styles.shortcutForm}>
+            <input type="text" placeholder="名称" value={newShortcut.name} onChange={(e) => setNewShortcut({ ...newShortcut, name: e.target.value })} className={styles.shortcutInput} />
+            <input type="text" placeholder="网址" value={newShortcut.url} onChange={(e) => setNewShortcut({ ...newShortcut, url: e.target.value })} className={styles.shortcutInput} />
+            <input type="text" placeholder="图标URL（可选，留空自动获取）" value={newShortcut.iconUrl} onChange={(e) => setNewShortcut({ ...newShortcut, iconUrl: e.target.value })} className={styles.shortcutInput} />
+            <button className={styles.shortcutConfirm} onClick={handleAddShortcut}>添加</button>
+          </div>
+        )}
+      </div>
 
-
+      {/* 拖拽放置层：全屏覆盖，仅用于显示占位框 */}
+      {isEditShortcuts && dropTarget && dragItemData.current && (() => {
+        const gap = 8
+        const cellTotal = CELL_SIZE + gap
+        const gridEl = gridRef.current
+        if (!gridEl) return null
+        const gridRect = gridEl.getBoundingClientRect()
+        // grid 内容在 gridEl 内的居中偏移
+        const gridContentWidth = GRID_COLS * cellTotal - gap
+        const gridOffsetX = (gridRect.width - gridContentWidth) / 2
+        // 占位框的像素位置
+        const placeholderLeft = gridRect.left + gridOffsetX + dropTarget.col * cellTotal
+        const placeholderTop = gridRect.top + dropTarget.row * cellTotal
+        const placeholderWidth = (dragItemData.current.cols || 1) * CELL_SIZE + ((dragItemData.current.cols || 1) - 1) * gap
+        const placeholderHeight = (dragItemData.current.rows || 1) * CELL_SIZE + ((dragItemData.current.rows || 1) - 1) * gap
+        return (
+          <div
+            className={styles.dropPlaceholder}
+            style={{
+              position: 'fixed',
+              left: placeholderLeft + 'px',
+              top: placeholderTop + 'px',
+              width: placeholderWidth + 'px',
+              height: placeholderHeight + 'px',
+              pointerEvents: 'none',
+              zIndex: 999,
+            }}
+          />
+        )
+      })()}
 
       {/* 设置弹窗 */}
       {showSettings && (
