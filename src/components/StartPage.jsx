@@ -424,6 +424,35 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     e.dataTransfer.setData('text/plain', 'item:' + index)
   }
 
+  /*
+   * 计算鼠标相对于网格容器的网格坐标
+   * 优先使用 shortcutsList 的坐标；如果鼠标在其外部，使用 container 坐标
+   */
+  const getGridPos = (clientX, clientY) => {
+    const gap = 8
+    const cellTotal = CELL_SIZE + gap
+    const gridEl = gridRef.current
+    const containerEl = containerRef.current
+
+    // 判断鼠标是否在 shortcutsList 内部
+    let useGrid = false
+    if (gridEl) {
+      const r = gridEl.getBoundingClientRect()
+      useGrid = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom
+    }
+
+    const rect = useGrid && gridEl ? gridEl.getBoundingClientRect()
+      : containerEl ? containerEl.getBoundingClientRect() : null
+    if (!rect) return null
+
+    const offsetX = clientX - rect.left
+    const offsetY = clientY - rect.top
+    return {
+      col: Math.max(0, Math.min(GRID_COLS - 1, Math.floor(offsetX / cellTotal))),
+      row: Math.max(0, Math.floor(offsetY / cellTotal)),
+    }
+  }
+
   /* 网格容器上的 dragOver：基于网格容器偏移计算网格位置 */
   const handleGridDragOver = (e) => {
     if (!isEditShortcuts) return
@@ -431,28 +460,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
 
-    const gap = 8
-    const cellTotal = CELL_SIZE + gap
-
-    // 优先使用 shortcutsList 网格容器的坐标
-    const gridEl = gridRef.current
-    const containerEl = containerRef.current
-    let rect
-    if (gridEl) {
-      rect = gridEl.getBoundingClientRect()
-    } else if (containerEl) {
-      rect = containerEl.getBoundingClientRect()
-    } else {
-      return
-    }
-
-    const offsetX = e.clientX - rect.left
-    const offsetY = e.clientY - rect.top
-    const col = Math.floor(offsetX / cellTotal)
-    const row = Math.floor(offsetY / cellTotal)
-
-    if (col >= 0 && col < GRID_COLS && row >= 0) {
-      setDropTarget({ col: Math.min(col, GRID_COLS - 1), row })
+    const pos = getGridPos(e.clientX, e.clientY)
+    if (pos) {
+      setDropTarget(pos)
     }
   }
 
@@ -461,25 +471,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     if (!isEditShortcuts) return
     e.preventDefault()
 
-    const gap = 8
-    const cellTotal = CELL_SIZE + gap
-
-    // 优先使用 shortcutsList 网格容器的坐标
-    const gridEl = gridRef.current
-    const containerEl = containerRef.current
-    let rect
-    if (gridEl) {
-      rect = gridEl.getBoundingClientRect()
-    } else if (containerEl) {
-      rect = containerEl.getBoundingClientRect()
-    } else {
-      return
-    }
-
-    const offsetX = e.clientX - rect.left
-    const offsetY = e.clientY - rect.top
-    const col = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(offsetX / cellTotal)))
-    const row = Math.max(0, Math.floor(offsetY / cellTotal))
+    const pos = getGridPos(e.clientX, e.clientY)
+    if (!pos) return
+    const { col, row } = pos
 
     const dragData = e.dataTransfer.getData('text/plain')
 
@@ -620,6 +614,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           draggable={isEditShortcuts}
           onDragStart={(e) => {
             if (!isEditShortcuts) return
+            dragItemData.current = { cols: 6, rows: 2 } // 时间栏占 6 列 2 行
             e.dataTransfer.effectAllowed = 'move'
             e.dataTransfer.setData('text/plain', 'time-section')
           }}
@@ -647,6 +642,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           draggable={isEditShortcuts}
           onDragStart={(e) => {
             if (!isEditShortcuts) return
+            dragItemData.current = { cols: 6, rows: 1 } // 搜索框占 6 列 1 行
             e.dataTransfer.effectAllowed = 'move'
             e.dataTransfer.setData('text/plain', 'search-box')
           }}
