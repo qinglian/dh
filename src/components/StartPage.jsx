@@ -23,11 +23,14 @@ const SHORTCUTS_KEY = 'nav-shortcuts'
 
 /*
  * 从 localStorage 读取指定页面的快捷方式列表
- * 使用 getPageDataKey 根据 pageId 生成独立的存储 key，实现多页面数据隔离
+ * 兼容新旧两种 key 格式：
+ *   - 新格式: nav-startpage-nav-shortcuts-{pageId}
+ *   - 旧格式: nav-{pageId}-nav-shortcuts
  */
 function getSavedShortcuts(pageId = 'default') {
-  const key = getPageDataKey(pageId, SHORTCUTS_KEY)
-  const saved = localStorage.getItem(key)
+  const newKey = getPageDataKey(pageId, SHORTCUTS_KEY)
+  const oldKey = `nav-${pageId}-${SHORTCUTS_KEY}`
+  const saved = localStorage.getItem(newKey) || localStorage.getItem(oldKey)
   if (!saved) return []
   try {
     return JSON.parse(saved)
@@ -36,7 +39,7 @@ function getSavedShortcuts(pageId = 'default') {
   }
 }
 
-/* 将快捷方式列表保存到指定页面的 localStorage */
+/* 将快捷方式列表保存到指定页面的 localStorage（使用新格式） */
 function saveShortcuts(pageId, list) {
   const key = getPageDataKey(pageId, SHORTCUTS_KEY)
   localStorage.setItem(key, JSON.stringify(list))
@@ -45,13 +48,19 @@ function saveShortcuts(pageId, list) {
 /* 小部件存储 key */
 const WIDGETS_KEY = 'nav-widgets'
 
+/*
+ * 从 localStorage 读取指定页面的小部件列表
+ * 兼容新旧两种 key 格式
+ */
 function getSavedWidgets(pageId = 'default') {
-  const key = getPageDataKey(pageId, WIDGETS_KEY)
-  const saved = localStorage.getItem(key)
+  const newKey = getPageDataKey(pageId, WIDGETS_KEY)
+  const oldKey = `nav-${pageId}-${WIDGETS_KEY}`
+  const saved = localStorage.getItem(newKey) || localStorage.getItem(oldKey)
   if (!saved) return []
   try { return JSON.parse(saved) } catch { return [] }
 }
 
+/* 将小部件列表保存到指定页面的 localStorage（使用新格式） */
 function saveWidgets(pageId, list) {
   const key = getPageDataKey(pageId, WIDGETS_KEY)
   localStorage.setItem(key, JSON.stringify(list))
