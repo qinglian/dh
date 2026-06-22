@@ -434,23 +434,26 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     }
   }
 
-  /* 网格容器上的 drop：直接设置目标 col/row */
+  /* 网格容器上的 drop：直接从事件坐标计算网格位置 */
   const handleGridDrop = (e) => {
     if (!isEditShortcuts) return
     e.preventDefault()
 
-    const { col, row } = dropTarget || { col: 0, row: 0 }
+    // 直接从 drop 事件的坐标计算网格位置，不依赖异步 state
+    const gap = 8
+    const cellTotal = CELL_SIZE + gap
+    const col = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(e.clientX / cellTotal)))
+    const row = Math.max(0, Math.floor(e.clientY / cellTotal))
+
     const dragData = e.dataTransfer.getData('text/plain')
 
     if (dragData === 'search-box') {
       // 搜索框放置：更新行位置
-      const newRow = Math.max(0, row)
-      setSearchRow(newRow)
-      localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(newRow))
+      setSearchRow(row)
+      localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(row))
     } else if (dragData === 'time-section') {
       // 时间栏放置：更新行位置
-      const newRow = Math.max(0, row)
-      localStorage.setItem(getPageDataKey(pageId, 'nav-time-row'), String(newRow))
+      localStorage.setItem(getPageDataKey(pageId, 'nav-time-row'), String(row))
     } else if (dragData.startsWith('item:')) {
       // 按钮/小部件放置：更新 col/row
       const idx = parseInt(dragData.split(':')[1])
