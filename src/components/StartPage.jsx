@@ -425,8 +425,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }
 
   /*
-   * 计算鼠标相对于 shortcutsList 网格容器的网格坐标
-   * 使用 gridRef 获取容器的实际位置，确保坐标与 CSS grid 对齐
+   * 计算鼠标相对于 CSS grid 内容区域的网格坐标
+   * 考虑 grid 在容器内水平居中的偏移
    */
   const getGridPos = (clientX, clientY) => {
     const gap = 8
@@ -434,7 +434,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const gridEl = gridRef.current
     if (!gridEl) return null
     const rect = gridEl.getBoundingClientRect()
-    const offsetX = clientX - rect.left
+    // grid 内容总宽度（不含最右边 gap）
+    const gridContentWidth = GRID_COLS * cellTotal - gap
+    // grid 内容在容器内的水平居中偏移
+    const gridOffsetX = (rect.width - gridContentWidth) / 2
+    const offsetX = clientX - rect.left - gridOffsetX
     const offsetY = clientY - rect.top
     return {
       col: Math.max(0, Math.min(GRID_COLS - 1, Math.floor(offsetX / cellTotal))),
@@ -613,18 +617,25 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div
-          className={styles.timeSection}
-          draggable={isEditShortcuts}
-          onDragStart={(e) => {
-            if (!isEditShortcuts) return
-            dragItemData.current = { cols: 6, rows: 2 }
-            e.dataTransfer.effectAllowed = 'move'
-            e.dataTransfer.setData('text/plain', 'time-section')
-          }}
-          onDragEnd={handleDragEnd}
-          style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
-        >
+        <div className={styles.timeSection} style={{ position: 'relative', cursor: isEditShortcuts ? 'grab' : undefined }}>
+          {/* 编辑模式覆盖层：覆盖整个时间栏，用于拖拽 */}
+          {isEditShortcuts && (
+            <div
+              draggable
+              onDragStart={(e) => {
+                dragItemData.current = { cols: 6, rows: 2 }
+                e.dataTransfer.effectAllowed = 'move'
+                e.dataTransfer.setData('text/plain', 'time-section')
+              }}
+              onDragEnd={handleDragEnd}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 10,
+                cursor: 'grab',
+              }}
+            />
+          )}
           <div className={styles.time}>
             <span className={styles.timeHour}>{String(dateInfo.hour).padStart(2, '0')}</span>
             <span className={styles.timeColon}>:</span>
@@ -641,18 +652,25 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 搜索框：根据设置项 searchBox.visible 控制显示 */}
       {startSettings.searchBox?.visible !== false && (
-        <div
-          className={styles.searchWrapper}
-          draggable={isEditShortcuts}
-          onDragStart={(e) => {
-            if (!isEditShortcuts) return
-            dragItemData.current = { cols: 6, rows: 1 }
-            e.dataTransfer.effectAllowed = 'move'
-            e.dataTransfer.setData('text/plain', 'search-box')
-          }}
-          onDragEnd={handleDragEnd}
-          style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
-        >
+        <div className={styles.searchWrapper} style={{ position: 'relative', cursor: isEditShortcuts ? 'grab' : undefined }}>
+          {/* 编辑模式覆盖层：覆盖整个搜索框，用于拖拽 */}
+          {isEditShortcuts && (
+            <div
+              draggable
+              onDragStart={(e) => {
+                dragItemData.current = { cols: 6, rows: 1 }
+                e.dataTransfer.effectAllowed = 'move'
+                e.dataTransfer.setData('text/plain', 'search-box')
+              }}
+              onDragEnd={handleDragEnd}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 10,
+                cursor: 'grab',
+              }}
+            />
+          )}
           {/* 编辑模式拖拽手柄 */}
           {isEditShortcuts && (
             <div className={styles.dragHandleBar}>
