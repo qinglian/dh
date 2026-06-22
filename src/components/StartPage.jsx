@@ -149,6 +149,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const dragItemIndex = useRef(null)
   /* 拖拽项的原始数据引用 */
   const dragItemData = useRef(null)
+  /* 自定义鼠标拖拽状态（时间/搜索框），绕过 HTML5 DnD 兼容性问题 */
+  const customDragRef = useRef({ active: false, type: null, data: null })
   /* 搜索框容器 DOM 引用 */
   const searchRef = useRef(null)
   /* 时间栏容器 DOM 引用 */
@@ -486,6 +488,55 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }
 
   /*
+   * 自定义拖拽：时间栏和搜索框使用 mousedown/mousemove/mouseup 替代 HTML5 DnD
+   * 避开浏览器对 invisible overlay 的拖拽限制
+   */
+  const handleCustomDragStart = (e, type, data) => {
+    if (!isEditShortcuts) return
+    e.preventDefault()
+    e.stopPropagation()
+    customDragRef.current = { active: true, type, data }
+    dragItemData.current = data
+    setDropTarget(null)
+  }
+
+  /* 自定义拖拽：document 级 mousemove 和 mouseup */
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      if (!customDragRef.current.active) return
+      const pos = getGridPos(e.clientX, e.clientY)
+      if (pos) setDropTarget(pos)
+    }
+
+    const onMouseUp = (e) => {
+      if (!customDragRef.current.active) return
+      const pos = getGridPos(e.clientX, e.clientY)
+      const { type } = customDragRef.current
+      if (pos) {
+        const { row } = pos
+        if (type === 'time-section') {
+          setTimeRow(row)
+          localStorage.setItem(getPageDataKey(pageId, 'nav-time-row'), String(row))
+        } else if (type === 'search-box') {
+          setSearchRow(row)
+          localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(row))
+        }
+      }
+      customDragRef.current = { active: false, type: null, data: null }
+      dragItemData.current = null
+      setDropTarget(null)
+      setDragOverIndex(null)
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [isEditShortcuts, pageId, getGridPos])
+
+  /*
    * 在 document 级别监听拖拽事件，确保整个页面（包括 topBar、时间栏、搜索框等区域）
    * 都能响应 dragover/drop，不受子元素事件冒泡阻断影响
    */
@@ -648,27 +699,16 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div className={styles.timeSection} style={{ position: 'relative' }} ref={timeSectionRef}>
-          {/* 编辑模式覆盖层：position: absolute 仅覆盖时间栏区域 */}
+        <div className={styles.timeSection} ref={timeSectionRef}>
+          {/* 编辑模式拖拽手柄 — 自定义鼠标拖拽 */}
           {isEditShortcuts && (
             <div
-              draggable
-              onDragStart={(e) => {
-                dragItemData.current = { cols: 6, rows: 2 }
-                e.dataTransfer.effectAllowed = 'move'
-                e.dataTransfer.setData('text/plain', 'time-section')
-                const img = new Image()
-                img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-                e.dataTransfer.setDragImage(img, 0, 0)
-              }}
-              onDragEnd={handleDragEnd}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 10,
-                cursor: 'grab',
-              }}
-            />
+              className={styles.dragHandleBar}
+              onMouseDown={(e) => handleCustomDragStart(e, 'time-section', { cols: 6, rows: 2 })}
+              style={{ cursor: 'grab', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: 2 }}>⠿</span>
+            </div>
           )}
           <div className={styles.time}>
             <span className={styles.timeHour}>{String(dateInfo.hour).padStart(2, '0')}</span>
@@ -687,30 +727,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       {/* 搜索框：根据设置项 searchBox.visible 控制显示 */}
       {startSettings.searchBox?.visible !== false && (
         <div ref={searchRef} className={styles.searchWrapper} style={{ position: 'relative' }}>
-          {/* 编辑模式覆盖层：position: absolute 仅覆盖搜索框区域 */}
+          {/* 编辑模式拖拽手柄 — 自定义鼠标拖拽 */}
           {isEditShortcuts && (
             <div
-              draggable
-              onDragStart={(e) => {
-                dragItemData.current = { cols: 6, rows: 1 }
-                e.dataTransfer.effectAllowed = 'move'
-                e.dataTransfer.setData('text/plain', 'search-box')
-                const img = new Image()
-                img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-                e.dataTransfer.setDragImage(img, 0, 0)
-              }}
-              onDragEnd={handleDragEnd}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 10,
-                cursor: 'grab',
-              }}
-            />
-          )}
-          {/* 编辑模式拖拽手柄 */}
-          {isEditShortcuts && (
-            <div className={styles.dragHandleBar}>
+              className={styles.dragHandleBar}
+              onMouseDown={(e) => handleCustomDragStart(e, 'search-box', { cols: 6, rows: 1 })}
+              style={{ cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
               <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: 2 }}>⠿</span>
             </div>
           )}
