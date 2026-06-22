@@ -454,8 +454,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /*
    * 计算鼠标相对于网格的坐标
-   * 网格覆盖整个视口（position: absolute; inset: 0），使用 auto-fill 全宽布局
-   * 动态读取列数，与 CSS grid 渲染完全一致
+   * 网格填充整个 shortcutsWrapper（从 0,0 开始），shortcutsWrapper 从搜索框下方开始
+   * 动态读取列数，与 CSS grid auto-fill 渲染完全一致
    */
   const getGridPos = useMemo(() => {
     return (clientX, clientY) => {
@@ -463,15 +463,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (!gridEl) return null
       const rect = gridEl.getBoundingClientRect()
       const cs = getComputedStyle(gridEl)
-      const padTop = parseFloat(cs.paddingTop) || 0
       const padLeft = parseFloat(cs.paddingLeft) || 0
-      // 内容区宽度 = 总宽度 - 左右 padding
       const contentWidth = rect.width - padLeft * 2
       const cols = Math.max(1, Math.floor((contentWidth + GAP) / CELL_TOTAL))
       const gridContentWidth = cols * CELL_TOTAL - GAP
       const gridOffsetX = (contentWidth - gridContentWidth) / 2
       const offsetX = clientX - rect.left - padLeft - gridOffsetX
-      const offsetY = clientY - rect.top - padTop
+      const offsetY = clientY - rect.top
       return {
         col: Math.max(0, Math.min(cols - 1, Math.floor(offsetX / CELL_TOTAL))),
         row: Math.max(0, Math.floor(offsetY / CELL_TOTAL)),
@@ -650,7 +648,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div className={styles.timeSection} style={{ position: 'relative', zIndex: 1 }} ref={timeSectionRef}>
+        <div className={styles.timeSection} style={{ position: 'relative' }} ref={timeSectionRef}>
           {/* 编辑模式覆盖层：position: absolute 仅覆盖时间栏区域 */}
           {isEditShortcuts && (
             <div
@@ -688,7 +686,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 搜索框：根据设置项 searchBox.visible 控制显示 */}
       {startSettings.searchBox?.visible !== false && (
-        <div ref={searchRef} className={styles.searchWrapper} style={{ position: 'relative', zIndex: 1 }}>
+        <div ref={searchRef} className={styles.searchWrapper} style={{ position: 'relative' }}>
           {/* 编辑模式覆盖层：position: absolute 仅覆盖搜索框区域 */}
           {isEditShortcuts && (
             <div
@@ -798,8 +796,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         </div>
       )}
 
-      {/* 快捷网页区域 */}
-      <div className={styles.shortcutsWrapper} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+      {/* 快捷网页区域 — 从搜索框下方开始，避免遮挡时间/搜索框 */}
+      <div className={styles.shortcutsWrapper} style={{ position: 'absolute', top: gridPaddingTop, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
         {/*
          * 网格布局列表：覆盖整个容器，作为拖拽放置区域
          * 使用 position: absolute 覆盖整个 shortcutsWrapper（alignSelf: stretch 使其宽度=容器宽度）
@@ -819,7 +817,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             left: 0,
             right: 0,
             bottom: 0,
-            paddingTop: gridPaddingTop,
             paddingLeft: CELL_SIZE,
             paddingRight: CELL_SIZE,
             maxWidth: 'none',
