@@ -135,8 +135,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const dragItemIndex = useRef(null)
   /* 拖拽项的原始数据引用 */
   const dragItemData = useRef(null)
-  /* 当前拖拽类型：'item' | 'search' | 'time' | null */
-  const dragTypeRef = useRef(null)
   /* 搜索框容器 DOM 引用 */
   const searchRef = useRef(null)
   /* 搜索输入框 DOM 引用 */
@@ -404,17 +402,14 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     if (!isEditShortcuts) return
     dragItemIndex.current = index
     dragItemData.current = gridItems[index]
-    dragTypeRef.current = 'item'
     e.dataTransfer.effectAllowed = 'move'
-    // 设置透明拖拽图像（我们自己渲染悬浮预览）
-    const img = new Image()
-    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-    e.dataTransfer.setDragImage(img, 0, 0)
+    e.dataTransfer.setData('text/plain', 'item:' + index)
   }
 
   /* 网格容器上的 dragOver：基于整个页面计算网格位置 */
   const handleGridDragOver = (e) => {
-    if (!isEditShortcuts || dragTypeRef.current === null) return
+    if (!isEditShortcuts) return
+    // 必须 preventDefault 才能允许 drop
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
 
@@ -432,31 +427,33 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /* 网格容器上的 drop：直接设置目标 col/row */
   const handleGridDrop = (e) => {
-    if (!isEditShortcuts || !dropTarget) return
+    if (!isEditShortcuts) return
     e.preventDefault()
 
-    const { col, row } = dropTarget
-    const dragType = e.dataTransfer.getData('text/plain')
+    const { col, row } = dropTarget || { col: 0, row: 0 }
+    const dragData = e.dataTransfer.getData('text/plain')
 
-    if (dragType === 'search-box') {
+    if (dragData === 'search-box') {
       // 搜索框放置：更新行位置
       const newRow = Math.max(0, row)
       setSearchRow(newRow)
       localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(newRow))
-    } else if (dragType === 'time-section') {
+    } else if (dragData === 'time-section') {
       // 时间栏放置：更新行位置
       const newRow = Math.max(0, row)
       localStorage.setItem(getPageDataKey(pageId, 'nav-time-row'), String(newRow))
-    } else if (dragItemIndex.current !== null) {
+    } else if (dragData.startsWith('item:')) {
       // 按钮/小部件放置：更新 col/row
-      const newGrid = [...gridItems]
-      newGrid[dragItemIndex.current] = { ...newGrid[dragItemIndex.current], col, row }
-      updateFromGrid(newGrid)
+      const idx = parseInt(dragData.split(':')[1])
+      if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
+        const newGrid = [...gridItems]
+        newGrid[idx] = { ...newGrid[idx], col, row }
+        updateFromGrid(newGrid)
+      }
     }
 
     dragItemIndex.current = null
     dragItemData.current = null
-    dragTypeRef.current = null
     setDropTarget(null)
     setDragOverIndex(null)
   }
@@ -465,7 +462,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const handleDragEnd = (e) => {
     dragItemIndex.current = null
     dragItemData.current = null
-    dragTypeRef.current = null
     setDropTarget(null)
     setDragOverIndex(null)
   }
@@ -574,12 +570,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           draggable={isEditShortcuts}
           onDragStart={(e) => {
             if (!isEditShortcuts) return
-            dragTypeRef.current = 'time'
             e.dataTransfer.effectAllowed = 'move'
             e.dataTransfer.setData('text/plain', 'time-section')
-            const img = new Image()
-            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-            e.dataTransfer.setDragImage(img, 0, 0)
           }}
           onDragEnd={handleDragEnd}
           style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
@@ -605,12 +597,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           draggable={isEditShortcuts}
           onDragStart={(e) => {
             if (!isEditShortcuts) return
-            dragTypeRef.current = 'search'
             e.dataTransfer.effectAllowed = 'move'
             e.dataTransfer.setData('text/plain', 'search-box')
-            const img = new Image()
-            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-            e.dataTransfer.setDragImage(img, 0, 0)
           }}
           onDragEnd={handleDragEnd}
           style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
