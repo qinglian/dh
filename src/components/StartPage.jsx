@@ -425,23 +425,17 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }
 
   /*
-   * 计算鼠标相对于视口的网格坐标
-   * 使用视口坐标，确保整个页面都可放置
-   * 考虑网格在页面中水平居中的偏移
+   * 计算鼠标相对于 shortcutsList 网格容器的网格坐标
+   * 使用 gridRef 获取容器的实际位置，确保坐标与 CSS grid 对齐
    */
   const getGridPos = (clientX, clientY) => {
     const gap = 8
     const cellTotal = CELL_SIZE + gap
-    const containerEl = containerRef.current
-    if (!containerEl) return null
-
-    const vw = window.innerWidth
-    const vh = window.innerHeight
-    const gridWidth = GRID_COLS * cellTotal - gap // 网格总宽度（不含最右边 gap）
-    const gridOffsetX = (vw - gridWidth) / 2 // 居中偏移
-
-    const offsetX = clientX - gridOffsetX
-    const offsetY = clientY
+    const gridEl = gridRef.current
+    if (!gridEl) return null
+    const rect = gridEl.getBoundingClientRect()
+    const offsetX = clientX - rect.left
+    const offsetY = clientY - rect.top
     return {
       col: Math.max(0, Math.min(GRID_COLS - 1, Math.floor(offsetX / cellTotal))),
       row: Math.max(0, Math.floor(offsetY / cellTotal)),
@@ -619,25 +613,18 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div className={styles.timeSection} style={{ position: 'relative', cursor: isEditShortcuts ? 'grab' : undefined }}>
-          {/* 编辑模式覆盖层：覆盖整个时间栏，用于拖拽 */}
-          {isEditShortcuts && (
-            <div
-              draggable
-              onDragStart={(e) => {
-                dragItemData.current = { cols: 6, rows: 2 }
-                e.dataTransfer.effectAllowed = 'move'
-                e.dataTransfer.setData('text/plain', 'time-section')
-              }}
-              onDragEnd={handleDragEnd}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 10,
-                cursor: 'grab',
-              }}
-            />
-          )}
+        <div
+          className={styles.timeSection}
+          draggable={isEditShortcuts}
+          onDragStart={(e) => {
+            if (!isEditShortcuts) return
+            dragItemData.current = { cols: 6, rows: 2 }
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', 'time-section')
+          }}
+          onDragEnd={handleDragEnd}
+          style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
+        >
           <div className={styles.time}>
             <span className={styles.timeHour}>{String(dateInfo.hour).padStart(2, '0')}</span>
             <span className={styles.timeColon}>:</span>
@@ -656,31 +643,21 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       {startSettings.searchBox?.visible !== false && (
         <div
           className={styles.searchWrapper}
-          style={{ position: 'relative', cursor: isEditShortcuts ? 'grab' : undefined }}
+          draggable={isEditShortcuts}
+          onDragStart={(e) => {
+            if (!isEditShortcuts) return
+            dragItemData.current = { cols: 6, rows: 1 }
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', 'search-box')
+          }}
+          onDragEnd={handleDragEnd}
+          style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
         >
           {/* 编辑模式拖拽手柄 */}
           {isEditShortcuts && (
             <div className={styles.dragHandleBar}>
               <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: 2 }}>⠿</span>
             </div>
-          )}
-          {/* 编辑模式覆盖层：覆盖整个搜索框，用于拖拽 */}
-          {isEditShortcuts && (
-            <div
-              draggable
-              onDragStart={(e) => {
-                dragItemData.current = { cols: 6, rows: 1 }
-                e.dataTransfer.effectAllowed = 'move'
-                e.dataTransfer.setData('text/plain', 'search-box')
-              }}
-              onDragEnd={handleDragEnd}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 10,
-                cursor: 'grab',
-              }}
-            />
           )}
           <div className={styles.searchBox}>
             {/* 搜索引擎选择器下拉 */}
@@ -765,7 +742,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       )}
 
       {/* 快捷网页区域 */}
-      <div className={styles.shortcutsWrapper}>
+      <div className={styles.shortcutsWrapper} style={{ pointerEvents: 'none' }}>
         {/*
          * 网格布局列表：快捷网页 + 小部件混合排列
          * 编辑模式下网格不可见，拖拽时显示占位
@@ -773,7 +750,20 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         <div
           className={styles.shortcutsList}
           ref={gridRef}
-          style={{ display: 'grid', gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`, gridAutoRows: `${CELL_SIZE}px`, gap: 8, justifyContent: 'center', position: 'relative' }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`,
+            gridAutoRows: `${CELL_SIZE}px`,
+            gap: 8,
+            justifyContent: 'center',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            paddingTop: '12.5vh',
+            pointerEvents: 'none',
+          }}
         >
           {gridItems.map((item, index) => {
             const isWidget = item.itemType === 'widget'
@@ -789,6 +779,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                 style={{
                   gridColumn: `${col + 1} / span ${cols}`,
                   gridRow: `${row + 1} / span ${rows}`,
+                  pointerEvents: 'auto',
                 }}
                 draggable={isEditShortcuts && !isWidget ? editingId !== item.id : isEditShortcuts}
                 onDragStart={(e) => handleDragStart(e, index)}
@@ -889,14 +880,27 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           })}
           {/* 编辑模式：显示"添加"按钮 */}
           {isEditShortcuts && (
-            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页">
+            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页" style={{ pointerEvents: 'auto' }}>
               <Plus size={18} />
             </button>
+          )}
+          {/* 拖拽悬浮占位预览：使用 CSS grid 定位，坐标与快捷网页一致 */}
+          {dropTarget && dragItemData.current && (
+            <div
+              className={styles.dropPlaceholder}
+              style={{
+                gridColumnStart: dropTarget.col + 1,
+                gridRowStart: dropTarget.row + 1,
+                gridColumnEnd: `span ${dragItemData.current.cols || 1}`,
+                gridRowEnd: `span ${dragItemData.current.rows || 1}`,
+                pointerEvents: 'none',
+              }}
+            />
           )}
         </div>
         {/* 添加快捷网页表单 */}
         {isEditShortcuts && showAddShortcut && (
-          <div className={styles.shortcutForm}>
+          <div className={styles.shortcutForm} style={{ pointerEvents: 'auto' }}>
             <input type="text" placeholder="名称" value={newShortcut.name} onChange={(e) => setNewShortcut({ ...newShortcut, name: e.target.value })} className={styles.shortcutInput} />
             <input type="text" placeholder="网址" value={newShortcut.url} onChange={(e) => setNewShortcut({ ...newShortcut, url: e.target.value })} className={styles.shortcutInput} />
             <input type="text" placeholder="图标URL（可选，留空自动获取）" value={newShortcut.iconUrl} onChange={(e) => setNewShortcut({ ...newShortcut, iconUrl: e.target.value })} className={styles.shortcutInput} />
@@ -914,21 +918,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       {/* 小部件选择弹窗 */}
       {showWidgetPanel && (
         <WidgetPanel onClose={() => setShowWidgetPanel(false)} onAdd={handleAddWidget} />
-      )}
-      {/* 拖拽悬浮占位预览：fixed 定位覆盖整个视口 */}
-      {dropTarget && dragItemData.current && (
-        <div
-          className={styles.dropPlaceholder}
-          style={{
-            position: 'fixed',
-            left: `${Math.max(0, (window.innerWidth - (GRID_COLS * (CELL_SIZE + 8) - 8)) / 2 + dropTarget.col * (CELL_SIZE + 8))}px`,
-            top: `${dropTarget.row * (CELL_SIZE + 8)}px`,
-            width: `${(dragItemData.current.cols || 1) * CELL_SIZE + ((dragItemData.current.cols || 1) - 1) * 8}px`,
-            height: `${(dragItemData.current.rows || 1) * CELL_SIZE + ((dragItemData.current.rows || 1) - 1) * 8}px`,
-            pointerEvents: 'none',
-            zIndex: 100,
-          }}
-        />
       )}
     </div>
   )
