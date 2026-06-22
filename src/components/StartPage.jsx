@@ -425,27 +425,21 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }
 
   /*
-   * 计算鼠标相对于网格容器的网格坐标
-   * 优先使用 shortcutsList 的坐标；如果鼠标在其外部，使用 container 坐标
+   * 计算鼠标相对于 container 的网格坐标
+   * 始终使用 container 坐标（全屏覆盖），确保整个页面都可放置
+   * 考虑网格在 container 中水平居中的偏移
    */
   const getGridPos = (clientX, clientY) => {
     const gap = 8
     const cellTotal = CELL_SIZE + gap
-    const gridEl = gridRef.current
     const containerEl = containerRef.current
+    if (!containerEl) return null
 
-    // 判断鼠标是否在 shortcutsList 内部
-    let useGrid = false
-    if (gridEl) {
-      const r = gridEl.getBoundingClientRect()
-      useGrid = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom
-    }
+    const rect = containerEl.getBoundingClientRect()
+    const gridWidth = GRID_COLS * cellTotal - gap // 网格总宽度（不含最右边 gap）
+    const gridOffsetX = (rect.width - gridWidth) / 2 // 居中偏移
 
-    const rect = useGrid && gridEl ? gridEl.getBoundingClientRect()
-      : containerEl ? containerEl.getBoundingClientRect() : null
-    if (!rect) return null
-
-    const offsetX = clientX - rect.left
+    const offsetX = clientX - rect.left - gridOffsetX
     const offsetY = clientY - rect.top
     return {
       col: Math.max(0, Math.min(GRID_COLS - 1, Math.floor(offsetX / cellTotal))),
@@ -881,18 +875,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
               <Plus size={18} />
             </button>
           )}
-          {/* 拖拽悬浮占位预览 */}
-          {dropTarget && dragItemData.current && (
-            <div
-              className={styles.dropPlaceholder}
-              style={{
-                gridColumnStart: dropTarget.col + 1,
-                gridRowStart: dropTarget.row + 1,
-                gridColumnEnd: `span ${dragItemData.current.cols || 1}`,
-                gridRowEnd: `span ${dragItemData.current.rows || 1}`,
-              }}
-            />
-          )}
         </div>
         {/* 添加快捷网页表单 */}
         {isEditShortcuts && showAddShortcut && (
@@ -914,6 +896,22 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       {/* 小部件选择弹窗 */}
       {showWidgetPanel && (
         <WidgetPanel onClose={() => setShowWidgetPanel(false)} onAdd={handleAddWidget} />
+      )}
+      {/* 拖拽悬浮占位预览：绝对定位覆盖整个 container */}
+      {dropTarget && dragItemData.current && (
+        <div
+          className={styles.dropPlaceholder}
+          style={{
+            position: 'absolute',
+            /* 使用 calc 居中：container 宽度的一半减去网格宽度的一半，再加上列偏移 */
+            left: `calc((100% - ${(GRID_COLS) * (CELL_SIZE + 8) - 8}px) / 2 + ${dropTarget.col * (CELL_SIZE + 8)}px)`,
+            top: `${dropTarget.row * (CELL_SIZE + 8)}px`,
+            width: `${(dragItemData.current.cols || 1) * CELL_SIZE + ((dragItemData.current.cols || 1) - 1) * 8}px`,
+            height: `${(dragItemData.current.rows || 1) * CELL_SIZE + ((dragItemData.current.rows || 1) - 1) * 8}px`,
+            pointerEvents: 'none',
+            zIndex: 100,
+          }}
+        />
       )}
     </div>
   )
