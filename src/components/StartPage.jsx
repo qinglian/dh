@@ -10,9 +10,10 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, ChevronDown, ArrowRight, Moon, Sun, Compass, Pencil, X, Plus, Settings, Monitor, Sunrise, Layers } from 'lucide-react'
+import { Search, ChevronDown, ArrowRight, Moon, Sun, Compass, Pencil, X, Plus, Settings, Monitor, Sunrise, Layers, LayoutGrid } from 'lucide-react'
 import { useTheme, THEME_MODES } from '../context/ThemeContext'
 import StartPageSettings from './StartPageSettings'
+import WidgetPanel from './WidgetPanel'
 import { getSettings } from '../utils/startPageSettings'
 import { getPageDataKey, getPages } from '../utils/startPagePages'
 import styles from './StartPage.module.css'
@@ -38,6 +39,21 @@ function getSavedShortcuts(pageId = 'default') {
 /* 将快捷方式列表保存到指定页面的 localStorage */
 function saveShortcuts(pageId, list) {
   const key = getPageDataKey(pageId, SHORTCUTS_KEY)
+  localStorage.setItem(key, JSON.stringify(list))
+}
+
+/* 小部件存储 key */
+const WIDGETS_KEY = 'nav-widgets'
+
+function getSavedWidgets(pageId = 'default') {
+  const key = getPageDataKey(pageId, WIDGETS_KEY)
+  const saved = localStorage.getItem(key)
+  if (!saved) return []
+  try { return JSON.parse(saved) } catch { return [] }
+}
+
+function saveWidgets(pageId, list) {
+  const key = getPageDataKey(pageId, WIDGETS_KEY)
   localStorage.setItem(key, JSON.stringify(list))
 }
 
@@ -79,6 +95,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const [dateInfo, setDateInfo] = useState({ hour: 0, minute: 0, second: 0, month: '', day: 0, year: 0, weekday: '' })
   /* 快捷网页列表，从当前页面的 localStorage 读取 */
   const [shortcuts, setShortcuts] = useState(() => getSavedShortcuts(pageId))
+  /* 小部件列表 */
+  const [widgets, setWidgets] = useState(() => getSavedWidgets(pageId))
+  /* 小部件面板显示状态 */
+  const [showWidgetPanel, setShowWidgetPanel] = useState(false)
   /* 快捷网页编辑模式开关 */
   const [isEditShortcuts, setIsEditShortcuts] = useState(false)
   /* 添加快捷网页表单的显示状态 */
@@ -133,6 +153,27 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /* 自由布局模式开关（当前为关闭状态） */
   const freeLayoutEnabled = false
+
+  /* 网格常量 */
+  const GRID_COLS = 6
+  const CELL_SIZE = 90
+
+  /* 合并列表：快捷网页 + 小部件，用于网格渲染和拖拽排序 */
+  const gridItems = useMemo(() => {
+    const sItems = shortcuts.map(s => ({ ...s, itemType: 'shortcut' }))
+    const wItems = widgets.map(w => ({ ...w, itemType: 'widget' }))
+    return [...sItems, ...wItems]
+  }, [shortcuts, widgets])
+
+  /* 从合并列表中分离出 shortcuts 和 widgets */
+  const updateFromGrid = (newGrid) => {
+    const newShortcuts = newGrid.filter(i => i.itemType === 'shortcut').map(({ itemType, ...rest }) => rest)
+    const newWidgets = newGrid.filter(i => i.itemType === 'widget').map(({ itemType, ...rest }) => rest)
+    setShortcuts(newShortcuts)
+    setWidgets(newWidgets)
+    saveShortcuts(pageId, newShortcuts)
+    saveWidgets(pageId, newWidgets)
+  }
 
   /* 每秒更新一次时钟 */
   useEffect(() => {
@@ -292,6 +333,24 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     saveShortcuts(pageId, updated)
   }
 
+  /* 添加小部件 */
+  const handleAddWidget = (widgetData) => {
+    const newWidget = {
+      ...widgetData,
+      id: Date.now().toString(),
+    }
+    const updated = [...widgets, newWidget]
+    setWidgets(updated)
+    saveWidgets(pageId, updated)
+  }
+
+  /* 删除小部件 */
+  const handleRemoveWidget = (id) => {
+    const updated = widgets.filter(w => w.id !== id)
+    setWidgets(updated)
+    saveWidgets(pageId, updated)
+  }
+
   /* 开始编辑某个快捷网页，填充编辑表单 */
   const startEdit = (site) => {
     setEditingId(site.id)
@@ -332,7 +391,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const handleDragStart = (e, index) => {
     if (!isEditShortcuts) return
     dragItemIndex.current = index
-    dragItemData.current = shortcuts[index]
+    dragItemData.current = gridItems[index]
     e.dataTransfer.effectAllowed = 'move'
     const img = new Image()
     img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
@@ -342,7 +401,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   /*
    * 拖拽经过目标项：
    * - 自由布局模式：吸附到网格位置
-   * - 普通模式：交换列表位置
+   * - 普通模式：交换列表位置（支持混合列表）
    */
   const handleDragOverItem = (e, index) => {
     if (!isEditShortcuts || dragItemIndex.current === null) return
@@ -350,7 +409,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     e.dataTransfer.dropEffect = 'move'
 
     if (freeLayoutEnabled) {
-      // 自由布局：吸附到网格（40px 网格）
+      // 自由布局：吸附到网格
       const wrapper = e.currentTarget.parentElement
       const rect = wrapper.getBoundingClientRect()
       const rawX = e.clientX - rect.left - 40
@@ -359,22 +418,22 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const x = Math.round(Math.max(0, rawX) / gridSize) * gridSize
       const y = Math.round(Math.max(0, rawY) / gridSize) * gridSize
 
-      const newShortcuts = shortcuts.map((s, i) => {
+      const newGrid = gridItems.map((item, i) => {
         if (i === dragItemIndex.current) {
-          return { ...s, pos: { x, y } }
+          return { ...item, pos: { x, y } }
         }
-        return s
+        return item
       })
-      setShortcuts(newShortcuts)
+      updateFromGrid(newGrid)
     } else {
-      // 普通模式：交换位置
+      // 普通模式：交换位置（混合列表）
       if (dragOverIndex !== index) {
         setDragOverIndex(index)
         if (dragItemIndex.current !== index) {
-          const newList = [...shortcuts]
-          const [moved] = newList.splice(dragItemIndex.current, 1)
-          newList.splice(index, 0, moved)
-          setShortcuts(newList)
+          const newGrid = [...gridItems]
+          const [moved] = newGrid.splice(dragItemIndex.current, 1)
+          newGrid.splice(index, 0, moved)
+          updateFromGrid(newGrid)
           dragItemIndex.current = index
         }
       }
@@ -391,7 +450,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     dragItemIndex.current = null
     dragItemData.current = null
     setDragOverIndex(null)
+    // 保存当前 shortcuts 和 widgets
     saveShortcuts(pageId, shortcuts)
+    saveWidgets(pageId, widgets)
   }
 
   return (
@@ -447,6 +508,16 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         >
           <Pencil size={15} />
         </button>
+        {/* 小部件添加按钮：仅在编辑模式下显示 */}
+        {isEditShortcuts && (
+          <button
+            className={styles.topBtn}
+            onClick={() => setShowWidgetPanel(true)}
+            title="添加小部件"
+          >
+            <LayoutGrid size={15} />
+          </button>
+        )}
         {/* 多页切换按钮：仅在传入 onToggleSidebar 时显示 */}
         {onToggleSidebar && (
           <button
@@ -580,34 +651,50 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       )}
 
       {/* 快捷网页区域 */}
-      <div className={styles.shortcutsWrapper}>
+      <div className={`${styles.shortcutsWrapper} ${isEditShortcuts ? styles.gridEditMode : ''}`}>
         {/*
-         * 快捷网页列表 CSS 类名切换：
-         * - shortcutsFreeMode: 自由布局模式
-         * - shortcutsFreeModeEdit: 自由布局 + 编辑模式
+         * 网格布局列表：快捷网页 + 小部件混合排列
+         * 编辑模式下显示网格背景线
          */}
-        <div className={`${styles.shortcutsList} ${freeLayoutEnabled ? styles.shortcutsFreeMode : ''} ${freeLayoutEnabled && isEditShortcuts ? styles.shortcutsFreeModeEdit : ''}`}>
-          {shortcuts.map((site, index) => {
-            const pos = freeLayoutEnabled && site.pos ? site.pos : null
+        <div
+          className={`${styles.shortcutsList} ${freeLayoutEnabled ? styles.shortcutsFreeMode : ''} ${freeLayoutEnabled && isEditShortcuts ? styles.shortcutsFreeModeEdit : ''}`}
+          style={!freeLayoutEnabled ? { display: 'grid', gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`, gap: 8, justifyContent: 'center' } : undefined}
+        >
+          {gridItems.map((item, index) => {
+            const pos = freeLayoutEnabled && item.pos ? item.pos : null
+            const isWidget = item.itemType === 'widget'
+            const cols = isWidget && item.cols ? item.cols : 1
+            const rows = isWidget && item.rows ? item.rows : 1
+
             return (
               <div
-                key={site.id}
-                /*
-                 * 快捷网页项 CSS 类名切换：
-                 * - shortcutItemDraggable: 编辑模式下使卡片可拖拽且显示视觉效果
-                 * - dragOver: 当前是拖拽悬停目标时添加高亮
-                 * - shortcutItemFree: 自由布局下的定位样式
-                 */
-                className={`${styles.shortcutItem} ${isEditShortcuts ? styles.shortcutItemDraggable : ''} ${dragOverIndex === index ? styles.dragOver : ''} ${pos ? styles.shortcutItemFree : ''}`}
-                style={pos ? { left: pos.x, top: pos.y } : undefined}
-                draggable={isEditShortcuts && editingId !== site.id}
+                key={item.id}
+                className={`${styles.shortcutItem} ${isEditShortcuts ? styles.shortcutItemDraggable : ''} ${dragOverIndex === index ? styles.dragOver : ''} ${pos ? styles.shortcutItemFree : ''} ${isWidget ? styles.widgetItem : ''}`}
+                style={pos ? { left: pos.x, top: pos.y } : (!freeLayoutEnabled && isWidget ? { gridColumn: `span ${cols}`, gridRow: `span ${rows}` } : undefined)}
+                draggable={isEditShortcuts && !isWidget ? editingId !== item.id : isEditShortcuts}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOverItem(e, index)}
                 onDragLeave={handleDragLeaveItem}
                 onDragEnd={handleDragEnd}
               >
-                {/* 编辑状态：显示行内编辑表单 */}
-                {editingId === site.id ? (
+                {isWidget ? (
+                  /* 小部件渲染 */
+                  <div className={styles.widgetContent} style={{ width: '100%', height: '100%', minHeight: CELL_SIZE * rows + (rows - 1) * 8 }}>
+                    <div className={styles.widgetPlaceholder}>
+                      <span style={{ fontSize: 24, opacity: 0.4 }}>📦</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4 }}>{item.name || '小部件'}</span>
+                    </div>
+                    {/* 编辑模式：删除按钮 */}
+                    {isEditShortcuts && (
+                      <div className={styles.shortcutActions}>
+                        <button className={styles.shortcutActionBtn} onClick={() => handleRemoveWidget(item.id)} title="删除">
+                          <X size={11} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : editingId === item.id ? (
+                  /* 编辑快捷网页表单 */
                   <div
                     className={styles.editForm}
                     onClick={(e) => e.stopPropagation()}
@@ -646,36 +733,34 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                   </div>
                 ) : (
                   <>
-                    {/* 正常模式：显示可点击的链接卡片 */}
+                    {/* 正常快捷网页链接 */}
                     <a
-                      href={isEditShortcuts ? undefined : site.url}
+                      href={isEditShortcuts ? undefined : item.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={styles.shortcutLink}
-                      title={site.name}
+                      title={item.name}
                       onClick={(e) => isEditShortcuts && e.preventDefault()}
                     >
                       <div className={styles.shortcutIcon}>
                         <img
-                          src={getIconUrl(site)}
+                          src={getIconUrl(item)}
                           alt=""
                           draggable={false}
                           onError={(e) => {
-                            /* 图标加载失败时隐藏 img 并显示网站名首字符作为 fallback */
                             e.target.style.display = 'none'
-                            e.target.parentElement.textContent = site.name.charAt(0)
+                            e.target.parentElement.textContent = item.name.charAt(0)
                           }}
                         />
                       </div>
-                      <span className={styles.shortcutName}>{site.name}</span>
+                      <span className={styles.shortcutName}>{item.name}</span>
                     </a>
-                    {/* 编辑模式：显示编辑和删除操作按钮 */}
                     {isEditShortcuts && (
                       <div className={styles.shortcutActions}>
-                        <button className={styles.shortcutActionBtn} onClick={() => startEdit(site)} title="编辑">
+                        <button className={styles.shortcutActionBtn} onClick={() => startEdit(item)} title="编辑">
                           <Pencil size={11} />
                         </button>
-                        <button className={styles.shortcutActionBtn} onClick={() => handleRemoveShortcut(site.id)} title="删除">
+                        <button className={styles.shortcutActionBtn} onClick={() => handleRemoveShortcut(item.id)} title="删除">
                           <X size={11} />
                         </button>
                       </div>
@@ -713,6 +798,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       {/* 设置弹窗 */}
       {showSettings && (
         <StartPageSettings onClose={() => setShowSettings(false)} onSettingsChange={handleSettingsChange} pageId={pageId} pageName={getPages().find(p => p.id === pageId)?.name} />
+      )}
+      {/* 小部件选择弹窗 */}
+      {showWidgetPanel && (
+        <WidgetPanel onClose={() => setShowWidgetPanel(false)} onAdd={handleAddWidget} />
       )}
     </div>
   )

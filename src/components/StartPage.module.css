@@ -1245,3 +1245,55 @@
   background: rgba(239, 68, 68, 0.12);
   color: #ff6b6b;
 }
+
+/* ==================== 网格编辑模式 ==================== */
+.gridEditMode .shortcutsList {
+  background-image:
+    linear-gradient(to right, rgba(0, 122, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 122, 255, 0.06) 1px, transparent 1px);
+  background-size: 98px 98px;
+  background-position: center top;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px dashed rgba(0, 122, 255, 0.12);
+}
+
+:global([data-theme="dark"]) .gridEditMode .shortcutsList {
+  background-image:
+    linear-gradient(to right, rgba(100, 210, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(100, 210, 255, 0.08) 1px, transparent 1px);
+  border-color: rgba(100, 210, 255, 0.1);
+}
+
+/* ==================== 小部件样式 ==================== */
+.widgetItem {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.widgetContent {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.widgetContent:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.widgetPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+}
