@@ -103,25 +103,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   /* 当前日期时间信息：时、分、秒、月、日、年、星期 */
   const [dateInfo, setDateInfo] = useState({ hour: 0, minute: 0, second: 0, month: '', day: 0, year: 0, weekday: '' })
   /* 快捷网页列表，从当前页面的 localStorage 读取 */
-  const [shortcuts, setShortcuts] = useState(() => {
-    const saved = getSavedShortcuts(pageId)
-    // 测试：如果没有快捷方式，添加测试数据
-    if (saved.length === 0) {
-      const testData = [
-        { id: 'test1', name: 'Test1', url: 'https://example.com', iconUrl: '', col: 0, row: 0 },
-        { id: 'test2', name: 'Test2', url: 'https://example.com', iconUrl: '', col: 1, row: 0 },
-        { id: 'test3', name: 'Test3', url: 'https://example.com', iconUrl: '', col: 2, row: 0 },
-        { id: 'test4', name: 'Test4', url: 'https://example.com', iconUrl: '', col: 3, row: 0 },
-        { id: 'test5', name: 'Test5', url: 'https://example.com', iconUrl: '', col: 4, row: 0 },
-        { id: 'test6', name: 'Test6', url: 'https://example.com', iconUrl: '', col: 5, row: 0 },
-        { id: 'test7', name: 'Test7', url: 'https://example.com', iconUrl: '', col: 0, row: 1 },
-        { id: 'test8', name: 'Test8', url: 'https://example.com', iconUrl: '', col: 1, row: 1 },
-      ]
-      saveShortcuts(pageId, testData)
-      return testData
-    }
-    return saved
-  })
+  const [shortcuts, setShortcuts] = useState(() => getSavedShortcuts(pageId))
   /* 搜索框网格行位置（默认第 0 行，即最顶部） */
   const [searchRow, setSearchRow] = useState(() => {
     const saved = localStorage.getItem(getPageDataKey(pageId, 'nav-search-row'))
