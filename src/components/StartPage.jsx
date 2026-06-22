@@ -759,9 +759,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             position: 'absolute',
             top: 0,
             left: 0,
-            right: 0,
+            width: '100%',
             bottom: 0,
             paddingTop: '12.5vh',
+            maxWidth: 'none',
             pointerEvents: 'none',
           }}
         >
