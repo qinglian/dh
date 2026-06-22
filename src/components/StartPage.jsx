@@ -135,7 +135,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const dragItemIndex = useRef(null)
   /* 拖拽项的原始数据引用 */
   const dragItemData = useRef(null)
-  /* 当前拖拽类型：'item' | 'search' | null */
+  /* 当前拖拽类型：'item' | 'search' | 'time' | null */
   const dragTypeRef = useRef(null)
   /* 搜索框容器 DOM 引用 */
   const searchRef = useRef(null)
@@ -443,6 +443,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const newRow = Math.max(0, row)
       setSearchRow(newRow)
       localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(newRow))
+    } else if (dragType === 'time-section') {
+      // 时间栏放置：更新行位置
+      const newRow = Math.max(0, row)
+      localStorage.setItem(getPageDataKey(pageId, 'nav-time-row'), String(newRow))
     } else if (dragItemIndex.current !== null) {
       // 按钮/小部件放置：更新 col/row
       const newGrid = [...gridItems]
@@ -476,7 +480,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       className={`${styles.container} ${shortcuts.length === 0 ? styles.containerCentered : ''}`}
       onDragOver={handleGridDragOver}
       onDrop={handleGridDrop}
-      onDragLeave={() => setDropTarget(null)}
     >
       {/* 顶部工具栏 */}
       <div className={`${styles.topBar} ${isEditShortcuts ? styles.topBarVisible : ''}`}
@@ -566,7 +569,21 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div className={styles.timeSection}>
+        <div
+          className={styles.timeSection}
+          draggable={isEditShortcuts}
+          onDragStart={(e) => {
+            if (!isEditShortcuts) return
+            dragTypeRef.current = 'time'
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', 'time-section')
+            const img = new Image()
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+            e.dataTransfer.setDragImage(img, 0, 0)
+          }}
+          onDragEnd={handleDragEnd}
+          style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
+        >
           <div className={styles.time}>
             <span className={styles.timeHour}>{String(dateInfo.hour).padStart(2, '0')}</span>
             <span className={styles.timeColon}>:</span>
