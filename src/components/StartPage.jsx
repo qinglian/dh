@@ -95,6 +95,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const [dateInfo, setDateInfo] = useState({ hour: 0, minute: 0, second: 0, month: '', day: 0, year: 0, weekday: '' })
   /* 快捷网页列表，从当前页面的 localStorage 读取 */
   const [shortcuts, setShortcuts] = useState(() => getSavedShortcuts(pageId))
+  /* 搜索框网格行位置（默认第 0 行，即最顶部） */
+  const [searchRow, setSearchRow] = useState(() => {
+    const saved = localStorage.getItem(getPageDataKey(pageId, 'nav-search-row'))
+    return saved !== null ? parseInt(saved) : 0
+  })
   /* 小部件列表 */
   const [widgets, setWidgets] = useState(() => getSavedWidgets(pageId))
   /* 小部件面板显示状态 */
@@ -404,20 +409,18 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     e.dataTransfer.setDragImage(img, 0, 0)
   }
 
-  /* 网格容器上的 dragOver：计算鼠标所在网格位置 */
+  /* 网格容器上的 dragOver：基于整个页面计算网格位置 */
   const handleGridDragOver = (e) => {
     if (!isEditShortcuts || dragItemIndex.current === null) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
 
-    const gridEl = e.currentTarget
-    const rect = gridEl.getBoundingClientRect()
     const gap = 8
     const cellTotal = CELL_SIZE + gap
-    const padding = 12
 
-    const col = Math.floor((e.clientX - rect.left - padding) / cellTotal)
-    const row = Math.floor((e.clientY - rect.top - padding) / cellTotal)
+    // 基于视口计算网格坐标，使整个页面都是可放置区域
+    const col = Math.floor((e.clientX) / cellTotal)
+    const row = Math.floor((e.clientY) / cellTotal)
 
     if (col >= 0 && col < GRID_COLS && row >= 0) {
       setDropTarget({ col: Math.min(col, GRID_COLS - 1), row })
@@ -426,20 +429,28 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /* 网格容器上的 drop：直接设置目标 col/row */
   const handleGridDrop = (e) => {
-    if (!isEditShortcuts || dragItemIndex.current === null || !dropTarget) return
+    if (!isEditShortcuts || !dropTarget) return
     e.preventDefault()
 
     const { col, row } = dropTarget
-    const newGrid = [...gridItems]
-    newGrid[dragItemIndex.current] = { ...newGrid[dragItemIndex.current], col, row }
-    updateFromGrid(newGrid)
+    const dragType = e.dataTransfer.getData('text/plain')
+
+    if (dragType === 'search-box') {
+      // 搜索框放置：更新行位置
+      const newRow = Math.max(0, row)
+      setSearchRow(newRow)
+      localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(newRow))
+    } else if (dragItemIndex.current !== null) {
+      // 按钮/小部件放置：更新 col/row
+      const newGrid = [...gridItems]
+      newGrid[dragItemIndex.current] = { ...newGrid[dragItemIndex.current], col, row }
+      updateFromGrid(newGrid)
+    }
 
     dragItemIndex.current = null
     dragItemData.current = null
     setDropTarget(null)
     setDragOverIndex(null)
-    saveShortcuts(pageId, shortcuts)
-    saveWidgets(pageId, widgets)
   }
 
   /* 拖拽结束：重置所有拖拽引用 */
@@ -456,7 +467,12 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
      * - container: 基础布局
      * - containerCentered: 当没有快捷网页时，使内容在垂直方向居中
      */
-    <div className={`${styles.container} ${shortcuts.length === 0 ? styles.containerCentered : ''}`}>
+    <div
+      className={`${styles.container} ${shortcuts.length === 0 ? styles.containerCentered : ''}`}
+      onDragOver={handleGridDragOver}
+      onDrop={handleGridDrop}
+      onDragLeave={() => setDropTarget(null)}
+    >
       {/* 顶部工具栏 */}
       <div className={`${styles.topBar} ${isEditShortcuts ? styles.topBarVisible : ''}`}
         ref={topBarRef}
@@ -562,7 +578,26 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 搜索框：根据设置项 searchBox.visible 控制显示 */}
       {startSettings.searchBox?.visible !== false && (
-        <div className={styles.searchWrapper}>
+        <div
+          className={styles.searchWrapper}
+          draggable={isEditShortcuts}
+          onDragStart={(e) => {
+            if (!isEditShortcuts) return
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', 'search-box')
+            const img = new Image()
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+            e.dataTransfer.setDragImage(img, 0, 0)
+          }}
+          onDragEnd={() => setDropTarget(null)}
+          style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
+        >
+          {/* 编辑模式拖拽手柄 */}
+          {isEditShortcuts && (
+            <div className={styles.dragHandleBar}>
+              <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: 2 }}>⠿</span>
+            </div>
+          )}
           <div className={styles.searchBox}>
             {/* 搜索引擎选择器下拉 */}
             <div className={styles.engineSelector} ref={enginePickerRef}>
@@ -654,9 +689,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         <div
           className={styles.shortcutsList}
           style={{ display: 'grid', gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`, gridAutoRows: `${CELL_SIZE}px`, gap: 8, justifyContent: 'center', position: 'relative' }}
-          onDragOver={handleGridDragOver}
-          onDrop={handleGridDrop}
-          onDragLeave={() => setDropTarget(null)}
         >
           {gridItems.map((item, index) => {
             const isWidget = item.itemType === 'widget'
@@ -798,12 +830,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         )}
       </div>
 
-      {/* 快捷提示 - 显示在搜索框下方 */}
-      {startSettings.searchBox?.visible !== false && (
-        <div className={styles.hint}>
-          输入关键词搜索 · 按 Enter 快速搜索
-        </div>
-      )}
+
 
       {/* 设置弹窗 */}
       {showSettings && (

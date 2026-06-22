@@ -1248,6 +1248,21 @@
 
 /* ==================== 网格编辑模式（不可见网格，拖拽时显示占位） ==================== */
 
+/* 搜索框拖拽手柄 */
+.dragHandleBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0 6px;
+  cursor: grab;
+  user-select: none;
+  opacity: 0.5;
+}
+
+.dragHandleBar:active {
+  cursor: grabbing;
+}
+
 /* 拖拽中原位置的半透明占位 */
 .dragSource {
   opacity: 0.3;
