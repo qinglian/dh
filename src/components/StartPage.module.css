@@ -1253,14 +1253,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 0 6px;
+  width: 100%;
+  padding: 8px 0;
+  margin-bottom: 4px;
   cursor: grab;
   user-select: none;
-  opacity: 0.5;
+  border-radius: 6px;
+  background: rgba(128, 128, 128, 0.08);
+  border: 1px dashed rgba(128, 128, 128, 0.25);
+  transition: all 0.2s ease;
+}
+
+.dragHandleBar:hover {
+  background: rgba(128, 128, 128, 0.15);
+  border-color: rgba(128, 128, 128, 0.4);
 }
 
 .dragHandleBar:active {
   cursor: grabbing;
+  background: rgba(128, 128, 128, 0.2);
+}
+
+.dragHandleIcon {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  letter-spacing: 2px;
+  opacity: 0.7;
 }
 
 /* 拖拽中原位置的半透明占位 */
