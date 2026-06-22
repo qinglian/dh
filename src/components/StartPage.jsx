@@ -453,54 +453,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     }
   }
 
-  /* 网格容器上的 dragOver：基于网格容器偏移计算网格位置 */
-  const handleGridDragOver = (e) => {
-    if (!isEditShortcuts) return
-    // 必须 preventDefault 才能允许 drop
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-
-    const pos = getGridPos(e.clientX, e.clientY)
-    if (pos) {
-      setDropTarget(pos)
-    }
-  }
-
-  /* 网格容器上的 drop：直接从事件坐标计算网格位置 */
-  const handleGridDrop = (e) => {
-    if (!isEditShortcuts) return
-    e.preventDefault()
-
-    const pos = getGridPos(e.clientX, e.clientY)
-    if (!pos) return
-    const { col, row } = pos
-
-    const dragData = e.dataTransfer.getData('text/plain')
-
-    if (dragData === 'search-box') {
-      // 搜索框放置：更新行位置
-      setSearchRow(row)
-      localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(row))
-    } else if (dragData === 'time-section') {
-      // 时间栏放置：更新行位置
-      setTimeRow(row)
-      localStorage.setItem(getPageDataKey(pageId, 'nav-time-row'), String(row))
-    } else if (dragData.startsWith('item:')) {
-      // 按钮/小部件放置：更新 col/row
-      const idx = parseInt(dragData.split(':')[1])
-      if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
-        const newGrid = [...gridItems]
-        newGrid[idx] = { ...newGrid[idx], col, row }
-        updateFromGrid(newGrid)
-      }
-    }
-
-    dragItemIndex.current = null
-    dragItemData.current = null
-    setDropTarget(null)
-    setDragOverIndex(null)
-  }
-
   /* 拖拽结束：重置所有拖拽引用 */
   const handleDragEnd = (e) => {
     dragItemIndex.current = null
@@ -508,6 +460,71 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     setDropTarget(null)
     setDragOverIndex(null)
   }
+
+  /*
+   * 在 document 级别监听拖拽事件，确保整个页面（包括 topBar、时间栏、搜索框等区域）
+   * 都能响应 dragover/drop，不受子元素事件冒泡阻断影响
+   */
+  useEffect(() => {
+    const onDragOver = (e) => {
+      if (!isEditShortcuts) return
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+
+      const pos = getGridPos(e.clientX, e.clientY)
+      if (pos) {
+        setDropTarget(pos)
+      }
+    }
+
+    const onDrop = (e) => {
+      if (!isEditShortcuts) return
+      e.preventDefault()
+
+      const pos = getGridPos(e.clientX, e.clientY)
+      if (!pos) return
+      const { col, row } = pos
+
+      const dragData = e.dataTransfer.getData('text/plain')
+
+      if (dragData === 'search-box') {
+        setSearchRow(row)
+        localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(row))
+      } else if (dragData === 'time-section') {
+        setTimeRow(row)
+        localStorage.setItem(getPageDataKey(pageId, 'nav-time-row'), String(row))
+      } else if (dragData.startsWith('item:')) {
+        const idx = parseInt(dragData.split(':')[1])
+        if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
+          const newGrid = [...gridItems]
+          newGrid[idx] = { ...newGrid[idx], col, row }
+          updateFromGrid(newGrid)
+        }
+      }
+
+      dragItemIndex.current = null
+      dragItemData.current = null
+      setDropTarget(null)
+      setDragOverIndex(null)
+    }
+
+    const onDragEnd = () => {
+      dragItemIndex.current = null
+      dragItemData.current = null
+      setDropTarget(null)
+      setDragOverIndex(null)
+    }
+
+    document.addEventListener('dragover', onDragOver)
+    document.addEventListener('drop', onDrop)
+    document.addEventListener('dragend', onDragEnd)
+
+    return () => {
+      document.removeEventListener('dragover', onDragOver)
+      document.removeEventListener('drop', onDrop)
+      document.removeEventListener('dragend', onDragEnd)
+    }
+  }, [isEditShortcuts, pageId, gridItems])
 
   return (
     /*
@@ -518,8 +535,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     <div
       ref={containerRef}
       className={`${styles.container} ${shortcuts.length === 0 ? styles.containerCentered : ''}`}
-      onDragOver={handleGridDragOver}
-      onDrop={handleGridDrop}
     >
       {/* 顶部工具栏 */}
       <div className={`${styles.topBar} ${isEditShortcuts ? styles.topBarVisible : ''}`}
