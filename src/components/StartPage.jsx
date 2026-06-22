@@ -109,6 +109,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const saved = localStorage.getItem(getPageDataKey(pageId, 'nav-search-row'))
     return saved !== null ? parseInt(saved) : 0
   })
+  /* 时间栏网格行位置 */
+  const [timeRow, setTimeRow] = useState(() => {
+    const saved = localStorage.getItem(getPageDataKey(pageId, 'nav-time-row'))
+    return saved !== null ? parseInt(saved) : 0
+  })
   /* 小部件列表 */
   const [widgets, setWidgets] = useState(() => getSavedWidgets(pageId))
   /* 小部件面板显示状态 */
@@ -146,6 +151,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const dragItemData = useRef(null)
   /* 搜索框容器 DOM 引用 */
   const searchRef = useRef(null)
+  /* 网格容器 DOM 引用，用于拖拽坐标偏移计算 */
+  const gridRef = useRef(null)
+  /* 页面容器 DOM 引用，用于时间栏/搜索框拖拽坐标计算 */
+  const containerRef = useRef(null)
   /* 搜索输入框 DOM 引用 */
   const inputRef = useRef(null)
   /* 主题下拉容器 DOM 引用，用于检测外部点击 */
@@ -415,7 +424,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     e.dataTransfer.setData('text/plain', 'item:' + index)
   }
 
-  /* 网格容器上的 dragOver：基于整个页面计算网格位置 */
+  /* 网格容器上的 dragOver：基于网格容器偏移计算网格位置 */
   const handleGridDragOver = (e) => {
     if (!isEditShortcuts) return
     // 必须 preventDefault 才能允许 drop
@@ -425,9 +434,22 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const gap = 8
     const cellTotal = CELL_SIZE + gap
 
-    // 基于视口计算网格坐标，使整个页面都是可放置区域
-    const col = Math.floor((e.clientX) / cellTotal)
-    const row = Math.floor((e.clientY) / cellTotal)
+    // 优先使用 shortcutsList 网格容器的坐标
+    const gridEl = gridRef.current
+    const containerEl = containerRef.current
+    let rect
+    if (gridEl) {
+      rect = gridEl.getBoundingClientRect()
+    } else if (containerEl) {
+      rect = containerEl.getBoundingClientRect()
+    } else {
+      return
+    }
+
+    const offsetX = e.clientX - rect.left
+    const offsetY = e.clientY - rect.top
+    const col = Math.floor(offsetX / cellTotal)
+    const row = Math.floor(offsetY / cellTotal)
 
     if (col >= 0 && col < GRID_COLS && row >= 0) {
       setDropTarget({ col: Math.min(col, GRID_COLS - 1), row })
@@ -439,11 +461,25 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     if (!isEditShortcuts) return
     e.preventDefault()
 
-    // 直接从 drop 事件的坐标计算网格位置，不依赖异步 state
     const gap = 8
     const cellTotal = CELL_SIZE + gap
-    const col = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(e.clientX / cellTotal)))
-    const row = Math.max(0, Math.floor(e.clientY / cellTotal))
+
+    // 优先使用 shortcutsList 网格容器的坐标
+    const gridEl = gridRef.current
+    const containerEl = containerRef.current
+    let rect
+    if (gridEl) {
+      rect = gridEl.getBoundingClientRect()
+    } else if (containerEl) {
+      rect = containerEl.getBoundingClientRect()
+    } else {
+      return
+    }
+
+    const offsetX = e.clientX - rect.left
+    const offsetY = e.clientY - rect.top
+    const col = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(offsetX / cellTotal)))
+    const row = Math.max(0, Math.floor(offsetY / cellTotal))
 
     const dragData = e.dataTransfer.getData('text/plain')
 
@@ -453,6 +489,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       localStorage.setItem(getPageDataKey(pageId, 'nav-search-row'), String(row))
     } else if (dragData === 'time-section') {
       // 时间栏放置：更新行位置
+      setTimeRow(row)
       localStorage.setItem(getPageDataKey(pageId, 'nav-time-row'), String(row))
     } else if (dragData.startsWith('item:')) {
       // 按钮/小部件放置：更新 col/row
@@ -485,6 +522,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
      * - containerCentered: 当没有快捷网页时，使内容在垂直方向居中
      */
     <div
+      ref={containerRef}
       className={`${styles.container} ${shortcuts.length === 0 ? styles.containerCentered : ''}`}
       onDragOver={handleGridDragOver}
       onDrop={handleGridDrop}
@@ -711,6 +749,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
          */}
         <div
           className={styles.shortcutsList}
+          ref={gridRef}
           style={{ display: 'grid', gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`, gridAutoRows: `${CELL_SIZE}px`, gap: 8, justifyContent: 'center', position: 'relative' }}
         >
           {gridItems.map((item, index) => {
@@ -836,8 +875,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             <div
               className={styles.dropPlaceholder}
               style={{
-                gridColumn: `span ${dragItemData.current.cols || 1}`,
-                gridRow: `span ${dragItemData.current.rows || 1}`,
+                gridColumnStart: dropTarget.col + 1,
+                gridRowStart: dropTarget.row + 1,
+                gridColumnEnd: `span ${dragItemData.current.cols || 1}`,
+                gridRowEnd: `span ${dragItemData.current.rows || 1}`,
               }}
             />
           )}
