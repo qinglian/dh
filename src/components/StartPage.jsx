@@ -664,7 +664,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
               <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: 2 }}>⠿</span>
             </div>
           )}
-          <div className={styles.searchBox}>
+          <div className={styles.searchBox} style={isEditShortcuts ? { pointerEvents: 'none' } : undefined}>
             {/* 搜索引擎选择器下拉 */}
             <div className={styles.engineSelector} ref={enginePickerRef}>
               <button className={styles.engineBtn} onClick={() => setShowEnginePicker(!showEnginePicker)}>
