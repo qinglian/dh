@@ -103,7 +103,25 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   /* 当前日期时间信息：时、分、秒、月、日、年、星期 */
   const [dateInfo, setDateInfo] = useState({ hour: 0, minute: 0, second: 0, month: '', day: 0, year: 0, weekday: '' })
   /* 快捷网页列表，从当前页面的 localStorage 读取 */
-  const [shortcuts, setShortcuts] = useState(() => getSavedShortcuts(pageId))
+  const [shortcuts, setShortcuts] = useState(() => {
+    const saved = getSavedShortcuts(pageId)
+    // 测试：如果没有快捷方式，添加测试数据
+    if (saved.length === 0) {
+      const testData = [
+        { id: 'test1', name: 'Test1', url: 'https://example.com', iconUrl: '', col: 0, row: 0 },
+        { id: 'test2', name: 'Test2', url: 'https://example.com', iconUrl: '', col: 1, row: 0 },
+        { id: 'test3', name: 'Test3', url: 'https://example.com', iconUrl: '', col: 2, row: 0 },
+        { id: 'test4', name: 'Test4', url: 'https://example.com', iconUrl: '', col: 3, row: 0 },
+        { id: 'test5', name: 'Test5', url: 'https://example.com', iconUrl: '', col: 4, row: 0 },
+        { id: 'test6', name: 'Test6', url: 'https://example.com', iconUrl: '', col: 5, row: 0 },
+        { id: 'test7', name: 'Test7', url: 'https://example.com', iconUrl: '', col: 0, row: 1 },
+        { id: 'test8', name: 'Test8', url: 'https://example.com', iconUrl: '', col: 1, row: 1 },
+      ]
+      saveShortcuts(pageId, testData)
+      return testData
+    }
+    return saved
+  })
   /* 搜索框网格行位置（默认第 0 行，即最顶部） */
   const [searchRow, setSearchRow] = useState(() => {
     const saved = localStorage.getItem(getPageDataKey(pageId, 'nav-search-row'))
@@ -151,6 +169,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const dragItemData = useRef(null)
   /* 搜索框容器 DOM 引用 */
   const searchRef = useRef(null)
+  /* 时间栏容器 DOM 引用 */
+  const timeSectionRef = useRef(null)
   /* 网格容器 DOM 引用，用于拖拽坐标偏移计算 */
   const gridRef = useRef(null)
   /* 网格动态 paddingTop，确保快捷网页在搜索框下方 */
@@ -181,17 +201,18 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   /* 自由布局模式开关（当前为关闭状态） */
   const freeLayoutEnabled = false
 
-  /* 网格常量 — 正方形单元格 */
-  const GRID_COLS = 6
+  /* 网格常量 — 单元格尺寸 */
   const CELL_SIZE = 80
+  const GAP = 8
+  const CELL_TOTAL = CELL_SIZE + GAP
 
   /*
    * 合并列表：快捷网页 + 小部件，每个项携带 col/row 坐标。
    * 旧数据没有 col/row 时，按数组顺序自动分配（兼容迁移）。
    */
   const gridItems = useMemo(() => {
-    const sItems = shortcuts.map((s, i) => ({ ...s, itemType: 'shortcut', col: s.col ?? (i % GRID_COLS), row: s.row ?? Math.floor(i / GRID_COLS) }))
-    const wItems = widgets.map((w, i) => ({ ...w, itemType: 'widget', col: w.col ?? ((shortcuts.length + i) % GRID_COLS), row: w.row ?? Math.floor((shortcuts.length + i) / GRID_COLS) }))
+    const sItems = shortcuts.map((s, i) => ({ ...s, itemType: 'shortcut', col: s.col ?? (i % 6), row: s.row ?? Math.floor(i / 6) }))
+    const wItems = widgets.map((w, i) => ({ ...w, itemType: 'widget', col: w.col ?? ((shortcuts.length + i) % 6), row: w.row ?? Math.floor((shortcuts.length + i) / 6) }))
     return [...sItems, ...wItems]
   }, [shortcuts, widgets])
 
@@ -450,28 +471,29 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }
 
   /*
-   * 计算鼠标相对于 shortcutsList 网格的网格坐标
-   * shortcutsList 是快捷网页的实际渲染位置
-   * 水平方向考虑 grid 在 shortcutsList 内居中的偏移
-   * 垂直方向：鼠标在 shortcutsList 上方时 row=0，下方时按 cellTotal 递增
+   * 计算鼠标相对于网格的坐标
+   * 网格覆盖整个视口（position: absolute; inset: 0），使用 auto-fill 全宽布局
+   * 动态读取列数，与 CSS grid 渲染完全一致
    */
-  const getGridPos = (clientX, clientY) => {
-    const gap = 8
-    const cellTotal = CELL_SIZE + gap
-    const gridEl = gridRef.current
-    if (!gridEl) return null
-    const rect = gridEl.getBoundingClientRect()
-    // grid 内容总宽度（不含最右边 gap）
-    const gridContentWidth = GRID_COLS * cellTotal - gap
-    // grid 内容在 shortcutsList 内的居中偏移
-    const gridOffsetX = (rect.width - gridContentWidth) / 2
-    const offsetX = clientX - rect.left - gridOffsetX
-    const offsetY = clientY - rect.top
-    return {
-      col: Math.max(0, Math.min(GRID_COLS - 1, Math.floor(offsetX / cellTotal))),
-      row: Math.max(0, Math.floor(offsetY / cellTotal)),
+  const getGridPos = useMemo(() => {
+    return (clientX, clientY) => {
+      const gridEl = gridRef.current
+      if (!gridEl) return null
+      const rect = gridEl.getBoundingClientRect()
+      const cs = getComputedStyle(gridEl)
+      const padTop = parseFloat(cs.paddingTop) || 0
+      // 动态列数：从容器宽度计算，与 auto-fill 一致
+      const cols = Math.max(1, Math.floor((rect.width + GAP) / CELL_TOTAL))
+      const gridContentWidth = cols * CELL_TOTAL - GAP
+      const gridOffsetX = (rect.width - gridContentWidth) / 2
+      const offsetX = clientX - rect.left - gridOffsetX
+      const offsetY = clientY - rect.top - padTop
+      return {
+        col: Math.max(0, Math.min(cols - 1, Math.floor(offsetX / CELL_TOTAL))),
+        row: Math.max(0, Math.floor(offsetY / CELL_TOTAL)),
+      }
     }
-  }
+  }, [])
 
   /* 拖拽结束：重置所有拖拽引用 */
   const handleDragEnd = (e) => {
@@ -644,8 +666,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div className={styles.timeSection} style={{ position: 'relative', cursor: isEditShortcuts ? 'grab' : undefined }}>
-          {/* 编辑模式覆盖层：覆盖整个时间栏，用于拖拽 */}
+        <div className={styles.timeSection} style={{ position: 'relative' }} ref={timeSectionRef}>
+          {/* 编辑模式覆盖层：position: absolute 仅覆盖时间栏区域 */}
           {isEditShortcuts && (
             <div
               draggable
@@ -653,6 +675,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                 dragItemData.current = { cols: 6, rows: 2 }
                 e.dataTransfer.effectAllowed = 'move'
                 e.dataTransfer.setData('text/plain', 'time-section')
+                const img = new Image()
+                img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+                e.dataTransfer.setDragImage(img, 0, 0)
               }}
               onDragEnd={handleDragEnd}
               style={{
@@ -679,8 +704,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 搜索框：根据设置项 searchBox.visible 控制显示 */}
       {startSettings.searchBox?.visible !== false && (
-        <div ref={searchRef} className={styles.searchWrapper} style={{ position: 'relative', cursor: isEditShortcuts ? 'grab' : undefined }}>
-          {/* 编辑模式覆盖层：覆盖整个搜索框，用于拖拽 */}
+        <div ref={searchRef} className={styles.searchWrapper} style={{ position: 'relative' }}>
+          {/* 编辑模式覆盖层：position: absolute 仅覆盖搜索框区域 */}
           {isEditShortcuts && (
             <div
               draggable
@@ -688,6 +713,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                 dragItemData.current = { cols: 6, rows: 1 }
                 e.dataTransfer.effectAllowed = 'move'
                 e.dataTransfer.setData('text/plain', 'search-box')
+                const img = new Image()
+                img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+                e.dataTransfer.setDragImage(img, 0, 0)
               }}
               onDragEnd={handleDragEnd}
               style={{
@@ -798,7 +826,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           ref={gridRef}
           style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`,
+            gridTemplateColumns: `repeat(auto-fill, ${CELL_SIZE}px)`,
             gridAutoRows: `${CELL_SIZE}px`,
             gap: 8,
             justifyContent: 'center',
@@ -816,8 +844,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             const isWidget = item.itemType === 'widget'
             const cols = isWidget && item.cols ? item.cols : 1
             const rows = isWidget && item.rows ? item.rows : 1
-            const col = item.col ?? (index % GRID_COLS)
-            const row = item.row ?? Math.floor(index / GRID_COLS)
+            const col = item.col ?? (index % 6)
+            const row = item.row ?? Math.floor(index / 6)
 
             return (
               <div
