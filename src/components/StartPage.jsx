@@ -743,10 +743,22 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 快捷网页区域 */}
       <div className={styles.shortcutsWrapper} style={{ pointerEvents: 'none' }}>
-        {/*
-         * 网格布局列表：快捷网页 + 小部件混合排列
-         * 编辑模式下网格不可见，拖拽时显示占位
-         */}
+        {/* 添加快捷网页表单 */}
+        {isEditShortcuts && showAddShortcut && (
+          <div className={styles.shortcutForm} style={{ pointerEvents: 'auto' }}>
+            <input type="text" placeholder="名称" value={newShortcut.name} onChange={(e) => setNewShortcut({ ...newShortcut, name: e.target.value })} className={styles.shortcutInput} />
+            <input type="text" placeholder="网址" value={newShortcut.url} onChange={(e) => setNewShortcut({ ...newShortcut, url: e.target.value })} className={styles.shortcutInput} />
+            <input type="text" placeholder="图标URL（可选，留空自动获取）" value={newShortcut.iconUrl} onChange={(e) => setNewShortcut({ ...newShortcut, iconUrl: e.target.value })} className={styles.shortcutInput} />
+            <button className={styles.shortcutConfirm} onClick={handleAddShortcut}>添加</button>
+          </div>
+        )}
+      </div>
+
+      {/*
+       * 网格布局列表：快捷网页 + 小部件混合排列
+       * 直接放在 container 内部（position: absolute），确保 inset: 0 正确工作
+       * 编辑模式下网格不可见，拖拽时显示占位
+       */}
         <div
           className={styles.shortcutsList}
           ref={gridRef}
@@ -759,7 +771,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '100%',
+            right: 0,
             bottom: 0,
             paddingTop: '12.5vh',
             maxWidth: 'none',
@@ -899,16 +911,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             />
           )}
         </div>
-        {/* 添加快捷网页表单 */}
-        {isEditShortcuts && showAddShortcut && (
-          <div className={styles.shortcutForm} style={{ pointerEvents: 'auto' }}>
-            <input type="text" placeholder="名称" value={newShortcut.name} onChange={(e) => setNewShortcut({ ...newShortcut, name: e.target.value })} className={styles.shortcutInput} />
-            <input type="text" placeholder="网址" value={newShortcut.url} onChange={(e) => setNewShortcut({ ...newShortcut, url: e.target.value })} className={styles.shortcutInput} />
-            <input type="text" placeholder="图标URL（可选，留空自动获取）" value={newShortcut.iconUrl} onChange={(e) => setNewShortcut({ ...newShortcut, iconUrl: e.target.value })} className={styles.shortcutInput} />
-            <button className={styles.shortcutConfirm} onClick={handleAddShortcut}>添加</button>
-          </div>
-        )}
-      </div>
 
 
 
