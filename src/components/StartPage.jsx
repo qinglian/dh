@@ -135,6 +135,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const dragItemIndex = useRef(null)
   /* 拖拽项的原始数据引用 */
   const dragItemData = useRef(null)
+  /* 当前拖拽类型：'item' | 'search' | null */
+  const dragTypeRef = useRef(null)
   /* 搜索框容器 DOM 引用 */
   const searchRef = useRef(null)
   /* 搜索输入框 DOM 引用 */
@@ -402,6 +404,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     if (!isEditShortcuts) return
     dragItemIndex.current = index
     dragItemData.current = gridItems[index]
+    dragTypeRef.current = 'item'
     e.dataTransfer.effectAllowed = 'move'
     // 设置透明拖拽图像（我们自己渲染悬浮预览）
     const img = new Image()
@@ -411,7 +414,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /* 网格容器上的 dragOver：基于整个页面计算网格位置 */
   const handleGridDragOver = (e) => {
-    if (!isEditShortcuts || dragItemIndex.current === null) return
+    if (!isEditShortcuts || dragTypeRef.current === null) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
 
@@ -449,6 +452,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
     dragItemIndex.current = null
     dragItemData.current = null
+    dragTypeRef.current = null
     setDropTarget(null)
     setDragOverIndex(null)
   }
@@ -457,6 +461,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const handleDragEnd = (e) => {
     dragItemIndex.current = null
     dragItemData.current = null
+    dragTypeRef.current = null
     setDropTarget(null)
     setDragOverIndex(null)
   }
@@ -583,13 +588,14 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           draggable={isEditShortcuts}
           onDragStart={(e) => {
             if (!isEditShortcuts) return
+            dragTypeRef.current = 'search'
             e.dataTransfer.effectAllowed = 'move'
             e.dataTransfer.setData('text/plain', 'search-box')
             const img = new Image()
             img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
             e.dataTransfer.setDragImage(img, 0, 0)
           }}
-          onDragEnd={() => setDropTarget(null)}
+          onDragEnd={handleDragEnd}
           style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
         >
           {/* 编辑模式拖拽手柄 */}
