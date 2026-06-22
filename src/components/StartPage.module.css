@@ -1246,23 +1246,46 @@
   color: #ff6b6b;
 }
 
-/* ==================== 网格编辑模式 ==================== */
-.gridEditMode .shortcutsList {
-  background-image:
-    linear-gradient(to right, rgba(0, 122, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 122, 255, 0.06) 1px, transparent 1px);
-  background-size: 98px 98px;
-  background-position: center top;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px dashed rgba(0, 122, 255, 0.12);
+/* ==================== 网格编辑模式（不可见网格，拖拽时显示占位） ==================== */
+
+/* 拖拽中原位置的半透明占位 */
+.dragSource {
+  opacity: 0.3;
+  transform: scale(0.95);
 }
 
-:global([data-theme="dark"]) .gridEditMode .shortcutsList {
-  background-image:
-    linear-gradient(to right, rgba(100, 210, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(100, 210, 255, 0.08) 1px, transparent 1px);
-  border-color: rgba(100, 210, 255, 0.1);
+/* 拖拽中的项目 */
+.dragging {
+  opacity: 0.5;
+}
+
+/* 拖拽悬浮占位预览 */
+.dropPlaceholder {
+  background: rgba(0, 122, 255, 0.08);
+  border: 2px dashed rgba(0, 122, 255, 0.25);
+  border-radius: 14px;
+  min-height: 90px;
+  transition: all 0.15s ease;
+  animation: dropPulse 1s ease-in-out infinite;
+}
+
+@keyframes dropPulse {
+  0%, 100% { border-color: rgba(0, 122, 255, 0.25); background: rgba(0, 122, 255, 0.06); }
+  50% { border-color: rgba(0, 122, 255, 0.4); background: rgba(0, 122, 255, 0.1); }
+}
+
+:global([data-theme="dark"]) .dropPlaceholder {
+  background: rgba(100, 210, 255, 0.08);
+  border-color: rgba(100, 210, 255, 0.2);
+}
+
+:global([data-theme="dark"]) .dropPlaceholder {
+  animation-name: dropPulseDark;
+}
+
+@keyframes dropPulseDark {
+  0%, 100% { border-color: rgba(100, 210, 255, 0.2); background: rgba(100, 210, 255, 0.06); }
+  50% { border-color: rgba(100, 210, 255, 0.35); background: rgba(100, 210, 255, 0.1); }
 }
 
 /* ==================== 小部件样式 ==================== */

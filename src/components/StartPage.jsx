@@ -124,6 +124,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /* 拖拽悬停目标索引，用于高亮当前拖拽位置 */
   const [dragOverIndex, setDragOverIndex] = useState(null)
+  /* 拖拽悬浮占位位置 { col, row } */
+  const [dropTarget, setDropTarget] = useState(null)
   /* 拖拽项的原始索引，用于交换计算 */
   const dragItemIndex = useRef(null)
   /* 拖拽项的原始数据引用 */
@@ -393,66 +395,62 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     dragItemIndex.current = index
     dragItemData.current = gridItems[index]
     e.dataTransfer.effectAllowed = 'move'
+    // 设置透明拖拽图像（我们自己渲染悬浮预览）
     const img = new Image()
     img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
     e.dataTransfer.setDragImage(img, 0, 0)
   }
 
-  /*
-   * 拖拽经过目标项：
-   * - 自由布局模式：吸附到网格位置
-   * - 普通模式：交换列表位置（支持混合列表）
-   */
-  const handleDragOverItem = (e, index) => {
+  /* 网格容器上的 dragOver：计算鼠标所在网格位置 */
+  const handleGridDragOver = (e) => {
     if (!isEditShortcuts || dragItemIndex.current === null) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
 
-    if (freeLayoutEnabled) {
-      // 自由布局：吸附到网格
-      const wrapper = e.currentTarget.parentElement
-      const rect = wrapper.getBoundingClientRect()
-      const rawX = e.clientX - rect.left - 40
-      const rawY = e.clientY - rect.top - 40
-      const gridSize = 40
-      const x = Math.round(Math.max(0, rawX) / gridSize) * gridSize
-      const y = Math.round(Math.max(0, rawY) / gridSize) * gridSize
+    const gridEl = e.currentTarget
+    const rect = gridEl.getBoundingClientRect()
+    const gap = 8
+    const cellTotal = CELL_SIZE + gap
+    const padding = 12
 
-      const newGrid = gridItems.map((item, i) => {
-        if (i === dragItemIndex.current) {
-          return { ...item, pos: { x, y } }
-        }
-        return item
-      })
-      updateFromGrid(newGrid)
-    } else {
-      // 普通模式：交换位置（混合列表）
-      if (dragOverIndex !== index) {
-        setDragOverIndex(index)
-        if (dragItemIndex.current !== index) {
-          const newGrid = [...gridItems]
-          const [moved] = newGrid.splice(dragItemIndex.current, 1)
-          newGrid.splice(index, 0, moved)
-          updateFromGrid(newGrid)
-          dragItemIndex.current = index
-        }
-      }
+    const col = Math.floor((e.clientX - rect.left - padding) / cellTotal)
+    const row = Math.floor((e.clientY - rect.top - padding) / cellTotal)
+
+    if (col >= 0 && col < GRID_COLS && row >= 0) {
+      setDropTarget({ col: Math.min(col, GRID_COLS - 1), row })
     }
   }
 
-  /* 拖拽离开目标项（预留，当前不需要额外处理） */
-  const handleDragLeaveItem = (e) => {
-    // 不需要处理
+  /* 网格容器上的 drop：计算目标位置并重排数组 */
+  const handleGridDrop = (e) => {
+    if (!isEditShortcuts || dragItemIndex.current === null || !dropTarget) return
+    e.preventDefault()
+
+    const { col, row } = dropTarget
+    const targetIndex = row * GRID_COLS + col
+
+    if (dragItemIndex.current !== targetIndex) {
+      const newGrid = [...gridItems]
+      const [moved] = newGrid.splice(dragItemIndex.current, 1)
+      const insertAt = Math.min(targetIndex, newGrid.length)
+      newGrid.splice(insertAt, 0, moved)
+      updateFromGrid(newGrid)
+    }
+
+    dragItemIndex.current = null
+    dragItemData.current = null
+    setDropTarget(null)
+    setDragOverIndex(null)
+    saveShortcuts(pageId, shortcuts)
+    saveWidgets(pageId, widgets)
   }
 
-  /* 拖拽结束：重置所有拖拽引用并保存最终顺序 */
+  /* 拖拽结束：重置所有拖拽引用 */
   const handleDragEnd = (e) => {
     dragItemIndex.current = null
     dragItemData.current = null
+    setDropTarget(null)
     setDragOverIndex(null)
-    // 保存当前 shortcuts 和 widgets
-    saveShortcuts(pageId, shortcuts)
-    saveWidgets(pageId, widgets)
   }
 
   return (
@@ -651,14 +649,17 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       )}
 
       {/* 快捷网页区域 */}
-      <div className={`${styles.shortcutsWrapper} ${isEditShortcuts ? styles.gridEditMode : ''}`}>
+      <div className={styles.shortcutsWrapper}>
         {/*
          * 网格布局列表：快捷网页 + 小部件混合排列
-         * 编辑模式下显示网格背景线
+         * 编辑模式下网格不可见，拖拽时显示占位
          */}
         <div
-          className={`${styles.shortcutsList} ${freeLayoutEnabled ? styles.shortcutsFreeMode : ''} ${freeLayoutEnabled && isEditShortcuts ? styles.shortcutsFreeModeEdit : ''}`}
-          style={!freeLayoutEnabled ? { display: 'grid', gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`, gap: 8, justifyContent: 'center' } : undefined}
+          className={styles.shortcutsList}
+          style={{ display: 'grid', gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`, gap: 8, justifyContent: 'center', position: 'relative' }}
+          onDragOver={handleGridDragOver}
+          onDrop={handleGridDrop}
+          onDragLeave={() => setDropTarget(null)}
         >
           {gridItems.map((item, index) => {
             const pos = freeLayoutEnabled && item.pos ? item.pos : null
@@ -669,12 +670,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             return (
               <div
                 key={item.id}
-                className={`${styles.shortcutItem} ${isEditShortcuts ? styles.shortcutItemDraggable : ''} ${dragOverIndex === index ? styles.dragOver : ''} ${pos ? styles.shortcutItemFree : ''} ${isWidget ? styles.widgetItem : ''}`}
+                className={`${styles.shortcutItem} ${isEditShortcuts ? styles.shortcutItemDraggable : ''} ${dragItemIndex.current === index ? styles.dragging : ''} ${dropTarget && dragItemIndex.current === index ? styles.dragSource : ''} ${pos ? styles.shortcutItemFree : ''} ${isWidget ? styles.widgetItem : ''}`}
                 style={pos ? { left: pos.x, top: pos.y } : (!freeLayoutEnabled && isWidget ? { gridColumn: `span ${cols}`, gridRow: `span ${rows}` } : undefined)}
                 draggable={isEditShortcuts && !isWidget ? editingId !== item.id : isEditShortcuts}
                 onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOverItem(e, index)}
-                onDragLeave={handleDragLeaveItem}
                 onDragEnd={handleDragEnd}
               >
                 {isWidget ? (
@@ -775,6 +774,16 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页">
               <Plus size={18} />
             </button>
+          )}
+          {/* 拖拽悬浮占位预览 */}
+          {dropTarget && dragItemData.current && (
+            <div
+              className={styles.dropPlaceholder}
+              style={{
+                gridColumn: `span ${dragItemData.current.cols || 1}`,
+                gridRow: `span ${dragItemData.current.rows || 1}`,
+              }}
+            />
           )}
         </div>
         {/* 添加快捷网页表单 */}
