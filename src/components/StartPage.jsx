@@ -464,11 +464,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const rect = gridEl.getBoundingClientRect()
       const cs = getComputedStyle(gridEl)
       const padTop = parseFloat(cs.paddingTop) || 0
-      // 动态列数：从容器宽度计算，与 auto-fill 一致
-      const cols = Math.max(1, Math.floor((rect.width + GAP) / CELL_TOTAL))
+      const padLeft = parseFloat(cs.paddingLeft) || 0
+      // 内容区宽度 = 总宽度 - 左右 padding
+      const contentWidth = rect.width - padLeft * 2
+      const cols = Math.max(1, Math.floor((contentWidth + GAP) / CELL_TOTAL))
       const gridContentWidth = cols * CELL_TOTAL - GAP
-      const gridOffsetX = (rect.width - gridContentWidth) / 2
-      const offsetX = clientX - rect.left - gridOffsetX
+      const gridOffsetX = (contentWidth - gridContentWidth) / 2
+      const offsetX = clientX - rect.left - padLeft - gridOffsetX
       const offsetY = clientY - rect.top - padTop
       return {
         col: Math.max(0, Math.min(cols - 1, Math.floor(offsetX / CELL_TOTAL))),
@@ -648,7 +650,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div className={styles.timeSection} style={{ position: 'relative' }} ref={timeSectionRef}>
+        <div className={styles.timeSection} style={{ position: 'relative', zIndex: 1 }} ref={timeSectionRef}>
           {/* 编辑模式覆盖层：position: absolute 仅覆盖时间栏区域 */}
           {isEditShortcuts && (
             <div
@@ -686,7 +688,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 搜索框：根据设置项 searchBox.visible 控制显示 */}
       {startSettings.searchBox?.visible !== false && (
-        <div ref={searchRef} className={styles.searchWrapper} style={{ position: 'relative' }}>
+        <div ref={searchRef} className={styles.searchWrapper} style={{ position: 'relative', zIndex: 1 }}>
           {/* 编辑模式覆盖层：position: absolute 仅覆盖搜索框区域 */}
           {isEditShortcuts && (
             <div
@@ -818,6 +820,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             right: 0,
             bottom: 0,
             paddingTop: gridPaddingTop,
+            paddingLeft: CELL_SIZE,
+            paddingRight: CELL_SIZE,
             maxWidth: 'none',
             pointerEvents: 'none',
           }}
