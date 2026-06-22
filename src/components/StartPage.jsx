@@ -425,9 +425,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }
 
   /*
-   * 计算鼠标相对于 container 的网格坐标
-   * 始终使用 container 坐标（全屏覆盖），确保整个页面都可放置
-   * 考虑网格在 container 中水平居中的偏移
+   * 计算鼠标相对于视口的网格坐标
+   * 使用视口坐标，确保整个页面都可放置
+   * 考虑网格在页面中水平居中的偏移
    */
   const getGridPos = (clientX, clientY) => {
     const gap = 8
@@ -435,12 +435,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const containerEl = containerRef.current
     if (!containerEl) return null
 
-    const rect = containerEl.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
     const gridWidth = GRID_COLS * cellTotal - gap // 网格总宽度（不含最右边 gap）
-    const gridOffsetX = (rect.width - gridWidth) / 2 // 居中偏移
+    const gridOffsetX = (vw - gridWidth) / 2 // 居中偏移
 
-    const offsetX = clientX - rect.left - gridOffsetX
-    const offsetY = clientY - rect.top
+    const offsetX = clientX - gridOffsetX
+    const offsetY = clientY
     return {
       col: Math.max(0, Math.min(GRID_COLS - 1, Math.floor(offsetX / cellTotal))),
       row: Math.max(0, Math.floor(offsetY / cellTotal)),
@@ -618,18 +619,25 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div
-          className={styles.timeSection}
-          draggable={isEditShortcuts}
-          onDragStart={(e) => {
-            if (!isEditShortcuts) return
-            dragItemData.current = { cols: 6, rows: 2 } // 时间栏占 6 列 2 行
-            e.dataTransfer.effectAllowed = 'move'
-            e.dataTransfer.setData('text/plain', 'time-section')
-          }}
-          onDragEnd={handleDragEnd}
-          style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
-        >
+        <div className={styles.timeSection} style={{ position: 'relative', cursor: isEditShortcuts ? 'grab' : undefined }}>
+          {/* 编辑模式覆盖层：覆盖整个时间栏，用于拖拽 */}
+          {isEditShortcuts && (
+            <div
+              draggable
+              onDragStart={(e) => {
+                dragItemData.current = { cols: 6, rows: 2 }
+                e.dataTransfer.effectAllowed = 'move'
+                e.dataTransfer.setData('text/plain', 'time-section')
+              }}
+              onDragEnd={handleDragEnd}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 10,
+                cursor: 'grab',
+              }}
+            />
+          )}
           <div className={styles.time}>
             <span className={styles.timeHour}>{String(dateInfo.hour).padStart(2, '0')}</span>
             <span className={styles.timeColon}>:</span>
@@ -648,15 +656,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       {startSettings.searchBox?.visible !== false && (
         <div
           className={styles.searchWrapper}
-          draggable={isEditShortcuts}
-          onDragStart={(e) => {
-            if (!isEditShortcuts) return
-            dragItemData.current = { cols: 6, rows: 1 } // 搜索框占 6 列 1 行
-            e.dataTransfer.effectAllowed = 'move'
-            e.dataTransfer.setData('text/plain', 'search-box')
-          }}
-          onDragEnd={handleDragEnd}
-          style={{ cursor: isEditShortcuts ? 'grab' : undefined }}
+          style={{ position: 'relative', cursor: isEditShortcuts ? 'grab' : undefined }}
         >
           {/* 编辑模式拖拽手柄 */}
           {isEditShortcuts && (
@@ -664,7 +664,25 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
               <span style={{ fontSize: 10, color: 'var(--text-tertiary)', letterSpacing: 2 }}>⠿</span>
             </div>
           )}
-          <div className={styles.searchBox} style={isEditShortcuts ? { pointerEvents: 'none' } : undefined}>
+          {/* 编辑模式覆盖层：覆盖整个搜索框，用于拖拽 */}
+          {isEditShortcuts && (
+            <div
+              draggable
+              onDragStart={(e) => {
+                dragItemData.current = { cols: 6, rows: 1 }
+                e.dataTransfer.effectAllowed = 'move'
+                e.dataTransfer.setData('text/plain', 'search-box')
+              }}
+              onDragEnd={handleDragEnd}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 10,
+                cursor: 'grab',
+              }}
+            />
+          )}
+          <div className={styles.searchBox}>
             {/* 搜索引擎选择器下拉 */}
             <div className={styles.engineSelector} ref={enginePickerRef}>
               <button className={styles.engineBtn} onClick={() => setShowEnginePicker(!showEnginePicker)}>
@@ -897,14 +915,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       {showWidgetPanel && (
         <WidgetPanel onClose={() => setShowWidgetPanel(false)} onAdd={handleAddWidget} />
       )}
-      {/* 拖拽悬浮占位预览：绝对定位覆盖整个 container */}
+      {/* 拖拽悬浮占位预览：fixed 定位覆盖整个视口 */}
       {dropTarget && dragItemData.current && (
         <div
           className={styles.dropPlaceholder}
           style={{
-            position: 'absolute',
-            /* 使用 calc 居中：container 宽度的一半减去网格宽度的一半，再加上列偏移 */
-            left: `calc((100% - ${(GRID_COLS) * (CELL_SIZE + 8) - 8}px) / 2 + ${dropTarget.col * (CELL_SIZE + 8)}px)`,
+            position: 'fixed',
+            left: `${Math.max(0, (window.innerWidth - (GRID_COLS * (CELL_SIZE + 8) - 8)) / 2 + dropTarget.col * (CELL_SIZE + 8))}px`,
             top: `${dropTarget.row * (CELL_SIZE + 8)}px`,
             width: `${(dragItemData.current.cols || 1) * CELL_SIZE + ((dragItemData.current.cols || 1) - 1) * 8}px`,
             height: `${(dragItemData.current.rows || 1) * CELL_SIZE + ((dragItemData.current.rows || 1) - 1) * 8}px`,
