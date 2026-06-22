@@ -156,18 +156,21 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   /* 自由布局模式开关（当前为关闭状态） */
   const freeLayoutEnabled = false
 
-  /* 网格常量 */
+  /* 网格常量 — 正方形单元格 */
   const GRID_COLS = 6
-  const CELL_SIZE = 90
+  const CELL_SIZE = 80
 
-  /* 合并列表：快捷网页 + 小部件，用于网格渲染和拖拽排序 */
+  /*
+   * 合并列表：快捷网页 + 小部件，每个项携带 col/row 坐标。
+   * 旧数据没有 col/row 时，按数组顺序自动分配（兼容迁移）。
+   */
   const gridItems = useMemo(() => {
-    const sItems = shortcuts.map(s => ({ ...s, itemType: 'shortcut' }))
-    const wItems = widgets.map(w => ({ ...w, itemType: 'widget' }))
+    const sItems = shortcuts.map((s, i) => ({ ...s, itemType: 'shortcut', col: s.col ?? (i % GRID_COLS), row: s.row ?? Math.floor(i / GRID_COLS) }))
+    const wItems = widgets.map((w, i) => ({ ...w, itemType: 'widget', col: w.col ?? ((shortcuts.length + i) % GRID_COLS), row: w.row ?? Math.floor((shortcuts.length + i) / GRID_COLS) }))
     return [...sItems, ...wItems]
   }, [shortcuts, widgets])
 
-  /* 从合并列表中分离出 shortcuts 和 widgets */
+  /* 从合并列表分离并保存 */
   const updateFromGrid = (newGrid) => {
     const newShortcuts = newGrid.filter(i => i.itemType === 'shortcut').map(({ itemType, ...rest }) => rest)
     const newWidgets = newGrid.filter(i => i.itemType === 'widget').map(({ itemType, ...rest }) => rest)
@@ -421,21 +424,15 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     }
   }
 
-  /* 网格容器上的 drop：计算目标位置并重排数组 */
+  /* 网格容器上的 drop：直接设置目标 col/row */
   const handleGridDrop = (e) => {
     if (!isEditShortcuts || dragItemIndex.current === null || !dropTarget) return
     e.preventDefault()
 
     const { col, row } = dropTarget
-    const targetIndex = row * GRID_COLS + col
-
-    if (dragItemIndex.current !== targetIndex) {
-      const newGrid = [...gridItems]
-      const [moved] = newGrid.splice(dragItemIndex.current, 1)
-      const insertAt = Math.min(targetIndex, newGrid.length)
-      newGrid.splice(insertAt, 0, moved)
-      updateFromGrid(newGrid)
-    }
+    const newGrid = [...gridItems]
+    newGrid[dragItemIndex.current] = { ...newGrid[dragItemIndex.current], col, row }
+    updateFromGrid(newGrid)
 
     dragItemIndex.current = null
     dragItemData.current = null
@@ -656,22 +653,26 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
          */}
         <div
           className={styles.shortcutsList}
-          style={{ display: 'grid', gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`, gap: 8, justifyContent: 'center', position: 'relative' }}
+          style={{ display: 'grid', gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_SIZE}px)`, gridAutoRows: `${CELL_SIZE}px`, gap: 8, justifyContent: 'center', position: 'relative' }}
           onDragOver={handleGridDragOver}
           onDrop={handleGridDrop}
           onDragLeave={() => setDropTarget(null)}
         >
           {gridItems.map((item, index) => {
-            const pos = freeLayoutEnabled && item.pos ? item.pos : null
             const isWidget = item.itemType === 'widget'
             const cols = isWidget && item.cols ? item.cols : 1
             const rows = isWidget && item.rows ? item.rows : 1
+            const col = item.col ?? (index % GRID_COLS)
+            const row = item.row ?? Math.floor(index / GRID_COLS)
 
             return (
               <div
                 key={item.id}
-                className={`${styles.shortcutItem} ${isEditShortcuts ? styles.shortcutItemDraggable : ''} ${dragItemIndex.current === index ? styles.dragging : ''} ${dropTarget && dragItemIndex.current === index ? styles.dragSource : ''} ${pos ? styles.shortcutItemFree : ''} ${isWidget ? styles.widgetItem : ''}`}
-                style={pos ? { left: pos.x, top: pos.y } : (!freeLayoutEnabled && isWidget ? { gridColumn: `span ${cols}`, gridRow: `span ${rows}` } : undefined)}
+                className={`${styles.shortcutItem} ${isEditShortcuts ? styles.shortcutItemDraggable : ''} ${dragItemIndex.current === index ? styles.dragging : ''} ${dropTarget && dragItemIndex.current === index ? styles.dragSource : ''} ${isWidget ? styles.widgetItem : ''}`}
+                style={{
+                  gridColumn: `${col + 1} / span ${cols}`,
+                  gridRow: `${row + 1} / span ${rows}`,
+                }}
                 draggable={isEditShortcuts && !isWidget ? editingId !== item.id : isEditShortcuts}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragEnd={handleDragEnd}

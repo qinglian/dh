@@ -1264,7 +1264,7 @@
   background: rgba(0, 122, 255, 0.08);
   border: 2px dashed rgba(0, 122, 255, 0.25);
   border-radius: 14px;
-  min-height: 90px;
+  min-height: 80px;
   transition: all 0.15s ease;
   animation: dropPulse 1s ease-in-out infinite;
 }
