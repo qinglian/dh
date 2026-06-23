@@ -463,24 +463,25 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }
 
   /*
-   * 计算鼠标相对于网格的坐标
-   * 网格覆盖整个容器（无 paddingTop），使用 gridRef 的 bounding rect 计算
-   * 动态读取列数，与 CSS grid auto-fill 渲染完全一致
+   * 计算鼠标相对于容器的坐标
+   * 使用容器 containerRef 作为参考坐标系（覆盖整个视口），确保整页均可拖拽放置
    */
   const getGridPos = useMemo(() => {
     return (clientX, clientY) => {
       const gridEl = gridRef.current
-      if (!gridEl) return null
-      const rect = gridEl.getBoundingClientRect()
+      const containerEl = containerRef.current
+      if (!gridEl || !containerEl) return null
+      const gridRect = gridEl.getBoundingClientRect()
+      const containerRect = containerEl.getBoundingClientRect()
       const cs = getComputedStyle(gridEl)
       const padLeft = parseFloat(cs.paddingLeft) || 0
-      const contentWidth = rect.width - padLeft * 2
+      const contentWidth = gridRect.width - padLeft * 2
       const cols = Math.max(1, Math.floor((contentWidth + GAP) / CELL_TOTAL))
       const gridContentWidth = cols * CELL_TOTAL - GAP
       const gridOffsetX = (contentWidth - gridContentWidth) / 2
-      const offsetX = clientX - rect.left - padLeft - gridOffsetX
-      const offsetY = clientY - rect.top
-      // 减去搜索框/时间栏占用的行数，使 row 0 对应搜索框下方第一行
+      const offsetX = clientX - gridRect.left - padLeft - gridOffsetX
+      // 使用容器顶部作为 Y 轴原点，使整个页面都是可放置区域
+      const offsetY = clientY - containerRect.top
       const row = Math.max(0, Math.floor(offsetY / CELL_TOTAL) - gridRowOffsetRef.current)
       return {
         col: Math.max(0, Math.min(cols - 1, Math.floor(offsetX / CELL_TOTAL))),
