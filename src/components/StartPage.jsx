@@ -157,6 +157,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const gridRef = useRef(null)
   /* 网格动态 paddingTop，确保快捷网页在搜索框下方 */
   const [gridPaddingTop, setGridPaddingTop] = useState('12.5vh')
+  /* 网格行偏移量：搜索框/时间栏占用的网格行数，渲染时加到 item.row 上，使得 item 保持在搜索框下方 */
+  const [gridRowOffset, setGridRowOffset] = useState(0)
+  /* gridRowOffset 的 ref，供 document 事件处理器读取最新值，避免 stale closure */
+  const gridRowOffsetRef = useRef(0)
   /* 页面容器 DOM 引用，用于时间栏/搜索框拖拽坐标计算 */
   const containerRef = useRef(null)
   /* 搜索输入框 DOM 引用 */
@@ -277,8 +281,14 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         // 搜索框底部到 container 顶部的距离 + 一个 cell 的间距
         const top = searchRect.bottom - containerRect.top + 16
         setGridPaddingTop(top + 'px')
+        // 将像素距离转换为网格行数（向上取整），确保快捷网页不覆盖搜索框
+        const offset = Math.ceil(top / CELL_TOTAL)
+        setGridRowOffset(offset)
+        gridRowOffsetRef.current = offset
       } else {
         setGridPaddingTop('12.5vh')
+        setGridRowOffset(0)
+        gridRowOffsetRef.current = 0
       }
     }
     update()
@@ -454,7 +464,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /*
    * 计算鼠标相对于网格的坐标
-   * 网格填充整个 shortcutsWrapper（从 0,0 开始），shortcutsWrapper 从搜索框下方开始
+   * 网格覆盖整个容器（无 paddingTop），使用 gridRef 的 bounding rect 计算
    * 动态读取列数，与 CSS grid auto-fill 渲染完全一致
    */
   const getGridPos = useMemo(() => {
@@ -470,9 +480,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const gridOffsetX = (contentWidth - gridContentWidth) / 2
       const offsetX = clientX - rect.left - padLeft - gridOffsetX
       const offsetY = clientY - rect.top
+      // 减去搜索框/时间栏占用的行数，使 row 0 对应搜索框下方第一行
+      const row = Math.max(0, Math.floor(offsetY / CELL_TOTAL) - gridRowOffsetRef.current)
       return {
         col: Math.max(0, Math.min(cols - 1, Math.floor(offsetX / CELL_TOTAL))),
-        row: Math.max(0, Math.floor(offsetY / CELL_TOTAL)),
+        row,
       }
     }
   }, [])
@@ -742,8 +754,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         </div>
       )}
 
-      {/* 快捷网页区域 — 从搜索框下方开始 */}
-      <div className={styles.shortcutsWrapper} style={{ width: '100%', paddingTop: gridPaddingTop, pointerEvents: 'none' }}>
+      {/* 快捷网页区域 — 网格覆盖整个容器，通过 gridRowOffset 将快捷网页偏移到搜索框下方 */}
+      <div className={styles.shortcutsWrapper} style={{ width: '100%', pointerEvents: 'none' }}>
         {/*
          * 网格布局列表：自然块级流式布局，auto-fill 全宽列 + 左右留边距
          */}
@@ -770,7 +782,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             const cols = isWidget && item.cols ? item.cols : 1
             const rows = isWidget && item.rows ? item.rows : 1
             const col = item.col ?? (index % 6)
-            const row = item.row ?? Math.floor(index / 6)
+            const row = (item.row ?? Math.floor(index / 6)) + gridRowOffset
 
             return (
               <div
@@ -890,7 +902,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
               className={styles.dropPlaceholder}
               style={{
                 gridColumnStart: dropTarget.col + 1,
-                gridRowStart: dropTarget.row + 1,
+                gridRowStart: dropTarget.row + gridRowOffset + 1,
                 gridColumnEnd: `span ${dragItemData.current.cols || 1}`,
                 gridRowEnd: `span ${dragItemData.current.rows || 1}`,
                 pointerEvents: 'none',
