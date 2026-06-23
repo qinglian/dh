@@ -1248,57 +1248,6 @@
 
 /* ==================== 网格编辑模式（不可见网格，拖拽时显示占位） ==================== */
 
-/* 搜索框拖拽手柄 */
-.dragHandleBar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 8px 0;
-  margin-bottom: 4px;
-  cursor: grab;
-  user-select: none;
-  border-radius: 6px;
-  background: rgba(128, 128, 128, 0.08);
-  border: 1px dashed rgba(128, 128, 128, 0.25);
-  transition: all 0.2s ease;
-}
-
-.dragHandleBar:hover {
-  background: rgba(128, 128, 128, 0.15);
-  border-color: rgba(128, 128, 128, 0.4);
-}
-
-.dragHandleBar:active {
-  cursor: grabbing;
-  background: rgba(128, 128, 128, 0.2);
-}
-
-.dragHandleIcon {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  letter-spacing: 2px;
-  opacity: 0.7;
-}
-
-/* 编辑模式下可直接拖拽的区域（时间栏、搜索框） */
-.draggableArea {
-  cursor: grab;
-  user-select: none;
-  outline: 1px dashed rgba(128, 128, 128, 0.3);
-  outline-offset: 4px;
-  border-radius: 8px;
-  transition: outline-color 0.2s ease;
-}
-
-.draggableArea:hover {
-  outline-color: rgba(128, 128, 128, 0.6);
-}
-
-.draggableArea:active {
-  cursor: grabbing;
-}
-
 /* 拖拽中原位置的半透明占位 */
 .dragSource {
   opacity: 0.3;
