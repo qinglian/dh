@@ -648,22 +648,18 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 时间日期：根据设置项 timeWidget.visible 控制显示 */}
       {startSettings.timeWidget?.visible !== false && (
-        <div className={styles.timeSection} ref={timeSectionRef}>
-          {/* 编辑模式拖拽手柄 — HTML5 原生拖拽 */}
-          {isEditShortcuts && (
-            <div
-              className={styles.dragHandleBar}
-              draggable
-              onDragStart={(e) => {
-                dragItemData.current = { cols: 6, rows: 2 }
-                e.dataTransfer.effectAllowed = 'move'
-                e.dataTransfer.setData('text/plain', 'time-section')
-              }}
-              onDragEnd={handleDragEnd}
-            >
-              <span className={styles.dragHandleIcon}>⠿ 拖拽移动时间</span>
-            </div>
-          )}
+        <div
+          className={`${styles.timeSection} ${isEditShortcuts ? styles.draggableArea : ''}`}
+          ref={timeSectionRef}
+          draggable={isEditShortcuts}
+          onDragStart={(e) => {
+            if (!isEditShortcuts) return
+            dragItemData.current = { cols: 6, rows: 2 }
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', 'time-section')
+          }}
+          onDragEnd={handleDragEnd}
+        >
           <div className={styles.time}>
             <span className={styles.timeHour}>{String(dateInfo.hour).padStart(2, '0')}</span>
             <span className={styles.timeColon}>:</span>
@@ -680,22 +676,18 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       {/* 搜索框：根据设置项 searchBox.visible 控制显示 */}
       {startSettings.searchBox?.visible !== false && (
-        <div ref={searchRef} className={styles.searchWrapper} style={{ position: 'relative' }}>
-          {/* 编辑模式拖拽手柄 — HTML5 原生拖拽 */}
-          {isEditShortcuts && (
-            <div
-              className={styles.dragHandleBar}
-              draggable
-              onDragStart={(e) => {
-                dragItemData.current = { cols: 6, rows: 1 }
-                e.dataTransfer.effectAllowed = 'move'
-                e.dataTransfer.setData('text/plain', 'search-box')
-              }}
-              onDragEnd={handleDragEnd}
-            >
-              <span className={styles.dragHandleIcon}>⠿ 拖拽移动搜索</span>
-            </div>
-          )}
+        <div
+          ref={searchRef}
+          className={`${styles.searchWrapper} ${isEditShortcuts ? styles.draggableArea : ''}`}
+          draggable={isEditShortcuts}
+          onDragStart={(e) => {
+            if (!isEditShortcuts) return
+            dragItemData.current = { cols: 6, rows: 1 }
+            e.dataTransfer.effectAllowed = 'move'
+            e.dataTransfer.setData('text/plain', 'search-box')
+          }}
+          onDragEnd={handleDragEnd}
+        >
           <div className={styles.searchBox}>
             {/* 搜索引擎选择器下拉 */}
             <div className={styles.engineSelector} ref={enginePickerRef}>

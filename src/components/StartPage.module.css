@@ -1281,6 +1281,24 @@
   opacity: 0.7;
 }
 
+/* 编辑模式下可直接拖拽的区域（时间栏、搜索框） */
+.draggableArea {
+  cursor: grab;
+  user-select: none;
+  outline: 1px dashed rgba(128, 128, 128, 0.3);
+  outline-offset: 4px;
+  border-radius: 8px;
+  transition: outline-color 0.2s ease;
+}
+
+.draggableArea:hover {
+  outline-color: rgba(128, 128, 128, 0.6);
+}
+
+.draggableArea:active {
+  cursor: grabbing;
+}
+
 /* 拖拽中原位置的半透明占位 */
 .dragSource {
   opacity: 0.3;
