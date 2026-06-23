@@ -742,12 +742,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         </div>
       )}
 
-      {/* 快捷网页区域 — 从搜索框下方开始，避免遮挡时间/搜索框 */}
-      <div className={styles.shortcutsWrapper} style={{ position: 'absolute', top: gridPaddingTop, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+      {/* 快捷网页区域 — 从搜索框下方开始 */}
+      <div className={styles.shortcutsWrapper} style={{ width: '100%', paddingTop: gridPaddingTop, pointerEvents: 'none' }}>
         {/*
-         * 网格布局列表：覆盖整个容器，作为拖拽放置区域
-         * 使用 position: absolute 覆盖整个 shortcutsWrapper（alignSelf: stretch 使其宽度=容器宽度）
-         * paddingTop 对齐内容区域（与 container 的 padding-top 一致）
+         * 网格布局列表：自然块级流式布局，auto-fill 全宽列 + 左右留边距
          */}
         <div
           className={styles.shortcutsList}
@@ -758,15 +756,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             gridAutoRows: `${CELL_SIZE}px`,
             gap: 8,
             justifyContent: 'center',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            width: '100%',
             paddingLeft: CELL_SIZE,
             paddingRight: CELL_SIZE,
+            boxSizing: 'border-box',
             maxWidth: 'none',
             pointerEvents: 'none',
+            paddingBottom: CELL_SIZE,
           }}
         >
           {gridItems.map((item, index) => {
