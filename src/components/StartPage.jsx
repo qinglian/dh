@@ -1,4 +1,4 @@
-/*
+﻿/*
  * StartPage - 浏览器起始页
  * 功能：展示问候语、实时时钟、多引擎搜索框、快捷网页图标，支持主题切换、快捷网页编辑/拖拽排序。
  *       支持多页面（pageId）模式下独立保存每个页面的快捷方式和设置。
@@ -275,18 +275,17 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const update = () => {
       const containerEl = containerRef.current
       const searchEl = searchRef.current
-      if (containerEl && searchEl) {
-        const containerRect = containerEl.getBoundingClientRect()
-        const searchRect = searchEl.getBoundingClientRect()
-        // 搜索框底部到 container 顶部的距离 + 一个 cell 的间距
-        const top = searchRect.bottom - containerRect.top + 16
-        setGridPaddingTop(top + 'px')
-        // 将像素距离转换为网格行数（向上取整），确保快捷网页不覆盖搜索框
-        const offset = Math.ceil(top / CELL_TOTAL)
-        setGridRowOffset(offset)
-        gridRowOffsetRef.current = offset
+      const timeEl = timeSectionRef.current
+      const hasSearch = !!(containerEl && searchEl)
+      const hasTime = !!(containerEl && timeEl)
+      if (hasSearch || hasTime) {
+        containerEl.style.paddingTop = ''
+        setGridPaddingTop('8px')
+        setGridRowOffset(0)
+        gridRowOffsetRef.current = 0
       } else {
-        setGridPaddingTop('12.5vh')
+        containerEl.style.paddingTop = '0'
+        setGridPaddingTop(CELL_TOTAL + 'px')
         setGridRowOffset(0)
         gridRowOffsetRef.current = 0
       }
@@ -480,9 +479,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const gridContentWidth = cols * CELL_TOTAL - GAP
       const gridOffsetX = (contentWidth - gridContentWidth) / 2
       const offsetX = clientX - gridRect.left - padLeft - gridOffsetX
-      // 使用容器顶部作为 Y 轴原点，使整个页面都是可放置区域
-      const offsetY = clientY - containerRect.top
-      const row = Math.max(0, Math.floor(offsetY / CELL_TOTAL) - gridRowOffsetRef.current)
+      const padTop = parseFloat(cs.paddingTop) || 0
+      // 使用 grid 本地坐标 + paddingTop 精确计算，整个 grid 内容区可放置
+      const offsetY = clientY - gridRect.top - padTop
+      const row = Math.max(0, Math.floor(offsetY / CELL_TOTAL))
       return {
         col: Math.max(0, Math.min(cols - 1, Math.floor(offsetX / CELL_TOTAL))),
         row,
@@ -775,6 +775,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             boxSizing: 'border-box',
             maxWidth: 'none',
             pointerEvents: 'none',
+            paddingTop: gridPaddingTop,
             paddingBottom: CELL_SIZE,
           }}
         >
@@ -783,7 +784,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             const cols = isWidget && item.cols ? item.cols : 1
             const rows = isWidget && item.rows ? item.rows : 1
             const col = item.col ?? (index % 6)
-            const row = (item.row ?? Math.floor(index / 6)) + gridRowOffset
+            const row = (item.row ?? Math.floor(index / 6))
 
             return (
               <div
@@ -903,7 +904,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
               className={styles.dropPlaceholder}
               style={{
                 gridColumnStart: dropTarget.col + 1,
-                gridRowStart: dropTarget.row + gridRowOffset + 1,
+                gridRowStart: dropTarget.row + 1,
                 gridColumnEnd: `span ${dragItemData.current.cols || 1}`,
                 gridRowEnd: `span ${dragItemData.current.rows || 1}`,
                 pointerEvents: 'none',
@@ -911,16 +912,28 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             />
           )}
         </div>
-        {/* 添加快捷网页表单 */}
-        {isEditShortcuts && showAddShortcut && (
-          <div className={styles.shortcutForm} style={{ pointerEvents: 'auto' }}>
-            <input type="text" placeholder="名称" value={newShortcut.name} onChange={(e) => setNewShortcut({ ...newShortcut, name: e.target.value })} className={styles.shortcutInput} />
-            <input type="text" placeholder="网址" value={newShortcut.url} onChange={(e) => setNewShortcut({ ...newShortcut, url: e.target.value })} className={styles.shortcutInput} />
-            <input type="text" placeholder="图标URL（可选，留空自动获取）" value={newShortcut.iconUrl} onChange={(e) => setNewShortcut({ ...newShortcut, iconUrl: e.target.value })} className={styles.shortcutInput} />
-            <button className={styles.shortcutConfirm} onClick={handleAddShortcut}>添加</button>
-          </div>
-        )}
       </div>
+
+      {/* 添加快捷网页弹窗 */}
+      {isEditShortcuts && showAddShortcut && (
+        <div className={styles.addDialog}>
+          <div className={styles.addDialogHeader}>
+            <span className={styles.addDialogTitle}>添加快捷网页</span>
+            <button className={styles.addDialogClose} onClick={() => setShowAddShortcut(false)}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+            </button>
+          </div>
+          <div className={styles.addDialogBody}>
+            <input type="text" placeholder="名称" value={newShortcut.name} onChange={(e) => setNewShortcut({ ...newShortcut, name: e.target.value })} className={styles.addDialogInput} autoFocus />
+            <input type="text" placeholder="网址 https://..." value={newShortcut.url} onChange={(e) => setNewShortcut({ ...newShortcut, url: e.target.value })} className={styles.addDialogInput} />
+            <input type="text" placeholder="图标 URL（可选，留空自动获取）" value={newShortcut.iconUrl} onChange={(e) => setNewShortcut({ ...newShortcut, iconUrl: e.target.value })} className={styles.addDialogInput} />
+          </div>
+          <div className={styles.addDialogFooter}>
+            <button className={styles.addDialogCancel} onClick={() => setShowAddShortcut(false)}>取消</button>
+            <button className={styles.addDialogConfirm} onClick={handleAddShortcut}>添加</button>
+          </div>
+        </div>
+      )}
 
       {/* 设置弹窗 */}
       {showSettings && (

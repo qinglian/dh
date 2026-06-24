@@ -962,7 +962,7 @@ export default function WeatherBackground({ theme }) {
       }
 
       // 每 50 帧检查一次缓存更新
-      if (state.time % 50 === 0) checkCacheUpdate();
+      if (state.time % 10 === 0) checkCacheUpdate();
 
       animRef.current = requestAnimationFrame(draw);
     };
@@ -983,14 +983,18 @@ export default function WeatherBackground({ theme }) {
           targetType = newWeather.type;
           initParticles(targetType);
         }
-      }, 2000);
+      }, 300);
     };
     window.addEventListener('weatherCityChanged', onCityChanged);
+    window.addEventListener('weatherToggleChanged', onCityChanged);
+    window.addEventListener('weatherAnimationToggleChanged', onCityChanged);
 
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', resize);
       window.removeEventListener('weatherCityChanged', onCityChanged);
+      window.removeEventListener('weatherToggleChanged', onCityChanged);
+      window.removeEventListener('weatherAnimationToggleChanged', onCityChanged);
     };
   }, [theme]);
 

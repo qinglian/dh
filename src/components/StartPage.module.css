@@ -1321,3 +1321,164 @@
   justify-content: center;
   opacity: 0.5;
 }
+
+/* ==================== 快捷网页添加弹窗 ==================== */
+.addDialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  pointer-events: auto;
+  width: 380px;
+  max-width: 90vw;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 20px 22px;
+  animation: dialogSlideIn 0.22s ease;
+}
+
+.addDialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.addDialogTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
+}
+
+.addDialogClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: #999;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.addDialogClose:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #555;
+}
+
+.addDialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.addDialogInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.025);
+  font-size: 14px;
+  color: #1d1d1f;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.addDialogInput::placeholder {
+  color: #bbb;
+}
+
+.addDialogInput:focus {
+  border-color: rgba(0, 122, 255, 0.4);
+  background: rgba(0, 122, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.07);
+}
+
+.addDialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.addDialogCancel {
+  padding: 8px 18px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 9px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.addDialogCancel:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #555;
+}
+
+.addDialogConfirm {
+  padding: 8px 22px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #007aff, #5856d6);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+  transition: all 0.15s ease;
+}
+
+.addDialogConfirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.addDialogConfirm:active {
+  transform: translateY(0);
+}
+
+@keyframes dialogSlideIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.92) translateY(6px); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1) translateY(0); }
+}
+
+/* 暗色主题 */
+:global([data-theme="dark"]) .addDialog {
+  background: rgba(28, 28, 42, 0.95);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+:global([data-theme="dark"]) .addDialogTitle { color: #eee; }
+:global([data-theme="dark"]) .addDialogClose { background: rgba(255, 255, 255, 0.06); color: #777; }
+:global([data-theme="dark"]) .addDialogClose:hover { background: rgba(255, 255, 255, 0.12); color: #bbb; }
+:global([data-theme="dark"]) .addDialogInput {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #eee;
+}
+:global([data-theme="dark"]) .addDialogInput::placeholder { color: #555; }
+:global([data-theme="dark"]) .addDialogInput:focus {
+  border-color: rgba(100, 210, 255, 0.3);
+  background: rgba(100, 210, 255, 0.04);
+  box-shadow: 0 0 0 3px rgba(100, 210, 255, 0.06);
+}
+:global([data-theme="dark"]) .addDialogCancel { border-color: rgba(255, 255, 255, 0.08); color: #888; }
+:global([data-theme="dark"]) .addDialogCancel:hover { background: rgba(255, 255, 255, 0.06); color: #ccc; }
+:global([data-theme="dark"]) .addDialogConfirm { background: linear-gradient(135deg, #0a84ff, #5e5ce6); }
