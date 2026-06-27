@@ -1210,7 +1210,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           })}
           {/* 编辑模式：显示"添加"按钮 */}
           {isEditShortcuts && (
-            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页" style={{ pointerEvents: 'auto', gridColumn: `${findNextPosition(gridItems, 6).col + 1}`, gridRow: `${findNextPosition(gridItems, 6).row + 1}` }}>
+            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页" style={{ pointerEvents: 'auto' }}>
               <Plus size={18} />
             </button>
           )}
