@@ -814,7 +814,7 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
   /* 当前天气类型，用于 Canvas 动画和 CSS 背景类名 */
   const weatherType = weather?.type || 'sunny'
   /* 是否白天（6:00-18:59），影响天气动画和背景样式 */
-  const isDay = useMemo(() => {
+  const isDay = (() => {
     const trySunTimes = (sunrise, sunset) => {
       if (!sunrise || !sunset) return null
       const [sh, sm] = sunrise.split(':').map(Number)
@@ -825,10 +825,15 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
       const nowMins = time.getHours() * 60 + time.getMinutes()
       return nowMins >= sMins && nowMins < eMins
     }
-    // 1. 天气 API 日出日落（内置或用户自定义 API）
-    const fromApi = trySunTimes(weather?.sunrise, weather?.sunset)
+    // 1. 天气缓存日出日落（直接从 localStorage 读取，保证与 WeatherBackground 一致）
+    let wt = null
+    try {
+      const raw = localStorage.getItem('nav-weather-cache')
+      if (raw) { const d = JSON.parse(raw)?.data; if (d?.sunrise && d?.sunset) wt = { sunrise: d.sunrise, sunset: d.sunset } }
+    } catch(_) {}
+    const fromApi = trySunTimes(wt?.sunrise, wt?.sunset)
     if (fromApi !== null) return fromApi
-    // 2. 用户自定义日出日落时间
+    // 2. 用户自定义日出日落
     const fromUser = trySunTimes(
       localStorage.getItem('nav-sunrise-time'),
       localStorage.getItem('nav-sunset-time')
@@ -836,7 +841,7 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
     if (fromUser !== null) return fromUser
     // 3. 兜底固定时间
     return time.getHours() >= 6 && time.getHours() < 18
-  }, [time, weather])
+  })()
 
   /*
    * 根据天气类型和白天/夜间计算 CSS 背景类名
