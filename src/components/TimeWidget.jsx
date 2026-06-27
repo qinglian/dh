@@ -149,7 +149,21 @@ function WeatherEffect({ type, isDay = true }) {
           if (isDay) { for (let i = 0; i < 12; i++) state.particles.push(createSunRay()) }
           break
       }
-    }
+    
+    // 夜间创建星星
+    if (!isDay) {
+      for (let i = 0; i < 60; i++) {
+        state.particles.push({
+          x: Math.random() * w,
+          y: Math.random() * h * 0.6,
+          r: 0.3 + Math.random() * 1.2,
+          twinkle: Math.random() * Math.PI * 2,
+          speed: 0.005 + Math.random() * 0.015,
+          opacity: 0.3 + Math.random() * 0.7,
+          isStar: true
+        })
+      }
+    }}
 
     /* 绘制六边形雪花（带旋转角度） */
     const drawHexagon = (x, y, r, rotation) => {
@@ -343,6 +357,19 @@ function WeatherEffect({ type, isDay = true }) {
       state.time++
       ctx.clearRect(0, 0, w, h)
 
+      // 夜间星星闪烁
+      if (!isDay) {
+        state.particles.forEach(p => {
+          if (!p.isStar) return
+          p.twinkle += p.speed
+          const alpha = p.opacity * (0.5 + 0.5 * Math.sin(p.twinkle))
+          ctx.fillStyle = `rgba(255,255,240,${alpha})`
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+          ctx.fill()
+        })
+      }
+
       // 晴天：太阳光晕 + 阳光射线 + 飘动白云
       if (type === 'sunny' && isDay) {
         const sunX = w * 0.85
@@ -376,7 +403,34 @@ function WeatherEffect({ type, isDay = true }) {
           ctx.stroke()
         })
 
-        state.clouds.forEach(cloud => {
+        // 夜晚显示月亮
+      if (type === 'sunny' && !isDay) {
+        const moonX = w * 0.82
+        const moonY = h * 0.12
+        // 月光晕
+        for (let i = 5; i >= 0; i--) {
+          const r = 18 + i * 22
+          const mg = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, r)
+          mg.addColorStop(0, `rgba(220,230,255,${0.06 - i * 0.008})`)
+          mg.addColorStop(1, 'rgba(220,230,255,0)')
+          ctx.fillStyle = mg
+          ctx.beginPath(); ctx.arc(moonX, moonY, r, 0, Math.PI * 2); ctx.fill()
+        }
+        // 月亮本体
+        const moonBody = ctx.createRadialGradient(moonX - 4, moonY - 4, 0, moonX, moonY, 24)
+        moonBody.addColorStop(0, 'rgba(250,248,240,0.95)')
+        moonBody.addColorStop(0.7, 'rgba(230,225,210,0.85)')
+        moonBody.addColorStop(1, 'rgba(200,195,180,0.4)')
+        ctx.fillStyle = moonBody
+        ctx.beginPath(); ctx.arc(moonX, moonY, 22, 0, Math.PI * 2); ctx.fill()
+        // 环形山
+        ctx.fillStyle = 'rgba(200,195,180,0.25)'
+        ctx.beginPath(); ctx.arc(moonX + 8, moonY - 4, 5, 0, Math.PI * 2); ctx.fill()
+        ctx.beginPath(); ctx.arc(moonX - 4, moonY + 10, 4, 0, Math.PI * 2); ctx.fill()
+        ctx.beginPath(); ctx.arc(moonX - 10, moonY - 2, 3, 0, Math.PI * 2); ctx.fill()
+      }
+
+      state.clouds.forEach(cloud => {
           cloud.x += cloud.speed * 2
           if (cloud.x > w + 200) cloud.x = -250
           drawCloud(cloud)
