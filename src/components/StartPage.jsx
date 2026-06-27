@@ -207,7 +207,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         if (!site.url) return
         try {
           const domain = new URL(site.url).hostname
-          tryUpgradeFavicon(domain).then(result => {
+          tryUpgradeFavicon(domain, site.iconUrl || '').then(result => {
             if (result) {
               setShortcuts(prev => {
                 const updated = prev.map(s => {

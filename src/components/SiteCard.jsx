@@ -103,7 +103,7 @@ export default function SiteCard({ site, isEditMode, onEdit, onDelete, onContext
     const check = async () => {
       try {
         const domain = new URL(site.url).hostname
-        const result = await tryUpgradeFavicon(domain)
+        const result = await tryUpgradeFavicon(domain, site.iconUrl || '')
         if (mounted && result) {
           // 升级成功，更新图标
           setIconSrc(result.url)
