@@ -770,7 +770,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const domain = new URL(site.url).hostname
       const cached = getCachedFavicon(domain)
       if (cached) return cached
-      return `https://favicon.im/${domain}`
+      return '' // 不使用 favicon.im 回退(返回地球图标),无缓存时显示首字母
     } catch {
       return ''
     }
