@@ -82,6 +82,25 @@
   background: linear-gradient(135deg, rgba(170, 175, 180, 0.22) 0%, rgba(160, 165, 170, 0.14) 50%, rgba(165, 170, 175, 0.18) 100%);
   border-color: rgba(160, 165, 170, 0.3);
 }
+.weatherSunnyNight {
+  background: linear-gradient(135deg, rgba(30, 40, 80, 0.2) 0%, rgba(20, 30, 60, 0.15) 50%, rgba(25, 35, 70, 0.18) 100%);
+  border-color: rgba(40, 50, 90, 0.2);
+}
+
+.weatherOvercastNight {
+  background: linear-gradient(135deg, rgba(30, 35, 45, 0.22) 0%, rgba(20, 25, 35, 0.16) 50%, rgba(25, 30, 40, 0.19) 100%);
+  border-color: rgba(30, 35, 45, 0.25);
+}
+
+.weatherSnowNight {
+  background: linear-gradient(135deg, rgba(50, 55, 80, 0.2) 0%, rgba(40, 45, 70, 0.14) 50%, rgba(45, 50, 75, 0.17) 100%);
+  border-color: rgba(60, 65, 90, 0.22);
+}
+
+.weatherFogNight {
+  background: linear-gradient(135deg, rgba(40, 45, 50, 0.22) 0%, rgba(30, 35, 40, 0.16) 50%, rgba(35, 40, 45, 0.19) 100%);
+  border-color: rgba(40, 45, 50, 0.25);
+}
 
 /* ==================== 左侧：问候+日期 ==================== */
 .left {

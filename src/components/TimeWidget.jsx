@@ -824,11 +824,11 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
     if (!weatherEnabled || !weather) return ''
     switch (weatherType) {
       case 'rain': return isDay ? styles.weatherRainDay : styles.weatherRainNight
-      case 'snow': return styles.weatherSnow
-      case 'overcast': return styles.weatherOvercast
-      case 'fog': return styles.weatherFog
+      case 'snow': return isDay ? styles.weatherSnow : styles.weatherSnowNight
+      case 'overcast': return isDay ? styles.weatherOvercast : styles.weatherOvercastNight
+      case 'fog': return isDay ? styles.weatherFog : styles.weatherFogNight
       case 'cloudy': return isDay ? styles.weatherCloudyDay : styles.weatherCloudyNight
-      case 'sunny': return styles.weatherSunny
+      case 'sunny': return isDay ? styles.weatherSunny : styles.weatherSunnyNight
       default: return ''
     }
   }, [weatherType, weatherEnabled, weather, isDay])
