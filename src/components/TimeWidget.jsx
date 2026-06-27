@@ -146,7 +146,7 @@ function WeatherEffect({ type, isDay = true }) {
           break
         case 'sunny':
           for (let i = 0; i < 5; i++) state.clouds.push(createCloud(true))
-          for (let i = 0; i < 12; i++) state.particles.push(createSunRay())
+          if (isDay) { for (let i = 0; i < 12; i++) state.particles.push(createSunRay()) }
           break
       }
     }
@@ -344,7 +344,7 @@ function WeatherEffect({ type, isDay = true }) {
       ctx.clearRect(0, 0, w, h)
 
       // 晴天：太阳光晕 + 阳光射线 + 飘动白云
-      if (type === 'sunny') {
+      if (type === 'sunny' && isDay) {
         const sunX = w * 0.85
         const sunY = h * 0.25
         const pulse = 1 + Math.sin(state.time * 0.015) * 0.08
