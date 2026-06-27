@@ -444,9 +444,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   /* 保存编辑：校验非空，自动补全 URL，更新列表 */
   const saveEdit = () => {
     if (!editShortcut.name.trim() || !editShortcut.url.trim()) return
+    const original = shortcuts.find(s => s.id === editingId)
+    const urlChanged = original && original.url !== editShortcut.url
     const updated = shortcuts.map((s) =>
       s.id === editingId
-        ? { ...s, name: editShortcut.name.trim(), url: editShortcut.url.startsWith('http') ? editShortcut.url : 'https://' + editShortcut.url, iconUrl: editShortcut.iconUrl.trim() || '' }
+        ? { ...s, name: editShortcut.name.trim(), url: editShortcut.url.startsWith('http') ? editShortcut.url : 'https://' + editShortcut.url, iconUrl: urlChanged ? '' : (editShortcut.iconUrl.trim() || '') }
         : s
     )
     setShortcuts(updated)
@@ -465,7 +467,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const domain = new URL(site.url).hostname
       const cached = getCachedFavicon(domain)
       if (cached) return cached
-      return ''
+      return `https://favicon.im/${domain}`
     } catch {
       return ''
     }
