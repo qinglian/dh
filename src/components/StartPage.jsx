@@ -1186,20 +1186,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                       onClick={(e) => isEditShortcuts && e.preventDefault()}
                     >
                       <div className={styles.shortcutIcon}>
-                        {getIconUrl(item) ? (
-                          <img
-                            src={getIconUrl(item)}
-                            alt=""
-                            draggable={false}
-                            onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
-                            onError={(e) => {
-                              e.target.style.display = 'none'
-                              const fb = e.target.parentElement?.querySelector('[data-fallback]')
-                              if (fb) fb.style.display = 'flex'
-                            }}
-                          />
-                        ) : null}
-                        <span className={styles.shortcutFallback} data-fallback="1" style={{ display: getIconUrl(item) ? 'none' : 'flex' }}>{item.name.charAt(0)}</span>
+                        <ShortcutIcon site={item} shortcutId={item.id} onCached={(url) => {
+                          window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: url, shortcutId: item.id } }))
+                        }} />
                       </div>
                       <span className={styles.shortcutName}>{item.name}</span>
                     </a>

@@ -56,36 +56,57 @@ export default function SiteCard({ site, isEditMode, onEdit, onDelete, onContext
     const result = getAutoFaviconUrl(site.url, site.iconUrl)
     if (result?.url) {
       setIconSrc(result.url)
-    } else {
-      setIconSrc(null)
-      try {
-        const domain = new URL(site.url).hostname
-        const candidates = getFaviconUrls(domain)
-        let mounted = true
-        let settled = false
-        const tryResolve = (url, source) => {
-          if (!mounted || settled) return
-          settled = true
-          setIconSrc(url)
-          cacheFavicon(domain, url, source)
+      return
+    }
+    setIconSrc(null)
+    try {
+      const domain = new URL(site.url).hostname
+      const candidates = getFaviconUrls(domain)
+      let mounted = true
+      let googleDone = undefined
+      let faviconimDone = undefined
+
+      const tryShow = () => {
+        if (!mounted) return
+        if (googleDone) {
+          setIconSrc(candidates[0].url)
+          cacheFavicon(domain, candidates[0].url, 'google')
           window.dispatchEvent(new CustomEvent('faviconCached', {
-            detail: { siteUrl: site.url, faviconUrl: url }
+            detail: { siteUrl: site.url, faviconUrl: candidates[0].url }
+          }))
+        } else if (faviconimDone && googleDone === undefined) {
+          setIconSrc(candidates[1].url)
+          cacheFavicon(domain, candidates[1].url, 'faviconim')
+          window.dispatchEvent(new CustomEvent('faviconCached', {
+            detail: { siteUrl: site.url, faviconUrl: candidates[1].url }
           }))
         }
-        const img1 = new Image()
-        img1.onload = () => { tryResolve(candidates[0].url, 'google') }
-        img1.onerror = () => {}
-        img1.src = candidates[0].url
-        const img2 = new Image()
-        img2.onload = () => { tryResolve(candidates[1].url, 'faviconim') }
-        img2.onerror = () => {}
-        img2.src = candidates[1].url
-        const timeout = setTimeout(() => {
-          if (!settled && mounted) { mounted = false; setIconError(true) }
-        }, 8000)
-        return () => { mounted = false; clearTimeout(timeout) }
-      } catch (_) {}
-    }
+      }
+
+      const checkBothFailed = () => {
+        if (googleDone === undefined || faviconimDone === undefined) return
+        if (!mounted) return
+        if (!googleDone && !faviconimDone) setIconError(true)
+      }
+
+      const img1 = new Image()
+      img1.onload = () => { googleDone = true; tryShow() }
+      img1.onerror = () => { googleDone = false; tryShow(); checkBothFailed() }
+      img1.src = candidates[0].url
+
+      const img2 = new Image()
+      img2.onload = () => { faviconimDone = true; tryShow() }
+      img2.onerror = () => { faviconimDone = false; tryShow(); checkBothFailed() }
+      img2.src = candidates[1].url
+
+      const timeout = setTimeout(() => {
+        if (googleDone === undefined) googleDone = false
+        if (faviconimDone === undefined) faviconimDone = false
+        checkBothFailed()
+      }, 8000)
+
+      return () => { mounted = false; clearTimeout(timeout) }
+    } catch (_) {}
   }, [site.url, site.iconUrl])
 
   // favicon 加载成功：缓存并通知数据层保存
