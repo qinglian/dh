@@ -421,6 +421,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const [dragOverIndex, setDragOverIndex] = useState(null)
   /* 拖拽悬浮占位位置 { col, row } */
   const [dropTarget, setDropTarget] = useState(null)
+  const [shiftedGrid, setShiftedGrid] = useState(null)
   // 拖拽悬停时的级联避让布局（临时计算结果）
   // 上一次的拖拽目标位置，用于检测拖拽是否移开
   const prevDropRef = useRef(null)
@@ -866,6 +867,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const handleDragEnd = (e) => {
     dragItemIndex.current = null
     dragItemData.current = null
+      setShiftedGrid(null)
       setDropTarget(null)
       setDragOverIndex(null)
       originalGridRef.current = null
@@ -886,6 +888,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (pos) {
         setDropTarget(pos)
         prevDropRef.current = pos
+        // 实时预览：重排按钮显示最终布局
+        const shifted = computeShiftedGrid(gridItems, dragItemIndex.current, pos.col, pos.row)
+        setShiftedGrid(shifted)
       }
     }
 
@@ -910,6 +915,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       dragItemIndex.current = null
       dragItemData.current = null
+      setShiftedGrid(null)
       setDropTarget(null)
       setDragOverIndex(null)
       originalGridRef.current = null
@@ -921,6 +927,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const onDragEnd = () => {
       dragItemIndex.current = null
       dragItemData.current = null
+      setShiftedGrid(null)
       setDropTarget(null)
       setDragOverIndex(null)
       originalGridRef.current = null
@@ -1163,7 +1170,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           {/* 隐藏校准元素：grid (0,0) 位置 */}
           <div ref={calibRef} style={{ gridColumn: 1, gridRow: 1, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
           {/* 拖拽悬停时使用级联避让布局，否则使用原始布局 */}
-          {(gridItems).map((item, index) => {
+          {(shiftedGrid && dragItemIndex.current !== null ? shiftedGrid : gridItems).map((item, index) => {
             const isWidget = item.itemType === 'widget'
             const cols = isWidget && item.cols ? item.cols : 1
             const rows = isWidget && item.rows ? item.rows : 1
