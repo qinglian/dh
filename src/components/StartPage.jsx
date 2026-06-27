@@ -521,9 +521,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   }, [])
 
   const addBtnPos = useMemo(() => {
-    if (gridItems.length === 0) return { col: 0, row: 0 }
+    const items = shiftedGrid || gridItems
+    if (items.length === 0) return { col: 0, row: 0 }
     let lastRow = 0, lastCol = 0
-    for (const item of gridItems) {
+    for (const item of items) {
       const r = item.row ?? 0
       const c = item.col ?? 0
       if (r > lastRow || (r === lastRow && c >= lastCol)) { lastRow = r; lastCol = c }
@@ -531,7 +532,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const nextCol = lastCol + 1
     if (nextCol >= addBtnCols) return { col: 0, row: lastRow + 1 }
     return { col: nextCol, row: lastRow }
-  }, [gridItems, addBtnCols])
+  }, [gridItems, shiftedGrid, addBtnCols])
 
   /* 从合并列表分离并保存 */
   const updateFromGrid = (newGrid) => {
