@@ -17,9 +17,8 @@ function getAutoFaviconUrl(url, siteIconUrl) {
     // 2. 检查缓存
     const cached = getCachedFavicon(domain)
     if (cached) return { url: cached, source: 'cache' }
-    // 3. 按优先级尝试外部源：Google S2 → favicon.im
-    const candidates = getFaviconUrls(domain)
-    return candidates[0] || null
+    // 3. 无缓存时不返回外部URL（它们可能返回地球图标），交给竞速加载处理
+    return null
   } catch {
     return null
   }
@@ -51,11 +50,42 @@ export default function SiteCard({ site, isEditMode, onEdit, onDelete, onContext
 
   const fallbackColor = generateColor(site.url)
 
-  // 初始化 favicon URL
+  // 初始化 favicon URL（竞速加载：Google S2 + favicon.im 并行，谁先成功用谁）
   useEffect(() => {
     setIconError(false)
     const result = getAutoFaviconUrl(site.url, site.iconUrl)
-    setIconSrc(result?.url || null)
+    if (result?.url) {
+      setIconSrc(result.url)
+    } else {
+      setIconSrc(null)
+      try {
+        const domain = new URL(site.url).hostname
+        const candidates = getFaviconUrls(domain)
+        let mounted = true
+        let settled = false
+        const tryResolve = (url, source) => {
+          if (!mounted || settled) return
+          settled = true
+          setIconSrc(url)
+          cacheFavicon(domain, url, source)
+          window.dispatchEvent(new CustomEvent('faviconCached', {
+            detail: { siteUrl: site.url, faviconUrl: url }
+          }))
+        }
+        const img1 = new Image()
+        img1.onload = () => { tryResolve(candidates[0].url, 'google') }
+        img1.onerror = () => {}
+        img1.src = candidates[0].url
+        const img2 = new Image()
+        img2.onload = () => { tryResolve(candidates[1].url, 'faviconim') }
+        img2.onerror = () => {}
+        img2.src = candidates[1].url
+        const timeout = setTimeout(() => {
+          if (!settled && mounted) { mounted = false; setIconError(true) }
+        }, 8000)
+        return () => { mounted = false; clearTimeout(timeout) }
+      } catch (_) {}
+    }
   }, [site.url, site.iconUrl])
 
   // favicon 加载成功：缓存并通知数据层保存
