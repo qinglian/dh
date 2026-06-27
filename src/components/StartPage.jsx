@@ -200,6 +200,32 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     window.addEventListener('faviconCached', handler)
     return () => window.removeEventListener('faviconCached', handler)
   }, [shortcuts, pageId])
+  // 后台检查是否有更高优先级的 favicon 可用（Google S2 > favicon.im）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      shortcuts.forEach(site => {
+        if (!site.url) return
+        try {
+          const domain = new URL(site.url).hostname
+          tryUpgradeFavicon(domain).then(result => {
+            if (result) {
+              setShortcuts(prev => {
+                const updated = prev.map(s => {
+                  if (s.url === site.url) return { ...s, iconUrl: result.url }
+                  return s
+                })
+                if (updated.some((s, i) => s.iconUrl !== prev[i]?.iconUrl)) {
+                  saveShortcuts(pageId, updated)
+                }
+                return updated
+              })
+            }
+          }).catch(() => {})
+        } catch (_) {}
+      })
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [pageId])
   const cancelHidePickups = () => clearTimeout(hideTimerRef.current)
   useEffect(() => () => clearTimeout(hideTimerRef.current), [])
 
