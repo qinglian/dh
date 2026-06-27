@@ -613,7 +613,7 @@ export default function WeatherBackground({ theme }) {
         });
 
         // 流星
-        if (Math.random() < 0.02 && state.meteors.length < 6) {
+        if (Math.random() < 0.008 && state.meteors.length < 3) {
           state.meteors.push({
             x: Math.random() * w * 0.8 + w * 0.1,
             y: Math.random() * h * 0.25,
@@ -626,7 +626,9 @@ export default function WeatherBackground({ theme }) {
         state.meteors = state.meteors.filter(m => {
           m.x += Math.cos(m.angle) * m.speed;
           m.y += Math.sin(m.angle) * m.speed;
-          m.opacity -= 0.004;
+          // 下半部分加速渐隐
+          const fadeRate = m.y > h * 0.45 ? 0.02 : 0.004;
+          m.opacity -= fadeRate;
           if (m.opacity <= 0) return false;
           ctx.save();
           ctx.globalAlpha = m.opacity;

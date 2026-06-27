@@ -16,6 +16,7 @@ import StartPageSettings from './StartPageSettings'
 import WidgetPanel from './WidgetPanel'
 import { getSettings } from '../utils/startPageSettings'
 import { getPageDataKey, getPages } from '../utils/startPagePages'
+import { getCachedFavicon, cacheFavicon, getFaviconUrl } from '../utils/faviconCache'
 import styles from './StartPage.module.css'
 
 /* localStorage 中快捷方式数据的存储 key */
@@ -181,6 +182,24 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       setShowEnginePicker(false)
     }, 5000)
   }
+  
+  // 监听favicon缓存事件，更新快捷方式iconUrl
+  useEffect(() => {
+    const handler = (e) => {
+      const { siteUrl, faviconUrl, shortcutId } = e.detail || {}
+      if (!siteUrl || !faviconUrl) return
+      const updated = shortcuts.map(s => {
+        if (s.url === siteUrl && !s.iconUrl) return { ...s, iconUrl: faviconUrl }
+        return s
+      })
+      if (updated.some((s, i) => s.iconUrl !== shortcuts[i]?.iconUrl)) {
+        setShortcuts(updated)
+        saveShortcuts(pageId, updated)
+      }
+    }
+    window.addEventListener('faviconCached', handler)
+    return () => window.removeEventListener('faviconCached', handler)
+  }, [shortcuts, pageId])
   const cancelHidePickups = () => clearTimeout(hideTimerRef.current)
   useEffect(() => () => clearTimeout(hideTimerRef.current), [])
 
@@ -188,7 +207,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const freeLayoutEnabled = false
 
   /* 网格常量 — 单元格尺寸 */
-  const CELL_SIZE = 80
+  const CELL_SIZE = 91
   const GAP = 8
   const CELL_TOTAL = CELL_SIZE + GAP
 
@@ -444,7 +463,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     if (site.iconUrl) return site.iconUrl
     try {
       const domain = new URL(site.url).hostname
-      return `https://favicon.im/${domain}`
+      const cached = getCachedFavicon(domain)
+      if (cached) return cached
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
     } catch {
       return ''
     }
@@ -830,7 +851,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                       onChange={(e) => setEditShortcut({ ...editShortcut, name: e.target.value })}
                       placeholder="名称"
                       className={styles.editInput}
-                      draggable={false}
+                      draggable={false} onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
                     />
                     <input
                       type="text"
@@ -838,7 +859,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                       onChange={(e) => setEditShortcut({ ...editShortcut, url: e.target.value })}
                       placeholder="网址"
                       className={styles.editInput}
-                      draggable={false}
+                      draggable={false} onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
                     />
                     <input
                       type="text"
@@ -846,7 +867,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                       onChange={(e) => setEditShortcut({ ...editShortcut, iconUrl: e.target.value })}
                       placeholder="图标URL（可选）"
                       className={styles.editInput}
-                      draggable={false}
+                      draggable={false} onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
                     />
                     <div className={styles.editActions}>
                       <button className={styles.editCancel} onClick={() => setEditingId(null)}>取消</button>
@@ -868,11 +889,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                         <img
                           src={getIconUrl(item)}
                           alt=""
-                          draggable={false}
+                          draggable={false} onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
                           onError={(e) => {
                             if (!e.target.dataset.retry) {
                               e.target.dataset.retry = '1'
-                              try { const d = new URL(item.url).hostname; e.target.src = 'https://' + d + '/favicon.ico' } catch(_) {
+                              try { const d = new URL(item.url).hostname; e.target.src = 'https://favicon.im/' + d } catch(_) {
                                 e.target.style.display = 'none'
                                 e.target.parentElement.textContent = item.name.charAt(0)
                               }

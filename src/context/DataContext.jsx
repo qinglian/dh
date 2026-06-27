@@ -310,7 +310,27 @@ export function DataProvider({ children }) {
    * 通过 Context.Provider 向组件树注入 data 状态和所有操作方法
    * 子组件通过 useData() Hook 消费这些值
    */
-  return (
+  
+  // 监听favicon缓存事件，更新站点iconUrl
+  useEffect(() => {
+    const handler = (e) => {
+      const { siteUrl, faviconUrl } = e.detail || {}
+      if (!siteUrl || !faviconUrl) return
+      const updated = data.map(cat => ({
+        ...cat,
+        sites: cat.sites?.map(site => {
+          if (site.url === siteUrl && !site.iconUrl) return { ...site, iconUrl: faviconUrl }
+          return site
+        })
+      }))
+      if (JSON.stringify(updated) !== JSON.stringify(data)) {
+        setData(updated)
+      }
+    }
+    window.addEventListener('faviconCached', handler)
+    return () => window.removeEventListener('faviconCached', handler)
+  }, [data])
+return (
     <DataContext.Provider value={{
       data,
       setData,
