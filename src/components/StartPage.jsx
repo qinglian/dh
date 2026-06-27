@@ -218,7 +218,7 @@ function ShortcutIcon({ site, onCached, shortcutId }) {
       const cached = getCachedFavicon(domain)
       if (cached) return { src: cached, source: 'cache', loading: false }
       const urls = getFaviconUrls(domain)
-      return { candidates: urls, src: urls[0]?.url || null, source: null, loading: true, googleLoaded: false, faviconimLoaded: false, failed: false }
+      return { candidates: urls, src: null, source: null, loading: true, googleLoaded: false, faviconimLoaded: false, failed: false }
     } catch { return { src: null, loading: false, failed: true } }
   })
   const stateRef = useRef(state)
@@ -682,6 +682,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       name: newShortcut.name.trim(),
       url,
       iconUrl,
+      col,
       row,
       pos: undefined,
     }
@@ -1209,7 +1210,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           })}
           {/* 编辑模式：显示"添加"按钮 */}
           {isEditShortcuts && (
-            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页" style={{ pointerEvents: 'auto' }}>
+            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页" style={{ pointerEvents: 'auto', gridColumn: `${findNextPosition(gridItems, 6).col + 1}`, gridRow: `${findNextPosition(gridItems, 6).row + 1}` }}>
               <Plus size={18} />
             </button>
           )}
