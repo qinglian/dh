@@ -422,7 +422,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   /* 拖拽悬浮占位位置 { col, row } */
   const [dropTarget, setDropTarget] = useState(null)
   // 拖拽悬停时的级联避让布局（临时计算结果）
-  const [shiftedGrid, setShiftedGrid] = useState(null)
   // 上一次的拖拽目标位置，用于检测拖拽是否移开
   const prevDropRef = useRef(null)
   /* 拖拽项的原始索引，用于交换计算 */
@@ -840,8 +839,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         // 基于校准元素位置计算鼠标所在行列
         const relX = clientX - calibRect.left
         const relY = clientY - calibRect.top
-        const col = Math.max(0, Math.min(cols - 1, Math.round(relX / cellTotal)))
-        const row = Math.max(0, Math.round(relY / cellTotal))
+        const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
+        const row = Math.max(0, Math.floor(relY / cellTotal))
         return { col, row }
       }
 
@@ -868,7 +867,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     dragItemIndex.current = null
     dragItemData.current = null
       setDropTarget(null)
-      setShiftedGrid(null)
       setDragOverIndex(null)
       originalGridRef.current = null
     setDragOverIndex(null)
@@ -888,9 +886,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (pos) {
         setDropTarget(pos)
         prevDropRef.current = pos
-        // 计算级联避让布局
-        const shifted = computeShiftedGrid(gridItems, dragItemIndex.current, pos.col, pos.row)
-        setShiftedGrid(shifted)
       }
     }
 
@@ -916,7 +911,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       dragItemIndex.current = null
       dragItemData.current = null
       setDropTarget(null)
-      setShiftedGrid(null)
       setDragOverIndex(null)
       originalGridRef.current = null
     }
@@ -928,7 +922,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       dragItemIndex.current = null
       dragItemData.current = null
       setDropTarget(null)
-      setShiftedGrid(null)
       setDragOverIndex(null)
       originalGridRef.current = null
     }
@@ -1170,7 +1163,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           {/* 隐藏校准元素：grid (0,0) 位置 */}
           <div ref={calibRef} style={{ gridColumn: 1, gridRow: 1, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
           {/* 拖拽悬停时使用级联避让布局，否则使用原始布局 */}
-          {(shiftedGrid && dragItemIndex.current !== null ? shiftedGrid : gridItems).map((item, index) => {
+          {(gridItems).map((item, index) => {
             const isWidget = item.itemType === 'widget'
             const cols = isWidget && item.cols ? item.cols : 1
             const rows = isWidget && item.rows ? item.rows : 1
