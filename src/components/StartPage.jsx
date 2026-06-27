@@ -465,7 +465,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const domain = new URL(site.url).hostname
       const cached = getCachedFavicon(domain)
       if (cached) return cached
-      return `https://favicon.im/${domain}`
+      return ''
     } catch {
       return ''
     }
@@ -893,18 +893,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                             draggable={false}
                             onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
                             onError={(e) => {
-                              if (!e.target.dataset.retry) {
-                                e.target.dataset.retry = '1'
-                                try { const d = new URL(item.url).hostname; e.target.src = 'https://www.google.com/s2/favicons?domain=' + d + '&sz=128' } catch(_) {
-                                  e.target.style.display = 'none'
-                                  const fb = e.target.parentElement.querySelector('[data-fallback]')
-                                  if (fb) fb.style.display = 'flex'
-                                }
-                              } else {
-                                e.target.style.display = 'none'
-                                const fb = e.target.parentElement.querySelector('[data-fallback]')
-                                if (fb) fb.style.display = 'flex'
-                              }
+                              e.target.style.display = 'none'
+                              const fb = e.target.parentElement?.querySelector('[data-fallback]')
+                              if (fb) fb.style.display = 'flex'
                             }}
                           />
                         ) : null}

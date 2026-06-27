@@ -10,7 +10,7 @@ function getAutoFaviconUrl(url) {
     const domain = new URL(url).hostname
     const cached = getCachedFavicon(domain)
     if (cached) return cached
-    return `https://favicon.im/${domain}`
+    return null
   } catch {
     return null
   }
