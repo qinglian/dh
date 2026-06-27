@@ -499,34 +499,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     const wItems = widgets.map((w, i) => ({ ...w, itemType: 'widget', col: w.col ?? ((shortcuts.length + i) % 6), row: w.row ?? Math.floor((shortcuts.length + i) / 6) }))
     return [...sItems, ...wItems]
   }, [shortcuts, widgets])
-  /* 计算加号按钮的网格位置：始终放在最后一行最右按钮的右边 */
-  const [addBtnCols, setAddBtnCols] = useState(6)
-  useLayoutEffect(() => {
-    const update = () => {
-      if (gridRef.current) {
-        const w = gridRef.current.clientWidth - CELL_SIZE * 2
-        setAddBtnCols(Math.max(1, Math.floor((w + GAP) / CELL_TOTAL)))
-      }
-    }
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
-
-  const addBtnPos = useMemo(() => {
-    const items = shiftedGrid || gridItems
-    if (items.length === 0) return { col: 0, row: 0 }
-    let lastRow = 0, lastCol = 0
-    for (const item of items) {
-      const r = item.row ?? 0
-      const c = item.col ?? 0
-      if (r > lastRow || (r === lastRow && c >= lastCol)) { lastRow = r; lastCol = c }
-    }
-    const nextCol = lastCol + 1
-    if (nextCol >= addBtnCols) return { col: 0, row: lastRow + 1 }
-    return { col: nextCol, row: lastRow }
-  }, [gridItems, shiftedGrid, addBtnCols])
-
   /* 从合并列表分离并保存 */
   const updateFromGrid = (newGrid) => {
     const newShortcuts = newGrid.filter(i => i.itemType === 'shortcut').map(({ itemType, ...rest }) => rest)
@@ -914,6 +886,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     <div
       ref={containerRef}
       className={`${styles.container} ${shortcuts.length === 0 ? styles.containerCentered : ''}`}
+      onContextMenu={handleGridContextMenu}
     >
       {/* 顶部工具栏 */}
       <div className={`${styles.topBar} ${isEditShortcuts ? styles.topBarVisible : ''}`}
@@ -1236,12 +1209,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
               </div>
             )
           })}
-          {/* 编辑模式：显示"添加"按钮 */}
-          {isEditShortcuts && (
-            <button className={styles.shortcutAdd} onClick={() => setShowAddShortcut(!showAddShortcut)} title="添加快捷网页" style={{ pointerEvents: 'auto', gridColumn: addBtnPos.col + 1, gridRow: addBtnPos.row + 1 }}>
-              <Plus size={18} />
-            </button>
-          )}
           {/* 拖拽悬浮占位预览：使用 CSS grid 定位，坐标与快捷网页一致 */}
           {dropTarget && dragItemData.current && (
             <div
