@@ -805,6 +805,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     originalGridRef.current = gridItems.map(item => ({ ...item }))
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', 'item:' + index)
+    // 隐藏浏览器原生拖拽预览，避免与自定义预览冲突
+    const ghost = document.createElement('div')
+    ghost.style.opacity = '0'
+    ghost.style.position = 'absolute'
+    document.body.appendChild(ghost)
+    e.dataTransfer.setDragImage(ghost, 0, 0)
+    setTimeout(() => document.body.removeChild(ghost), 0)
   }
 
   /*
