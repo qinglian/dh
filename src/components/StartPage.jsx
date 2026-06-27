@@ -1,4 +1,4 @@
-/*
+﻿/*
  * StartPage - 浏览器起始页
  * 功能：展示问候语、实时时钟、多引擎搜索框、快捷网页图标，支持主题切换、快捷网页编辑/拖拽排序。
  *       支持多页面（pageId）模式下独立保存每个页面的快捷方式和设置。
@@ -20,6 +20,60 @@ import { getCachedFavicon, cacheFavicon, getFaviconUrls, tryUpgradeFavicon } fro
 import styles from './StartPage.module.css'
 
 /* localStorage 中快捷方式数据的存储 key */
+/* ============ 网格碰撞检测辅助函数 ============ */
+
+/* 检查指定网格位置是否已被占用（可选择排除自身索引） */
+function isCellOccupied(grid, col, row, excludeIndex = -1) {
+  return grid.some((item, idx) => {
+    if (idx === excludeIndex) return false
+    const itemCol = item.col ?? 0
+    const itemRow = item.row ?? 0
+    return itemCol === col && itemRow === row
+  })
+}
+
+/* 查找第一个空闲的网格位置（用于新增快捷按钮时防止重叠） */
+function findEmptyPosition(grid, maxCols = 100) {
+  for (let row = 0; row < 100; row++) {
+    for (let col = 0; col < maxCols; col++) {
+      if (!isCellOccupied(grid, col, row)) {
+        return { col, row }
+      }
+    }
+  }
+  // 最终回退：按顺序排列
+  return { col: grid.length % 6, row: Math.floor(grid.length / 6) }
+}
+
+/* 使用BFS搜索离目标位置最近的空闲网格（用于拖拽时防止重叠） */
+function findNearestEmpty(grid, targetCol, targetRow, excludeIndex, maxCols = 100) {
+  // 先检查目标位置是否空闲
+  if (!isCellOccupied(grid, targetCol, targetRow, excludeIndex)) {
+    return { col: targetCol, row: targetRow }
+  }
+  // BFS 搜索最近空闲单元格
+  const visited = new Set()
+  const queue = [{ col: targetCol, row: targetRow }]
+  visited.add(`${targetCol},${targetRow}`)
+  const dirs = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]
+  while (queue.length > 0) {
+    const { col, row } = queue.shift()
+    for (const [dc, dr] of dirs) {
+      const nc = col + dc
+      const nr = row + dr
+      const key = `${nc},${nr}`
+      if (nc >= 0 && nc < maxCols && nr >= 0 && nr < 100 && !visited.has(key)) {
+        visited.add(key)
+        if (!isCellOccupied(grid, nc, nr, excludeIndex)) {
+          return { col: nc, row: nr }
+        }
+        queue.push({ col: nc, row: nr })
+      }
+    }
+  }
+  // 最终回退
+  return findEmptyPosition(grid, maxCols)
+}
 const SHORTCUTS_KEY = 'nav-shortcuts'
 
 /*
@@ -554,11 +608,14 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     if (!newShortcut.name.trim() || !newShortcut.url.trim()) return
     const url = newShortcut.url.startsWith('http') ? newShortcut.url : 'https://' + newShortcut.url
     const iconUrl = newShortcut.iconUrl.trim() || ''
+    // 查找第一个空闲网格位置，避免重叠
+    const { col, row } = findEmptyPosition(gridItems, 6)
     const item = {
       id: Date.now().toString(),
       name: newShortcut.name.trim(),
       url,
       iconUrl,
+      row,
       pos: undefined,
     }
     const updated = [...shortcuts, item]
@@ -708,8 +765,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (dragData.startsWith('item:')) {
         const idx = parseInt(dragData.split(':')[1])
         if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
+
+          // 查找最近空闲位置，防止拖拽重叠
+          const safePos = findNearestEmpty(gridItems, col, row, idx)
           const newGrid = [...gridItems]
-          newGrid[idx] = { ...newGrid[idx], col, row }
+          newGrid[idx] = { ...newGrid[idx], col: safePos.col, row: safePos.row }
           updateFromGrid(newGrid)
         }
       }
