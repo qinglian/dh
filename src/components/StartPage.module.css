@@ -1,4 +1,4 @@
-/* ==================== 起始页容器 ==================== */
+﻿/* ==================== 起始页容器 ==================== */
 .container {
   position: fixed;
   inset: 0;
@@ -824,6 +824,59 @@
   border-color: rgba(0, 122, 255, 0.4);
   color: rgba(0, 122, 255, 0.7);
   background: rgba(0, 122, 255, 0.05);
+}
+
+/* 网格空白处右键菜单 */
+.contextMenuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: transparent;
+}
+
+.contextMenu {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  min-width: 140px;
+  transform: translate(4px, 4px);
+}
+
+.contextMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #1d1d1f;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.contextMenuItem:hover {
+  background: rgba(0, 122, 255, 0.08);
+}
+
+:global([data-theme="dark"]) .contextMenu {
+  background: rgba(30, 30, 32, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme="dark"]) .contextMenuItem {
+  color: #f5f5f7;
+}
+
+:global([data-theme="dark"]) .contextMenuItem:hover {
+  background: rgba(0, 122, 255, 0.15);
 }
 
 /* 添加表单 */

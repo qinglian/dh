@@ -74,9 +74,8 @@ function findNearestEmpty(grid, targetCol, targetRow, excludeIndex, maxCols = 10
   // 最终回退
   return findEmptyPosition(grid, maxCols)
 }
-/* 计算拖拽排序：仅移动原始位置与目标位置之间的按钮（保持其他按钮位置不变）。
- * 向前拖（A→C）：中间按钮依次向前移一格 → B C A D E
- * 向后拖（C→A）：中间按钮依次向后移一格 → C A B D E
+/* 计算拖拽排序：当目标位置已有按钮时，插入式重排（仅移动之间的按钮）。
+ * 目标为空时，仅移动拖动按钮到目标位置，不影响其他按钮。
  */
 function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) {
   const result = grid.map(item => ({ ...item }))
@@ -86,14 +85,24 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
 
   if (origCol === targetCol && origRow === targetRow) return result
 
-  // 拖拽按钮放到目标位置
+  // 检查目标位置是否被占用
+  const targetOccupied = result.some((item, idx) =>
+    idx !== dragIdx && (item.col ?? 0) === targetCol && (item.row ?? 0) === targetRow
+  )
+
+  // 目标为空：仅移动拖动按钮，不移动其他
+  if (!targetOccupied) {
+    dragged.col = targetCol
+    dragged.row = targetRow
+    return result
+  }
+
+  // 目标被占用：插入式重排
   dragged.col = targetCol
   dragged.row = targetRow
 
-  // 判断拖动方向（按阅读顺序：先行后列 → 行号增大或同行列号增大即为向前）
   const isForward = targetRow > origRow || (targetRow === origRow && targetCol > origCol)
 
-  // 只移动原始位置与目标位置之间的按钮
   for (let i = 0; i < result.length; i++) {
     if (i === dragIdx) continue
     const item = result[i]
@@ -101,27 +110,18 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
     const r = item.row ?? 0
 
     if (isForward) {
-      // 向前拖（A→C）：原始之后、目标之前（含目标）的按钮向前移一格
       const isAfterOrig = r > origRow || (r === origRow && c > origCol)
       const isBeforeOrAtTarget = r < targetRow || (r === targetRow && c <= targetCol)
       if (isAfterOrig && isBeforeOrAtTarget) {
-        if (c > 0) {
-          item.col = c - 1
-        } else {
-          item.col = maxCols - 1
-          item.row = r - 1
-        }
+        if (c > 0) { item.col = c - 1 }
+        else { item.col = maxCols - 1; item.row = r - 1 }
       }
     } else {
-      // 向后拖（C→A）：目标之后（含目标）、原始之前的按钮向后移一格
       const isAtOrAfterTarget = r > targetRow || (r === targetRow && c >= targetCol)
       const isBeforeOrig = r < origRow || (r === origRow && c < origCol)
       if (isAtOrAfterTarget && isBeforeOrig) {
         item.col = c + 1
-        if (item.col >= maxCols) {
-          item.col = 0
-          item.row = r + 1
-        }
+        if (item.col >= maxCols) { item.col = 0; item.row = r + 1 }
       }
     }
   }
@@ -925,6 +925,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         <div className={styles.themePickerWrapper} ref={themePickerRef}>
           <button className={styles.topBtn} onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker) }} title="主题模式">
             {theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />}
+      onContextMenu={handleGridContextMenu}
           </button>
           {showThemePicker && (
             <div className={styles.themeDropdown}>
@@ -1138,7 +1139,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             return (
               <div
                 key={item.id}
-                className={`${styles.shortcutItem} ${isEditShortcuts ? styles.shortcutItemDraggable : ''} ${dragItemIndex.current === index ? styles.dragging : ''} ${dropTarget && dragItemIndex.current === index ? styles.dragSource : ''} ${isWidget ? styles.widgetItem : ''}`}
+                data-shortcut className={`${styles.shortcutItem} ${isEditShortcuts ? styles.shortcutItemDraggable : ''} ${dragItemIndex.current === index ? styles.dragging : ''} ${dropTarget && dragItemIndex.current === index ? styles.dragSource : ''} ${isWidget ? styles.widgetItem : ''}`}
                 style={{
                   gridColumn: `${col + 1} / span ${cols}`,
                   gridRow: `${row + 1} / span ${rows}`,
@@ -1257,6 +1258,24 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         </div>
       </div>
 
+      {/* 网格空白处右键菜单 */}
+      {gridContextMenu && (
+        <>
+          <div className={styles.contextMenuOverlay} onClick={() => setGridContextMenu(null)} onContextMenu={(e) => { e.preventDefault(); setGridContextMenu(null) }} />
+          <div className={styles.contextMenu} style={{ position: 'fixed', left: gridContextMenu.x, top: gridContextMenu.y, zIndex: 10000 }}>
+            <button
+              className={styles.contextMenuItem}
+              onClick={() => {
+                setGridContextMenu(null)
+                setShowAddShortcut(true)
+              }}
+            >
+              <Plus size={14} />
+              <span>新增网页</span>
+            </button>
+          </div>
+        </>
+      )}
       {/* 添加快捷网页弹窗 */}
       {isEditShortcuts && showAddShortcut && (
         <div className={styles.addDialog}>
