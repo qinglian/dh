@@ -74,6 +74,88 @@ function findNearestEmpty(grid, targetCol, targetRow, excludeIndex, maxCols = 10
   // 最终回退
   return findEmptyPosition(grid, maxCols)
 }
+/* 计算拖拽悬停时的级联避让布局
+ * 当拖拽按钮悬停在已有按钮位置时，被占位置的按钮自动向下避让一格；
+ * 如果下一格也有按钮则同理递推。返回新的 grid 数组（含所有避让后的位置）。
+ * 若悬停位置为空，则仅返回目标位置（无避让）。
+ */
+function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) {
+  const result = grid.map(item => ({ ...item }))
+  const dragged = result[dragIdx]
+
+  // 检查目标位置是否被其他按钮占用
+  const occupantIdx = result.findIndex((item, idx) =>
+    idx !== dragIdx && (item.col ?? 0) === targetCol && (item.row ?? 0) === targetRow
+  )
+
+  if (occupantIdx === -1) {
+    // 目标位置空闲，直接放置
+    dragged.col = targetCol
+    dragged.row = targetRow
+    return result
+  }
+
+  // 目标位置被占用，需要级联避让
+  // 第一步：把拖拽项放到目标位置
+  dragged.col = targetCol
+  dragged.row = targetRow
+
+  // 构建占用集合用于快速查找
+  const occupied = new Set()
+  result.forEach((item, idx) => {
+    if (idx !== occupantIdx && idx !== dragIdx) {
+      occupied.add(`${item.col ?? 0},${item.row ?? 0}`)
+    }
+  })
+
+  // 级联向下推移：从被挤走的按钮开始，逐行向下查找空位
+  let shiftItem = result[occupantIdx]
+  let shiftRow = targetRow
+  let searchRow = targetRow + 1
+
+  while (true) {
+    const key = `${targetCol},${searchRow}`
+    if (!occupied.has(key) && !result.some((item, idx) =>
+      idx !== dragIdx && (item.col ?? 0) === targetCol && (item.row ?? 0) === searchRow
+    )) {
+      // 找到空位
+      shiftItem.col = targetCol
+      shiftItem.row = searchRow
+      break
+    }
+    // 当前行被占用，找这一行的占用者并继续向下推
+    const nextOccupant = result.find((item, idx) =>
+      idx !== dragIdx &&
+      (item.col ?? 0) === targetCol &&
+      (item.row ?? 0) === searchRow
+    )
+    if (nextOccupant) {
+      shiftItem.col = targetCol
+      shiftItem.row = searchRow
+      shiftItem = nextOccupant
+      occupied.add(`${targetCol},${searchRow}`)
+      searchRow++
+    } else {
+      searchRow++
+    }
+
+    // 安全上限
+    if (searchRow > 200) break
+  }
+
+  // 被挤走的按钮位置可能已被占，确保没有重叠
+  const finalCheck = new Set()
+  for (let i = 0; i < result.length; i++) {
+    const k = `${result[i].col ?? 0},${result[i].row ?? 0}`
+    if (finalCheck.has(k)) {
+      // 有冲突，回退到简单放置
+      result[i].row = (result[i].row ?? 0) + 1
+    }
+    finalCheck.add(k)
+  }
+
+  return result
+}
 const SHORTCUTS_KEY = 'nav-shortcuts'
 
 /*
@@ -332,10 +414,16 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const [dragOverIndex, setDragOverIndex] = useState(null)
   /* 拖拽悬浮占位位置 { col, row } */
   const [dropTarget, setDropTarget] = useState(null)
+  // 拖拽悬停时的级联避让布局（临时计算结果）
+  const [shiftedGrid, setShiftedGrid] = useState(null)
+  // 上一次的拖拽目标位置，用于检测拖拽是否移开
+  const prevDropRef = useRef(null)
   /* 拖拽项的原始索引，用于交换计算 */
   const dragItemIndex = useRef(null)
   /* 拖拽项的原始数据引用 */
   const dragItemData = useRef(null)
+  // 拖拽开始时保存原始 grid（用于取消时恢复）
+  const originalGridRef = useRef(null)
   /* 搜索框容器 DOM 引用 */
   const searchRef = useRef(null)
   /* 时间栏容器 DOM 引用 */
@@ -695,6 +783,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     if (!isEditShortcuts) return
     dragItemIndex.current = index
     dragItemData.current = gridItems[index]
+    originalGridRef.current = gridItems.map(item => ({ ...item }))
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', 'item:' + index)
   }
@@ -732,7 +821,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const handleDragEnd = (e) => {
     dragItemIndex.current = null
     dragItemData.current = null
-    setDropTarget(null)
+      setDropTarget(null)
+      setShiftedGrid(null)
+      setDragOverIndex(null)
+      originalGridRef.current = null
     setDragOverIndex(null)
   }
 
@@ -749,6 +841,10 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const pos = getGridPos(e.clientX, e.clientY)
       if (pos) {
         setDropTarget(pos)
+        prevDropRef.current = pos
+        // 计算级联避让布局
+        const shifted = computeShiftedGrid(gridItems, dragItemIndex.current, pos.col, pos.row)
+        setShiftedGrid(shifted)
       }
     }
 
@@ -765,26 +861,30 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (dragData.startsWith('item:')) {
         const idx = parseInt(dragData.split(':')[1])
         if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
-
-          // 查找最近空闲位置，防止拖拽重叠
-          const safePos = findNearestEmpty(gridItems, col, row, idx)
-          const newGrid = [...gridItems]
-          newGrid[idx] = { ...newGrid[idx], col: safePos.col, row: safePos.row }
-          updateFromGrid(newGrid)
+          // 应用级联避让后的最终布局
+          const finalGrid = computeShiftedGrid(gridItems, idx, col, row)
+          updateFromGrid(finalGrid)
         }
       }
 
       dragItemIndex.current = null
       dragItemData.current = null
       setDropTarget(null)
+      setShiftedGrid(null)
       setDragOverIndex(null)
+      originalGridRef.current = null
     }
+
+
+
 
     const onDragEnd = () => {
       dragItemIndex.current = null
       dragItemData.current = null
       setDropTarget(null)
+      setShiftedGrid(null)
       setDragOverIndex(null)
+      originalGridRef.current = null
     }
 
     document.addEventListener('dragover', onDragOver)
@@ -1020,7 +1120,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             paddingBottom: CELL_SIZE,
           }}
         >
-          {gridItems.map((item, index) => {
+          {/* 拖拽悬停时使用级联避让布局，否则使用原始布局 */}
+          {(shiftedGrid && dragItemIndex.current !== null ? shiftedGrid : gridItems).map((item, index) => {
             const isWidget = item.itemType === 'widget'
             const cols = isWidget && item.cols ? item.cols : 1
             const rows = isWidget && item.rows ? item.rows : 1
