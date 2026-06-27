@@ -311,6 +311,13 @@ export function DataProvider({ children }) {
    * 子组件通过 useData() Hook 消费这些值
    */
   
+  // 自动持久化数据到 localStorage（每次 data 变更时同步）
+  useEffect(() => {
+    if (data && Array.isArray(data.categories)) {
+      localStorage.setItem("nav-data-v2", JSON.stringify(data))
+    }
+  }, [data])
+
   // 监听favicon缓存事件，更新站点iconUrl
   useEffect(() => {
     const handler = (e) => {

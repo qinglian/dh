@@ -2,8 +2,8 @@
  * defaultConfig.js - 内置默认配置模块
  *
  * 将用户导出的配置 JSON 作为源码内置默认值。
- * 应用首次加载时（localStorage 为空），自动将这些默认值写入 localStorage。
- * 这样新用户首次访问即可看到配置好的效果，无需手动导入。
+ * 应用每次加载时，对 localStorage 中尚不存在的配置 key 自动补全默认值。
+ * 已有配置不会被覆盖，缺失的配置会被补齐。
  */
 
 /**
@@ -19,7 +19,7 @@ export const DEFAULT_CONFIG = {
   'nav-startpage-current-page': 'default',
 
   // 网站标题
-  'nav-site-title': '清炼导航',
+  'nav-site-title': '\u6e05\u70bc\u5bfc\u822a',
   'nav-site-subtitle': 'qinglian',
 
   // 站点状态检测
@@ -81,35 +81,22 @@ export const DEFAULT_CONFIG = {
   'nav-glass-light-text-color3': '#8e8e93',
 
   // 版权
-  'nav-copyright-text': '清炼',
+  'nav-copyright-text': '\u6e05\u70bc',
 }
 
 /**
- * hasAnyNavConfig - 检查是否已有任何导航配置
- * 通过检查几个关键 key 来判断用户是否已有配置
- */
-function hasAnyNavConfig() {
-  const keys = [
-    'nav-theme-mode',
-    'nav-site-title',
-    'nav-animated-bg',
-    'nav-current-view',
-  ]
-  return keys.some(key => localStorage.getItem(key) !== null)
-}
-
-/**
- * applyDefaultConfig - 应用默认配置
- * 如果 localStorage 中没有任何导航配置，则将内置默认值写入
+ * applyDefaultConfig - 应用默认配置（合并模式）
+ * 遍历所有默认配置项，仅对 localStorage 中尚不存在的 key 写入默认值。
+ * 已有配置不会被覆盖，缺失的配置会被补齐。
+ * @returns {boolean} 是否有新的默认值被写入
  */
 export function applyDefaultConfig() {
-  if (hasAnyNavConfig()) {
-    return false // 已有配置，不覆盖
-  }
-
+  let applied = false
   Object.entries(DEFAULT_CONFIG).forEach(([key, value]) => {
-    localStorage.setItem(key, value)
+    if (localStorage.getItem(key) === null) {
+      localStorage.setItem(key, value)
+      applied = true
+    }
   })
-
-  return true
+  return applied
 }
