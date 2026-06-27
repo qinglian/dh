@@ -126,7 +126,7 @@ function ShortcutIcon({ site, onCached, shortcutId }) {
     }
 
     const checkBothFailed = () => {
-      if (googleDone === false && faviconimDone === false) return // still loading
+      if (googleDone === undefined || faviconimDone === undefined) return // still loading
       if (!mounted) return
       // googleDone and faviconimDone are set (true or false)
       if (!googleDone && !faviconimDone) {
