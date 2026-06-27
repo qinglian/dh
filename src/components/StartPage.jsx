@@ -1,4 +1,4 @@
-﻿/*
+/*
  * StartPage - 浏览器起始页
  * 功能：展示问候语、实时时钟、多引擎搜索框、快捷网页图标，支持主题切换、快捷网页编辑/拖拽排序。
  *       支持多页面（pageId）模式下独立保存每个页面的快捷方式和设置。
@@ -444,7 +444,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     if (site.iconUrl) return site.iconUrl
     try {
       const domain = new URL(site.url).hostname
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+      return `https://favicon.im/${domain}`
     } catch {
       return ''
     }
@@ -870,8 +870,16 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                           alt=""
                           draggable={false}
                           onError={(e) => {
-                            e.target.style.display = 'none'
-                            e.target.parentElement.textContent = item.name.charAt(0)
+                            if (!e.target.dataset.retry) {
+                              e.target.dataset.retry = '1'
+                              try { const d = new URL(item.url).hostname; e.target.src = 'https://' + d + '/favicon.ico' } catch(_) {
+                                e.target.style.display = 'none'
+                                e.target.parentElement.textContent = item.name.charAt(0)
+                              }
+                            } else {
+                              e.target.style.display = 'none'
+                              e.target.parentElement.textContent = item.name.charAt(0)
+                            }
                           }}
                         />
                       </div>

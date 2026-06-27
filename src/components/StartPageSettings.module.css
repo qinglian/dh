@@ -586,3 +586,43 @@
   background: #e0e0e0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
+
+.sizeBtnGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.sizeBtn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  font-family: inherit;
+}
+
+.sizeBtn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.sizeBtnActive {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 2px 12px rgba(0, 122, 255, 0.25);
+}
+
+.sizeBtnActive:hover {
+  color: white;
+  opacity: 0.9;
+  transform: none;
+}

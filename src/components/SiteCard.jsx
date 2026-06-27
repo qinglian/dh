@@ -6,8 +6,8 @@ import styles from './SiteCard.module.css'
 
 function getAutoFaviconUrl(url) {
   try {
-    const urlObj = new URL(url)
-    return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`
+    const urlObj = new URL(url); const domain = urlObj.hostname
+    return `https://favicon.im/${domain}`
   } catch {
     return null
   }
@@ -92,7 +92,7 @@ export default function SiteCard({ site, isEditMode, onEdit, onDelete, onContext
             src={iconUrl}
             alt={site.name}
             className={styles.icon}
-            onError={() => setIconError(true)}
+            onError={(e) => { if (!e.target.dataset.retry) { e.target.dataset.retry = "1"; try { const d = new URL(site.url).hostname; e.target.src = "https://" + d + "/favicon.ico" } catch(_) { setIconError(true) } } else { setIconError(true) } }}
             loading="lazy"
             draggable={false}
           />

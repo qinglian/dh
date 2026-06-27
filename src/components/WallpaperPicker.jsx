@@ -10,9 +10,9 @@ const presets = [
   { id: 'gradient4',  name: '森林',   gradient: 'linear-gradient(135deg, #0f5e52 0%, #1d9b72 30%, #2ecc71 60%, #a8e6cf 100%)' },
   { id: 'gradient5',  name: '幻夜',   gradient: 'linear-gradient(160deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' },
   { id: 'gradient6',  name: '晨曦',   gradient: 'linear-gradient(120deg, #e8d5b7 0%, #f5cc95 25%, #f7a8b8 60%, #d291bc 100%)' },
-  { id: 'gradient7',  name: '海雾',   gradient: 'linear-gradient(160deg, #b6c6cc 0%, #8aa6b0 30%, #6b8e9b 60%, #4a7485 100%)' },
-  { id: 'gradient8',  name: '梦境',   gradient: 'linear-gradient(120deg, #fc5c7d 0%, #6a82fb 50%, #1dd1a1 100%)' },
-  { id: 'gradient9',  name: '夜幕',   gradient: 'linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 30%, #16213e 60%, #0f3460 100%)' },
+  { id: 'gradient7',  name: '暮光',   gradient: 'linear-gradient(135deg, #2c1b4d 0%, #a4508b 40%, #ff6b6b 70%, #ffa502 100%)' },
+  { id: 'gradient8',  name: '碧波',   gradient: 'linear-gradient(135deg, #00b4db 0%, #0083b0 50%, #00d2ff 100%)' },
+  { id: 'gradient9',  name: '紫霞',   gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
 ]
 
 function isCustom(wp) { return wp?.startsWith('media:') || wp?.startsWith('url:') }

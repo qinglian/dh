@@ -77,6 +77,9 @@ export default function WeatherBackground({ theme }) {
         if (newWeather && newWeather.type !== targetType) {
           targetType = newWeather.type;
           state.transitionAlpha = 0;
+        } else if (!newWeather && targetType !== 'sunny') {
+          targetType = 'sunny';
+          state.transitionAlpha = 0;
         }
       }
     };
@@ -200,7 +203,7 @@ export default function WeatherBackground({ theme }) {
         y: Math.random() * h * 0.6,
         radius: 0.3 + Math.random() * 2.2,
         opacity: 0.2 + Math.random() * 0.8,
-        twinkleSpeed: 0.001 + Math.random() * 0.008,
+        twinkleSpeed: 0.0003 + Math.random() * 0.002,
         twinklePhase: Math.random() * Math.PI * 2,
         hasSpikes: Math.random() > 0.65,
         color,
@@ -571,8 +574,8 @@ export default function WeatherBackground({ theme }) {
         type = targetType;
         state.prevType = targetType;
         init();
-        return;
-      }
+        // 过渡完成后继续渲染，不 return 终止循环
+      } else {
 
       drawSky();
 
@@ -580,7 +583,7 @@ export default function WeatherBackground({ theme }) {
       if (!isDay && type !== 'rain' && type !== 'snow') {
         state.stars.forEach(star => {
           star.twinklePhase += star.twinkleSpeed;
-          const twinkle = 0.3 + 0.7 * Math.sin(star.twinklePhase);
+          const twinkle = 0.55 + 0.45 * Math.sin(star.twinklePhase);
           ctx.save();
           ctx.globalAlpha = star.opacity * twinkle;
           // 星星颜色微偏黄/蓝，更自然
@@ -610,12 +613,12 @@ export default function WeatherBackground({ theme }) {
         });
 
         // 流星
-        if (Math.random() < 0.003 && state.meteors.length < 2) {
+        if (Math.random() < 0.02 && state.meteors.length < 6) {
           state.meteors.push({
             x: Math.random() * w * 0.8 + w * 0.1,
             y: Math.random() * h * 0.25,
             length: 60 + Math.random() * 100,
-            speed: 4 + Math.random() * 6,
+            speed: 5 + Math.random() * 8,
             angle: Math.PI / 4 + (Math.random() - 0.5) * 0.3,
             opacity: 1,
           });
@@ -623,7 +626,7 @@ export default function WeatherBackground({ theme }) {
         state.meteors = state.meteors.filter(m => {
           m.x += Math.cos(m.angle) * m.speed;
           m.y += Math.sin(m.angle) * m.speed;
-          m.opacity -= 0.008;
+          m.opacity -= 0.004;
           if (m.opacity <= 0) return false;
           ctx.save();
           ctx.globalAlpha = m.opacity;
@@ -962,6 +965,7 @@ export default function WeatherBackground({ theme }) {
       }
 
       // 每 50 帧检查一次缓存更新
+      }
       if (state.time % 10 === 0) checkCacheUpdate();
 
       animRef.current = requestAnimationFrame(draw);
@@ -981,7 +985,7 @@ export default function WeatherBackground({ theme }) {
         const newWeather = getWeatherCache()?.data;
         if (newWeather && newWeather.type !== type) {
           targetType = newWeather.type;
-          initParticles(targetType);
+          init();
         }
       }, 300);
     };

@@ -82,6 +82,13 @@ applyCardHighlightColor()
 window.addEventListener('cardHighlightChanged', applyCardHighlightColor)
 
 function AppContent() {
+  // 全局屏蔽浏览器右键菜单
+  useEffect(() => {
+    const handler = (e) => e.preventDefault();
+    document.addEventListener('contextmenu', handler);
+    return () => document.removeEventListener('contextmenu', handler);
+  }, []);
+
   const { data, setData, addCategory, updateCategory, deleteCategory, addSite, updateSite, deleteSite, reorderSites, reorderCategories, reorderTags } = useData()
   const { theme } = useTheme()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -411,7 +418,7 @@ function AppContent() {
   }, [bgMultiMode])
 
   useEffect(() => {
-    localStorage.setItem('nav-wallpaper', wallpaper)
+    try { localStorage.setItem('nav-wallpaper', wallpaper) } catch (e) { console.warn('壁纸存储失败:', e.message) }
   }, [wallpaper])
 
   useEffect(() => {

@@ -744,6 +744,10 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
           icon: '\u26C5',
           type: 'cloudy',
         }
+        // 写入缓存，确保 WeatherBackground 可以检测到天气变化
+        const cacheKey = `${lat.toFixed(4)},${lon.toFixed(4)}`
+        localStorage.setItem('nav-weather-cache', JSON.stringify({ cacheKey, data: weatherData }))
+        localStorage.setItem('nav-weather-cache-time', Date.now().toString())
       }
 
       if (weatherData) {
