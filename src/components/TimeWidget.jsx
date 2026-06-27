@@ -814,7 +814,18 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
   /* 当前天气类型，用于 Canvas 动画和 CSS 背景类名 */
   const weatherType = weather?.type || 'sunny'
   /* 是否白天（6:00-18:59），影响天气动画和背景样式 */
-  const isDay = time.getHours() >= 6 && time.getHours() < 19
+  const isDay = useMemo(() => {
+    if (weather?.sunrise && weather?.sunset) {
+      const [sh, sm] = weather.sunrise.split(':').map(Number)
+      const [eh, em] = weather.sunset.split(':').map(Number)
+      const sMins = sh * 60 + sm
+      const eMins = eh * 60 + em
+      const nowMins = time.getHours() * 60 + time.getMinutes()
+      return nowMins >= sMins && nowMins < eMins
+    }
+    // fallback when no sunrise/sunset data
+    return time.getHours() >= 6 && time.getHours() < 19
+  }, [time, weather])
 
   /*
    * 根据天气类型和白天/夜间计算 CSS 背景类名

@@ -65,7 +65,17 @@ export default function WeatherBackground({ theme }) {
     let type = weather?.type || 'sunny';
     let targetType = type;
     const hour = new Date().getHours();
-    const isDay = hour >= 6 && hour < 19;
+    const isDay = (() => {
+    if (weather?.sunrise && weather?.sunset) {
+      const [sh, sm] = weather.sunrise.split(':').map(Number)
+      const [eh, em] = weather.sunset.split(':').map(Number)
+      const sMins = sh * 60 + sm
+      const eMins = eh * 60 + em
+      const nowMins = hour * 60 + new Date().getMinutes()
+      return nowMins >= sMins && nowMins < eMins
+    }
+    return hour >= 6 && hour < 19
+  })();
 
     // 监听缓存变化
     let lastCacheTime = localStorage.getItem('nav-weather-cache-time');
