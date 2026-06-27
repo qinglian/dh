@@ -16,7 +16,7 @@ import StartPageSettings from './StartPageSettings'
 import WidgetPanel from './WidgetPanel'
 import { getSettings } from '../utils/startPageSettings'
 import { getPageDataKey, getPages } from '../utils/startPagePages'
-import { getCachedFavicon, cacheFavicon, getFaviconUrls, tryUpgradeFavicon } from '../utils/faviconCache'
+import { getCachedFavicon, cacheFavicon, getFaviconUrls, tryUpgradeFavicon, detectGoogleGlobe } from '../utils/faviconCache'
 import styles from './StartPage.module.css'
 
 /* localStorage 中快捷方式数据的存储 key */
@@ -252,6 +252,13 @@ function ShortcutIcon({ site, onCached, shortcutId }) {
     // 加载 Google S2
     const img1 = new Image()
     img1.onload = () => {
+      // 屏蔽 Google S2 返回的地球图标（16x16 默认图）
+      if (detectGoogleGlobe(img1)) {
+        googleDone = false
+        tryShow()
+        checkBothFailed()
+        return
+      }
       googleDone = true
       cacheFavicon(new URL(site.url).hostname, candidates[0].url, 'google')
       if (onCached) onCached(candidates[0].url)
@@ -1152,7 +1159,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                       onChange={(e) => setEditShortcut({ ...editShortcut, name: e.target.value })}
                       placeholder="名称"
                       className={styles.editInput}
-                      draggable={false} onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
+                      draggable={false}
                     />
                     <input
                       type="text"
@@ -1160,7 +1167,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                       onChange={(e) => setEditShortcut({ ...editShortcut, url: e.target.value })}
                       placeholder="网址"
                       className={styles.editInput}
-                      draggable={false} onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
+                      draggable={false}
                     />
                     <input
                       type="text"
@@ -1168,7 +1175,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                       onChange={(e) => setEditShortcut({ ...editShortcut, iconUrl: e.target.value })}
                       placeholder="图标URL（可选）"
                       className={styles.editInput}
-                      draggable={false} onLoad={(e) => { try { const d = new URL(item.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: item.url, faviconUrl: u, shortcutId: item.id } })) } catch(_) {} }}
+                      draggable={false}
                     />
                     <div className={styles.editActions}>
                       <button className={styles.editCancel} onClick={() => setEditingId(null)}>取消</button>

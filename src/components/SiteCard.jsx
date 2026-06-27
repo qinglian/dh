@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { Edit2, Trash2, GripVertical } from 'lucide-react'
 import { checkSiteStatus } from '../utils/siteStatus'
 import { recordSiteClick } from '../utils/quickAccess'
-import { getCachedFavicon, cacheFavicon, getFaviconUrls, tryUpgradeFavicon } from '../utils/faviconCache'
+import { getCachedFavicon, cacheFavicon, getFaviconUrls, tryUpgradeFavicon, detectGoogleGlobe } from '../utils/faviconCache'
 import styles from './SiteCard.module.css'
 
 /**
@@ -90,7 +90,15 @@ export default function SiteCard({ site, isEditMode, onEdit, onDelete, onContext
       }
 
       const img1 = new Image()
-      img1.onload = () => { googleDone = true; tryShow() }
+      img1.onload = () => {
+      if (detectGoogleGlobe(img1)) {
+        googleDone = false
+        tryShow()
+        checkBothFailed()
+        return
+      }
+      googleDone = true; tryShow()
+    }
       img1.onerror = () => { googleDone = false; tryShow(); checkBothFailed() }
       img1.src = candidates[0].url
 
