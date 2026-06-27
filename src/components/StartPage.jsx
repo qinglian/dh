@@ -437,6 +437,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const timeSectionRef = useRef(null)
   /* 网格容器 DOM 引用，用于拖拽坐标偏移计算 */
   const gridRef = useRef(null)
+  const calibRef = useRef(null)
   /* 网格动态 paddingTop，确保快捷网页在搜索框下方 */
   const [gridPaddingTop, setGridPaddingTop] = useState('12.5vh')
   /* 网格行偏移量：搜索框/时间栏占用的网格行数，渲染时加到 item.row 上，使得 item 保持在搜索框下方 */
@@ -810,28 +811,55 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    * 计算鼠标相对于容器的坐标
    * 使用容器 containerRef 作为参考坐标系（覆盖整个视口），确保整页均可拖拽放置
    */
+  /*
+   * 计算鼠标对应的网格位置：使用隐藏参考元素校准坐标，确保预览位置与鼠标完全对齐。
+   */
+  /*
+   * 计算鼠标对应的网格位置：通过隐藏校准元素精确映射坐标。
+   */
   const getGridPos = useMemo(() => {
     return (clientX, clientY) => {
       const gridEl = gridRef.current
-      const containerEl = containerRef.current
-      if (!gridEl || !containerEl) return null
-      const gridRect = gridEl.getBoundingClientRect()
-      const containerRect = containerEl.getBoundingClientRect()
+      const calibEl = calibRef.current
+      if (!gridEl) return null
       const cs = getComputedStyle(gridEl)
-      const padLeft = parseFloat(cs.paddingLeft) || 0
-      const contentWidth = gridRect.width - padLeft * 2
-      const cols = Math.max(1, Math.floor((contentWidth + GAP) / CELL_TOTAL))
-      const gridContentWidth = cols * CELL_TOTAL - GAP
-      const gridOffsetX = (contentWidth - gridContentWidth) / 2
-      const offsetX = clientX - gridRect.left - padLeft - gridOffsetX
       const padTop = parseFloat(cs.paddingTop) || 0
-      // 使用 grid 本地坐标 + paddingTop 精确计算，整个 grid 内容区可放置
-      const offsetY = clientY - gridRect.top - padTop
-      const row = Math.max(0, Math.floor(offsetY / CELL_TOTAL))
-      return {
-        col: Math.max(0, Math.min(cols - 1, Math.floor(offsetX / CELL_TOTAL))),
-        row,
+
+      // 使用校准元素（grid 0,0 位置）获取实际起始坐标
+      if (calibEl) {
+        const calibRect = calibEl.getBoundingClientRect()
+        const gap = parseFloat(cs.columnGap) || GAP
+        const cellTotal = CELL_SIZE + gap
+
+        // 内容区宽度和列数
+        const padLeft = parseFloat(cs.paddingLeft) || 0
+        const padRight = parseFloat(cs.paddingRight) || 0
+        const contentWidth = gridEl.getBoundingClientRect().width - padLeft - padRight
+        const cols = Math.max(1, Math.floor((contentWidth + gap) / cellTotal))
+
+        // 基于校准元素位置计算鼠标所在行列
+        const relX = clientX - calibRect.left
+        const relY = clientY - calibRect.top
+        const col = Math.max(0, Math.min(cols - 1, Math.round(relX / cellTotal)))
+        const row = Math.max(0, Math.round(relY / cellTotal))
+        return { col, row }
       }
+
+      // 回退：手动计算（无校准元素时）
+      const gridRect = gridEl.getBoundingClientRect()
+      const padLeft = parseFloat(cs.paddingLeft) || 0
+      const padRight = parseFloat(cs.paddingRight) || 0
+      const gap = parseFloat(cs.columnGap) || GAP
+      const contentWidth = gridRect.width - padLeft - padRight
+      const cellTotal = CELL_SIZE + gap
+      const cols = Math.max(1, Math.floor((contentWidth + gap) / cellTotal))
+      const gridWidth = cols * cellTotal - gap
+      const centerOffsetX = (contentWidth - gridWidth) / 2
+      const relX = clientX - gridRect.left - padLeft - centerOffsetX
+      const relY = clientY - gridRect.top - padTop
+      const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
+      const row = Math.max(0, Math.floor(relY / cellTotal))
+      return { col, row }
     }
   }, [])
 
@@ -1139,6 +1167,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             paddingBottom: CELL_SIZE,
           }}
         >
+          {/* 隐藏校准元素：grid (0,0) 位置 */}
+          <div ref={calibRef} style={{ gridColumn: 1, gridRow: 1, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
           {/* 拖拽悬停时使用级联避让布局，否则使用原始布局 */}
           {(shiftedGrid && dragItemIndex.current !== null ? shiftedGrid : gridItems).map((item, index) => {
             const isWidget = item.itemType === 'widget'
