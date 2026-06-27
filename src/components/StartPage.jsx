@@ -839,8 +839,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         // 基于校准元素位置计算鼠标所在行列
         const relX = clientX - calibRect.left
         const relY = clientY - calibRect.top
-        const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
-        const row = Math.max(0, Math.floor(relY / cellTotal))
+        const col = Math.max(0, Math.min(cols - 1, Math.floor((relX + gap / 2) / cellTotal)))
+        const row = Math.max(0, Math.floor((relY + gap / 2) / cellTotal))
         return { col, row }
       }
 
@@ -856,8 +856,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const centerOffsetX = (contentWidth - gridWidth) / 2
       const relX = clientX - gridRect.left - padLeft - centerOffsetX
       const relY = clientY - gridRect.top - padTop
-      const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
-      const row = Math.max(0, Math.floor(relY / cellTotal))
+      const col = Math.max(0, Math.min(cols - 1, Math.floor((relX + gap / 2) / cellTotal)))
+      const row = Math.max(0, Math.floor((relY + gap / 2) / cellTotal))
       return { col, row }
     }
   }, [])
