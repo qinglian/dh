@@ -465,7 +465,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const domain = new URL(site.url).hostname
       const cached = getCachedFavicon(domain)
       if (cached) return cached
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
+      return `https://favicon.im/${domain}`
     } catch {
       return ''
     }
@@ -895,7 +895,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                             onError={(e) => {
                               if (!e.target.dataset.retry) {
                                 e.target.dataset.retry = '1'
-                                try { const d = new URL(item.url).hostname; e.target.src = 'https://favicon.im/' + d } catch(_) {
+                                try { const d = new URL(item.url).hostname; e.target.src = 'https://www.google.com/s2/favicons?domain=' + d + '&sz=128' } catch(_) {
                                   e.target.style.display = 'none'
                                   const fb = e.target.parentElement.querySelector('[data-fallback]')
                                   if (fb) fb.style.display = 'flex'

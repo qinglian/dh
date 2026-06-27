@@ -10,7 +10,7 @@ function getAutoFaviconUrl(url) {
     const domain = new URL(url).hostname
     const cached = getCachedFavicon(domain)
     if (cached) return cached
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
+    return `https://favicon.im/${domain}`
   } catch {
     return null
   }
@@ -95,7 +95,7 @@ export default function SiteCard({ site, isEditMode, onEdit, onDelete, onContext
             src={iconUrl}
             alt={site.name}
             className={styles.icon}
-            onError={(e) => { if (!e.target.dataset.retry) { e.target.dataset.retry = "1"; try { const d = new URL(site.url).hostname; e.target.src = "https://favicon.im/" + d } catch(_) { setIconError(true) } } else { setIconError(true) } }}
+            onError={() => setIconError(true)}
             loading="lazy" onLoad={(e) => { try { const d = new URL(site.url).hostname; const u = e.target.currentSrc || e.target.src; cacheFavicon(d, u); window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: site.url, faviconUrl: u } })) } catch(_) {} }}
             draggable={false}
           />
