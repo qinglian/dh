@@ -74,63 +74,69 @@ function findNearestEmpty(grid, targetCol, targetRow, excludeIndex, maxCols = 10
   // 最终回退
   return findEmptyPosition(grid, maxCols)
 }
-/* 计算拖拽悬停时的级联避让布局
- * 当拖拽按钮悬停在已有按钮位置时，被占位置的按钮自动向下避让一格；
- * 如果下一格也有按钮则同理递推。返回新的 grid 数组（含所有避让后的位置）。
- * 若悬停位置为空，则仅返回目标位置（无避让）。
+/* 计算拖拽排序：将拖动的按钮插入到目标位置，其余按钮按阅读顺序（先行后列）依次填补。
+ * 例如 ABCDE 拖动 A 到 C 位置，结果为 B C A D E。
  */
 function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) {
   const result = grid.map(item => ({ ...item }))
   const dragged = result[dragIdx]
+  const origCol = dragged.col ?? 0
+  const origRow = dragged.row ?? 0
 
-  const occupantIdx = result.findIndex((item, idx) =>
-    idx !== dragIdx && (item.col ?? 0) === targetCol && (item.row ?? 0) === targetRow
-  )
+  // 如果目标位置与原始位置相同，不需要移动
+  if (origCol === targetCol && origRow === targetRow) return result
 
-  if (occupantIdx === -1) {
-    dragged.col = targetCol
-    dragged.row = targetRow
-    return result
+  // 计算列数：取现有按钮最大列+1，至少1列
+  const cols = Math.max(1, ...result.map(item => (item.col ?? 0) + 1), 6)
+
+  // 1. 按阅读顺序（先行后列）排序所有项目
+  const sorted = result.map((item, idx) => ({ ...item, _idx: idx }))
+    .sort((a, b) => {
+      const ra = a.row ?? 0, rb = b.row ?? 0
+      const ca = a.col ?? 0, cb = b.col ?? 0
+      return ra !== rb ? ra - rb : ca - cb
+    })
+
+  // 2. 找到拖动项和目标插入位置在排序数组中的索引
+  let dragSortedIdx = -1
+  let targetSortedIdx = -1
+
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i]._idx === dragIdx) dragSortedIdx = i
+    const c = sorted[i].col ?? 0
+    const r = sorted[i].row ?? 0
+    if (c === targetCol && r === targetRow && sorted[i]._idx !== dragIdx) {
+      targetSortedIdx = i
+    }
   }
 
-  dragged.col = targetCol
-  dragged.row = targetRow
+  if (dragSortedIdx === -1) return result
 
-  const occupied = new Set()
-  result.forEach((item, idx) => {
-    if (idx !== dragIdx) occupied.add(item.col + "," + item.row)
-  })
+  // 如果目标位置是空的，计算插入位置（首个 row>targetRow 或 row===targetRow && col>targetCol 的项）
+  if (targetSortedIdx === -1) {
+    targetSortedIdx = sorted.findIndex(item => {
+      const r = item.row ?? 0
+      const c = item.col ?? 0
+      return r > targetRow || (r === targetRow && c >= targetCol)
+    })
+    if (targetSortedIdx === -1) targetSortedIdx = sorted.length
+  }
 
-  let shiftItem = result[occupantIdx]
-  let curCol = targetCol
-  let curRow = targetRow
-  let safety = 0
+  // 3. 从排序数组中移除拖动项，插入到目标位置
+  const [removed] = sorted.splice(dragSortedIdx, 1)
 
-  while (safety < 200) {
-    safety++
-    let nextCol = curCol + 1
-    let nextRow = curRow
-    if (nextCol >= maxCols) {
-      nextCol = 0
-      nextRow = curRow + 1
-    }
-    const nextKey = nextCol + "," + nextRow
-    if (!occupied.has(nextKey)) {
-      shiftItem.col = nextCol
-      shiftItem.row = nextRow
-      break
-    }
-    const nextOcc = result.find(item =>
-      item !== shiftItem && (item.col ?? 0) === nextCol && (item.row ?? 0) === nextRow
-    )
-    if (nextOcc) {
-      shiftItem.col = nextCol
-      shiftItem.row = nextRow
-      occupied.add(nextKey)
-      shiftItem = nextOcc
-    }
-    curCol = nextCol
-    curRow = nextRow
+  // 重新计算插入位置（因为移除后索引可能变化）
+  const insertIdx = dragSortedIdx < targetSortedIdx ? targetSortedIdx - 1 : targetSortedIdx
+  sorted.splice(insertIdx, 0, removed)
+
+  // 4. 按新顺序重新分配网格位置
+  for (let i = 0; i < sorted.length; i++) {
+    sorted[i].col = i % cols
+    sorted[i].row = Math.floor(i / cols)
+    // 同步回 result 数组
+    const idx = sorted[i]._idx
+    result[idx].col = sorted[i].col
+    result[idx].row = sorted[i].row
   }
 
   return result
