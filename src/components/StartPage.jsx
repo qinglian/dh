@@ -895,14 +895,17 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                               e.target.dataset.retry = '1'
                               try { const d = new URL(item.url).hostname; e.target.src = 'https://favicon.im/' + d } catch(_) {
                                 e.target.style.display = 'none'
-                                e.target.parentElement.textContent = item.name.charAt(0)
+                                const fb = e.target.parentElement.querySelector('[data-fallback]')
+                                if (fb) fb.style.display = 'flex'
                               }
                             } else {
                               e.target.style.display = 'none'
-                              e.target.parentElement.textContent = item.name.charAt(0)
+                              const fb = e.target.parentElement.querySelector('[data-fallback]')
+                              if (fb) fb.style.display = 'flex'
                             }
                           }}
                         />
+                        <span className={styles.shortcutFallback} data-fallback="1" style={{ display: 'none' }}>{item.name.charAt(0)}</span>
                       </div>
                       <span className={styles.shortcutName}>{item.name}</span>
                     </a>
