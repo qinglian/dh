@@ -403,7 +403,18 @@ function WeatherEffect({ type, isDay = true }) {
           ctx.stroke()
         })
 
-        // 夜晚显示月亮
+      }
+
+      // 晴天白云（白天和夜晚都有）
+      if (type === 'sunny') {
+      state.clouds.forEach(cloud => {
+          cloud.x += cloud.speed * 2
+          if (cloud.x > w + 200) cloud.x = -250
+          drawCloud(cloud)
+        })
+      }
+
+      // 夜晚显示月亮
       if (type === 'sunny' && !isDay) {
         const moonX = w * 0.82
         const moonY = h * 0.12
@@ -428,13 +439,6 @@ function WeatherEffect({ type, isDay = true }) {
         ctx.beginPath(); ctx.arc(moonX + 8, moonY - 4, 5, 0, Math.PI * 2); ctx.fill()
         ctx.beginPath(); ctx.arc(moonX - 4, moonY + 10, 4, 0, Math.PI * 2); ctx.fill()
         ctx.beginPath(); ctx.arc(moonX - 10, moonY - 2, 3, 0, Math.PI * 2); ctx.fill()
-      }
-
-      state.clouds.forEach(cloud => {
-          cloud.x += cloud.speed * 2
-          if (cloud.x > w + 200) cloud.x = -250
-          drawCloud(cloud)
-        })
       }
 
       // 多云：多层云朵飘动
