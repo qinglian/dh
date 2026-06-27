@@ -74,8 +74,9 @@ function findNearestEmpty(grid, targetCol, targetRow, excludeIndex, maxCols = 10
   // 最终回退
   return findEmptyPosition(grid, maxCols)
 }
-/* 计算拖拽排序：将拖动的按钮插入到目标位置，其余按钮按阅读顺序（先行后列）依次填补。
- * 例如 ABCDE 拖动 A 到 C 位置，结果为 B C A D E。
+/* 计算拖拽排序：仅移动原始位置与目标位置之间的按钮（保持其他按钮位置不变）。
+ * 向前拖（A→C）：中间按钮依次向前移一格 → B C A D E
+ * 向后拖（C→A）：中间按钮依次向后移一格 → C A B D E
  */
 function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) {
   const result = grid.map(item => ({ ...item }))
@@ -83,60 +84,46 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
   const origCol = dragged.col ?? 0
   const origRow = dragged.row ?? 0
 
-  // 如果目标位置与原始位置相同，不需要移动
   if (origCol === targetCol && origRow === targetRow) return result
 
-  // 计算列数：取现有按钮最大列+1，至少1列
-  const cols = Math.max(1, ...result.map(item => (item.col ?? 0) + 1), 6)
+  // 拖拽按钮放到目标位置
+  dragged.col = targetCol
+  dragged.row = targetRow
 
-  // 1. 按阅读顺序（先行后列）排序所有项目
-  const sorted = result.map((item, idx) => ({ ...item, _idx: idx }))
-    .sort((a, b) => {
-      const ra = a.row ?? 0, rb = b.row ?? 0
-      const ca = a.col ?? 0, cb = b.col ?? 0
-      return ra !== rb ? ra - rb : ca - cb
-    })
+  // 判断拖动方向（按阅读顺序：先行后列 → 行号增大或同行列号增大即为向前）
+  const isForward = targetRow > origRow || (targetRow === origRow && targetCol > origCol)
 
-  // 2. 找到拖动项和目标插入位置在排序数组中的索引
-  let dragSortedIdx = -1
-  let targetSortedIdx = -1
+  // 只移动原始位置与目标位置之间的按钮
+  for (let i = 0; i < result.length; i++) {
+    if (i === dragIdx) continue
+    const item = result[i]
+    const c = item.col ?? 0
+    const r = item.row ?? 0
 
-  for (let i = 0; i < sorted.length; i++) {
-    if (sorted[i]._idx === dragIdx) dragSortedIdx = i
-    const c = sorted[i].col ?? 0
-    const r = sorted[i].row ?? 0
-    if (c === targetCol && r === targetRow && sorted[i]._idx !== dragIdx) {
-      targetSortedIdx = i
+    if (isForward) {
+      // 向前拖（A→C）：原始之后、目标之前（含目标）的按钮向前移一格
+      const isAfterOrig = r > origRow || (r === origRow && c > origCol)
+      const isBeforeOrAtTarget = r < targetRow || (r === targetRow && c <= targetCol)
+      if (isAfterOrig && isBeforeOrAtTarget) {
+        if (c > 0) {
+          item.col = c - 1
+        } else {
+          item.col = maxCols - 1
+          item.row = r - 1
+        }
+      }
+    } else {
+      // 向后拖（C→A）：目标之后（含目标）、原始之前的按钮向后移一格
+      const isAtOrAfterTarget = r > targetRow || (r === targetRow && c >= targetCol)
+      const isBeforeOrig = r < origRow || (r === origRow && c < origCol)
+      if (isAtOrAfterTarget && isBeforeOrig) {
+        item.col = c + 1
+        if (item.col >= maxCols) {
+          item.col = 0
+          item.row = r + 1
+        }
+      }
     }
-  }
-
-  if (dragSortedIdx === -1) return result
-
-  // 如果目标位置是空的，计算插入位置（首个 row>targetRow 或 row===targetRow && col>targetCol 的项）
-  if (targetSortedIdx === -1) {
-    targetSortedIdx = sorted.findIndex(item => {
-      const r = item.row ?? 0
-      const c = item.col ?? 0
-      return r > targetRow || (r === targetRow && c >= targetCol)
-    })
-    if (targetSortedIdx === -1) targetSortedIdx = sorted.length
-  }
-
-  // 3. 从排序数组中移除拖动项，插入到目标位置
-  const [removed] = sorted.splice(dragSortedIdx, 1)
-
-  // 重新计算插入位置（因为移除后索引可能变化）
-  const insertIdx = dragSortedIdx < targetSortedIdx ? targetSortedIdx - 1 : targetSortedIdx
-  sorted.splice(insertIdx, 0, removed)
-
-  // 4. 按新顺序重新分配网格位置
-  for (let i = 0; i < sorted.length; i++) {
-    sorted[i].col = i % cols
-    sorted[i].row = Math.floor(i / cols)
-    // 同步回 result 数组
-    const idx = sorted[i]._idx
-    result[idx].col = sorted[i].col
-    result[idx].row = sorted[i].row
   }
 
   return result
