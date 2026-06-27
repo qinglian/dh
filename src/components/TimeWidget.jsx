@@ -847,7 +847,7 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
    * 根据天气类型和白天/夜间计算 CSS 背景类名
    * 使用 useMemo 避免每次渲染都重新计算
    */
-  const weatherBgClass = useMemo(() => {
+  const weatherBgClass = (() => {
     if (!weatherEnabled || !weather) return ''
     switch (weatherType) {
       case 'rain': return isDay ? styles.weatherRainDay : styles.weatherRainNight
@@ -858,7 +858,7 @@ export default function TimeWidget({ isEditMode, independentGlassControl, blurLe
       case 'sunny': return isDay ? styles.weatherSunny : styles.weatherSunnyNight
       default: return ''
     }
-  }, [weatherType, weatherEnabled, weather, isDay])
+  })()
 
   /* 根据 windowOverride 构建独立窗口覆盖内联样式 */
   const overrideStyle = {}

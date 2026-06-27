@@ -1,5 +1,5 @@
 /** faviconCache.js - 网页图标缓存模块 */
-const CACHE_KEY = 'nav-favicon-cache'
+const CACHE_KEY = 'nav-favicon-cache-v2'
 const MAX_CACHE_SIZE = 500
 
 function getCache() {
