@@ -83,75 +83,54 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
   const result = grid.map(item => ({ ...item }))
   const dragged = result[dragIdx]
 
-  // 检查目标位置是否被其他按钮占用
   const occupantIdx = result.findIndex((item, idx) =>
     idx !== dragIdx && (item.col ?? 0) === targetCol && (item.row ?? 0) === targetRow
   )
 
   if (occupantIdx === -1) {
-    // 目标位置空闲，直接放置
     dragged.col = targetCol
     dragged.row = targetRow
     return result
   }
 
-  // 目标位置被占用，需要级联避让
-  // 第一步：把拖拽项放到目标位置
   dragged.col = targetCol
   dragged.row = targetRow
 
-  // 构建占用集合用于快速查找
   const occupied = new Set()
   result.forEach((item, idx) => {
-    if (idx !== occupantIdx && idx !== dragIdx) {
-      occupied.add(`${item.col ?? 0},${item.row ?? 0}`)
-    }
+    if (idx !== dragIdx) occupied.add(item.col + "," + item.row)
   })
 
-  // 级联向下推移：从被挤走的按钮开始，逐行向下查找空位
   let shiftItem = result[occupantIdx]
-  let shiftRow = targetRow
-  let searchRow = targetRow + 1
+  let curCol = targetCol
+  let curRow = targetRow
+  let safety = 0
 
-  while (true) {
-    const key = `${targetCol},${searchRow}`
-    if (!occupied.has(key) && !result.some((item, idx) =>
-      idx !== dragIdx && (item.col ?? 0) === targetCol && (item.row ?? 0) === searchRow
-    )) {
-      // 找到空位
-      shiftItem.col = targetCol
-      shiftItem.row = searchRow
+  while (safety < 200) {
+    safety++
+    let nextCol = curCol + 1
+    let nextRow = curRow
+    if (nextCol >= maxCols) {
+      nextCol = 0
+      nextRow = curRow + 1
+    }
+    const nextKey = nextCol + "," + nextRow
+    if (!occupied.has(nextKey)) {
+      shiftItem.col = nextCol
+      shiftItem.row = nextRow
       break
     }
-    // 当前行被占用，找这一行的占用者并继续向下推
-    const nextOccupant = result.find((item, idx) =>
-      idx !== dragIdx &&
-      (item.col ?? 0) === targetCol &&
-      (item.row ?? 0) === searchRow
+    const nextOcc = result.find(item =>
+      item !== shiftItem && (item.col ?? 0) === nextCol && (item.row ?? 0) === nextRow
     )
-    if (nextOccupant) {
-      shiftItem.col = targetCol
-      shiftItem.row = searchRow
-      shiftItem = nextOccupant
-      occupied.add(`${targetCol},${searchRow}`)
-      searchRow++
-    } else {
-      searchRow++
+    if (nextOcc) {
+      shiftItem.col = nextCol
+      shiftItem.row = nextRow
+      occupied.add(nextKey)
+      shiftItem = nextOcc
     }
-
-    // 安全上限
-    if (searchRow > 200) break
-  }
-
-  // 被挤走的按钮位置可能已被占，确保没有重叠
-  const finalCheck = new Set()
-  for (let i = 0; i < result.length; i++) {
-    const k = `${result[i].col ?? 0},${result[i].row ?? 0}`
-    if (finalCheck.has(k)) {
-      // 有冲突，回退到简单放置
-      result[i].row = (result[i].row ?? 0) + 1
-    }
-    finalCheck.add(k)
+    curCol = nextCol
+    curRow = nextRow
   }
 
   return result
@@ -770,7 +749,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const domain = new URL(site.url).hostname
       const cached = getCachedFavicon(domain)
       if (cached) return cached
-      return '' // 不使用 favicon.im 回退(返回地球图标),无缓存时显示首字母
+      return ''
     } catch {
       return ''
     }
