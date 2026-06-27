@@ -88,6 +88,138 @@ function getCurrentEngineId() {
   return localStorage.getItem('nav-current-engine') || 'bing'
 }
 
+
+/* ==================== 快捷图标竞速加载组件 ====================
+ * 同时请求 Google S2 和 favicon.im，谁先返回就先用谁
+ * Google S2 返回后自动切换（如果之前用的是 favicon.im）
+ * 两个都失败才显示首字母
+ */
+function ShortcutIcon({ site, onCached, shortcutId }) {
+  const [state, setState] = useState(() => {
+    // 如果已有保存的 iconUrl，直接用它
+    if (site.iconUrl) return { src: site.iconUrl, source: 'saved', loading: false }
+    try {
+      const domain = new URL(site.url).hostname
+      const cached = getCachedFavicon(domain)
+      if (cached) return { src: cached, source: 'cache', loading: false }
+      const urls = getFaviconUrls(domain)
+      return { candidates: urls, src: urls[0]?.url || null, source: null, loading: true, googleLoaded: false, faviconimLoaded: false, failed: false }
+    } catch { return { src: null, loading: false, failed: true } }
+  })
+  const stateRef = useRef(state)
+
+  useEffect(() => {
+    if (!state.loading || !state.candidates) return
+    const candidates = state.candidates
+    let mounted = true
+    let googleDone = false
+    let faviconimDone = false
+
+    const tryShow = () => {
+      if (!mounted) return
+      // 优先 Google，其次 faviconim
+      if (googleDone) {
+        setState(prev => ({ ...prev, src: candidates[0].url, source: 'google', loading: false }))
+      } else if (faviconimDone && !googleDone) {
+        setState(prev => ({ ...prev, src: candidates[1].url, source: 'faviconim', loading: false }))
+      }
+    }
+
+    const checkBothFailed = () => {
+      if (googleDone === false && faviconimDone === false) return // still loading
+      if (!mounted) return
+      // googleDone and faviconimDone are set (true or false)
+      if (!googleDone && !faviconimDone) {
+        setState(prev => ({ ...prev, src: null, loading: false, failed: true }))
+      }
+    }
+
+    // 加载 Google S2
+    const img1 = new Image()
+    img1.onload = () => {
+      googleDone = true
+      cacheFavicon(new URL(site.url).hostname, candidates[0].url, 'google')
+      if (onCached) onCached(candidates[0].url)
+      tryShow()
+    }
+    img1.onerror = () => { googleDone = false; tryShow(); checkBothFailed() }
+    img1.src = candidates[0].url
+
+    // 加载 favicon.im
+    const img2 = new Image()
+    img2.onload = () => {
+      faviconimDone = true
+      if (!googleDone) {
+        cacheFavicon(new URL(site.url).hostname, candidates[1].url, 'faviconim')
+        if (onCached) onCached(candidates[1].url)
+      }
+      tryShow()
+    }
+    img2.onerror = () => { faviconimDone = false; tryShow(); checkBothFailed() }
+    img2.src = candidates[1].url
+
+    // 2秒超时检查
+    const timeout = setTimeout(() => {
+      if (googleDone === undefined) googleDone = false
+      if (faviconimDone === undefined) faviconimDone = false
+      checkBothFailed()
+    }, 5000)
+
+    return () => { mounted = false; clearTimeout(timeout) }
+  }, [])
+
+  // 如果不是竞速模式（有保存的 iconUrl），用简单模式
+  if (!state.loading || state.source === 'saved' || state.source === 'cache') {
+    if (!state.src) {
+      return <span className={styles.shortcutFallback}>{site.name.charAt(0)}</span>
+    }
+    return (
+      <img
+        src={state.src}
+        alt=""
+        draggable={false}
+        onLoad={(e) => {
+          try {
+            const d = new URL(site.url).hostname
+            const u = e.target.currentSrc || e.target.src
+            const source = u.includes('google.com/s2/favicons') ? 'google' : 'faviconim'
+            cacheFavicon(d, u, source)
+            window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: site.url, faviconUrl: u, shortcutId } }))
+          } catch(_) {}
+        }}
+        onError={(e) => {
+          e.target.style.display = 'none'
+          const fb = e.target.parentElement?.querySelector('[data-fallback]')
+          if (fb) fb.style.display = 'flex'
+        }}
+      />
+    )
+  }
+
+  // 竞速模式：显示当前最佳，失败时显示首字母
+  if (state.failed || !state.src) {
+    return <span className={styles.shortcutFallback}>{site.name.charAt(0)}</span>
+  }
+
+  return (
+    <img
+      src={state.src}
+      alt=""
+      draggable={false}
+      onLoad={(e) => {
+        try {
+          const d = new URL(site.url).hostname
+          const u = e.target.currentSrc || e.target.src
+          if (onCached) onCached(u)
+          window.dispatchEvent(new CustomEvent('faviconCached', { detail: { siteUrl: site.url, faviconUrl: u, shortcutId } }))
+        } catch(_) {}
+      }}
+      onError={() => {
+        setState(prev => ({ ...prev, src: null, failed: true }))
+      }}
+    />
+  )
+}
 export default function StartPage({ onGoToNav, pageId = 'default', onSettingsChange, onToggleSidebar }) {
   const { theme, themeMode, setTheme } = useTheme()
 

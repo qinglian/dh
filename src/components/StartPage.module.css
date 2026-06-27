@@ -621,7 +621,7 @@
 
 
 /* 拖动时的实时预览样式 */
-.dragOver {
+.dragOver { z-index: 10; position: relative;
   transform: scale(1.05);
   transition: transform 0.15s ease;
 }
