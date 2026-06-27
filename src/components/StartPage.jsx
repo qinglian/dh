@@ -16,7 +16,7 @@ import StartPageSettings from './StartPageSettings'
 import WidgetPanel from './WidgetPanel'
 import { getSettings } from '../utils/startPageSettings'
 import { getPageDataKey, getPages } from '../utils/startPagePages'
-import { getCachedFavicon, cacheFavicon, getFaviconUrl } from '../utils/faviconCache'
+import { getCachedFavicon, cacheFavicon, getFaviconUrls, tryUpgradeFavicon } from '../utils/faviconCache'
 import styles from './StartPage.module.css'
 
 /* localStorage 中快捷方式数据的存储 key */
