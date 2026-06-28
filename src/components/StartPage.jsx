@@ -852,7 +852,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         // 基于校准元素位置计算鼠标所在行列
         const relX = clientX - calibRect.left
         const relY = clientY - calibRect.top
-        const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
+        const col = Math.max(0, Math.min(5, Math.floor(relX / cellTotal)))
         const row = Math.max(0, Math.floor(relY / cellTotal))
         if (getMeta) return { col, row, cols: 6, baseX: calibRect.left, padTop, cellTotal }
         return { col, row }
@@ -870,7 +870,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const centerOffsetX = (contentWidth - gridWidth) / 2
       const relX = clientX - gridRect.left - padLeft - centerOffsetX
       const relY = clientY - gridRect.top - padTop
-      const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
+      const col = Math.max(0, Math.min(5, Math.floor(relX / cellTotal)))
       const row = Math.max(0, Math.floor(relY / cellTotal))
       if (getMeta) return { col, row, cols: 6, baseX: gridRect.left + padLeft + centerOffsetX, padTop, cellTotal }
       return { col, row }
@@ -884,6 +884,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     setDropTarget(null)
     setDragOverIndex(null)
     originalGridRef.current = null
+    setPreviewShortcuts(null)
   }
 
   /*
