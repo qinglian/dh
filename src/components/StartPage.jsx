@@ -891,62 +891,81 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    * 在 document 级别监听拖拽事件，确保整个页面（包括 topBar、时间栏、搜索框等区域）
    * 都能响应 dragover/drop，不受子元素事件冒泡阻断影响
    */
+
+  /* 计算拖拽目标索引：根据鼠标在目标元素左/右半区决定插入位置 */
+  const calcDragTargetIdx = (e, targetEl) => {
+    const srcIdx = dragItemIndex.current
+    if (srcIdx === null || srcIdx >= shortcuts.length) return null
+    const rect = targetEl.getBoundingClientRect()
+    const after = e.clientX > rect.left + rect.width / 2
+    const targetIndex = parseInt(targetEl.getAttribute("data-index"))
+    if (isNaN(targetIndex)) return null
+    let tidx = targetIndex
+    if (after) tidx++
+    tidx = Math.max(0, Math.min(tidx, shortcuts.length))
+    if (srcIdx < tidx) tidx--
+    return tidx >= 0 && tidx !== srcIdx ? tidx : null
+  }
+
+  /* 拖拽悬停：更新预览布局 */
+  const handleItemDragOver = (e) => {
+    if (!isEditShortcuts || dragItemIndex.current === null) return
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = "move"
+
+    const tidx = calcDragTargetIdx(e, e.currentTarget)
+    if (tidx === null) { setPreviewShortcuts(null); return }
+
+    const srcIdx = dragItemIndex.current
+    const preview = [...shortcuts]
+    const [moved] = preview.splice(srcIdx, 1)
+    preview.splice(tidx, 0, moved)
+    setPreviewShortcuts(preview)
+  }
+
+  /* 拖拽放下：执行重排 */
+  const handleItemDrop = (e) => {
+    if (!isEditShortcuts) return
+    e.preventDefault()
+    e.stopPropagation()
+    e._dhHandled = true
+
+    const dragData = e.dataTransfer.getData("text/plain")
+    if (!dragData || !dragData.startsWith("item:")) { cleanupDrag(); return }
+    const srcIdx = parseInt(dragData.split(":")[1])
+    if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { cleanupDrag(); return }
+
+    const tidx = calcDragTargetIdx(e, e.currentTarget)
+    if (tidx === null) { cleanupDrag(); return }
+
+    const updated = [...shortcuts]
+    const [moved] = updated.splice(srcIdx, 1)
+    updated.splice(tidx, 0, moved)
+    setShortcuts(updated)
+    saveShortcuts(pageId, updated)
+
+    cleanupDrag()
+  }
+
       useEffect(() => {
-    const onDragOver = (e) => {
+    const onDocDragOver = (e) => {
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
-      e.dataTransfer.dropEffect = 'move'
-
-      const pos = getGridPos(e.clientX, e.clientY, true)
-      if (!pos) return
-      const { col, row, baseX, cellTotal, cols: viewCols } = pos
-      const srcIdx = dragItemIndex.current
-      if (srcIdx >= shortcuts.length) return
-
-      const inCellX = baseX !== undefined && cellTotal ? (e.clientX - baseX) % cellTotal : 0
-      const realCols = viewCols || 6
-
-      const after = inCellX > CELL_SIZE / 2
-      let tc = col, tr = row
-      if (after) { tc++; if (tc >= realCols) { tc = 0; tr++ } }
-      let tidx = tr * realCols + tc
-      tidx = Math.max(0, Math.min(tidx, shortcuts.length))
-      if (srcIdx < tidx) tidx--
-
-      if (tidx >= 0 && tidx !== srcIdx) {
-        const preview = [...shortcuts]
-        const [moved] = preview.splice(srcIdx, 1)
-        preview.splice(tidx, 0, moved)
-        setPreviewShortcuts(preview)
-      } else {
-        setPreviewShortcuts(null)
-      }
-
-      setDropTarget(pos)
-      prevDropRef.current = pos
+      e.dataTransfer.dropEffect = "move"
     }
 
-    const onDrop = (e) => {
+    const onDocDrop = (e) => {
       if (!isEditShortcuts) return
+      if (e._dhHandled) return
       e.preventDefault()
 
-      const pos = getGridPos(e.clientX, e.clientY, true)
-      if (!pos) { cleanupDrag(); return }
-      const { col, row, baseX, cellTotal, cols: viewCols } = pos
-
-      const dragData = e.dataTransfer.getData('text/plain')
-      if (!dragData.startsWith('item:')) { cleanupDrag(); return }
-      const srcIdx = parseInt(dragData.split(':')[1])
+      const dragData = e.dataTransfer.getData("text/plain")
+      if (!dragData || !dragData.startsWith("item:")) { cleanupDrag(); return }
+      const srcIdx = parseInt(dragData.split(":")[1])
       if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { cleanupDrag(); return }
 
-      const inCellX = baseX !== undefined && cellTotal ? (e.clientX - baseX) % cellTotal : 0
-      const realCols = viewCols || 6
-
-      const after = inCellX > CELL_SIZE / 2
-      let tc = col, tr = row
-      if (after) { tc++; if (tc >= realCols) { tc = 0; tr++ } }
-      let tidx = tr * realCols + tc
-      tidx = Math.max(0, Math.min(tidx, shortcuts.length))
+      let tidx = shortcuts.length
       if (srcIdx < tidx) tidx--
 
       if (tidx >= 0 && tidx !== srcIdx) {
@@ -959,7 +978,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       cleanupDrag()
     }
 
-    const onDragEnd = () => { cleanupDrag() }
+    const onDocDragEnd = () => { cleanupDrag() }
 
     const cleanupDrag = () => {
       dragItemIndex.current = null
@@ -970,14 +989,14 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       setPreviewShortcuts(null)
     }
 
-    document.addEventListener('dragover', onDragOver)
-    document.addEventListener('drop', onDrop)
-    document.addEventListener('dragend', onDragEnd)
+    document.addEventListener("dragover", onDocDragOver)
+    document.addEventListener("drop", onDocDrop)
+    document.addEventListener("dragend", onDocDragEnd)
 
     return () => {
-      document.removeEventListener('dragover', onDragOver)
-      document.removeEventListener('drop', onDrop)
-      document.removeEventListener('dragend', onDragEnd)
+      document.removeEventListener("dragover", onDocDragOver)
+      document.removeEventListener("drop", onDocDrop)
+      document.removeEventListener("dragend", onDocDragEnd)
     }
   }, [isEditShortcuts, shortcuts.length, shortcuts, pageId])
 
@@ -1223,9 +1242,12 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                   gridRow: `${row + 1} / span ${rows}`,
                   pointerEvents: 'auto',
                 }}
+                data-index={index}
                 draggable={isEditShortcuts && !isWidget ? editingId !== item.id : isEditShortcuts}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragEnd={handleDragEnd}
+                onDragOver={!isWidget ? handleItemDragOver : undefined}
+                onDrop={!isWidget ? handleItemDrop : undefined}
               >
                 {isWidget ? (
                   /* 小部件渲染 */
