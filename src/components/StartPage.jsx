@@ -1,4 +1,4 @@
-﻿/*
+/*
  * StartPage - 浏览器起始页
  * 功能：展示问候语、实时时钟、多引擎搜索框、快捷网页图标，支持主题切换、快捷网页编辑/拖拽排序。
  *       支持多页面（pageId）模式下独立保存每个页面的快捷方式和设置。
@@ -98,7 +98,10 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
     return result
   }
 
-    // 目标被占用：插入式重排——仅移动源与目标之间的按钮，保持间隔不变
+    ﻿  // 目标被占用：插入式重排——仅移动源与目标之间的按钮，保持间隔不变
+
+  // 计算实际列数（基于所有按钮的最大列号）
+  const cols = Math.max(1, ...result.map(item => (item.col ?? 0) + 1), 6)
 
   // 找到被目标位置占用的按钮索引
   let targetIdx = -1
@@ -115,43 +118,39 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
   const tcol = targetItem.col ?? 0
   const trow = targetItem.row ?? 0
 
-  const dragOrder = origRow * maxCols + origCol
-  const targetOrder = trow * maxCols + tcol
+  // 阅读顺序：row * cols + col（使用实际列数确保顺序连续）
+  const dragOrder = origRow * cols + origCol
+  const targetOrder = trow * cols + tcol
 
   // 将被拖拽按钮直接放到目标位置
   dragged.col = tcol
   dragged.row = trow
 
   if (dragOrder < targetOrder) {
-    // 向右/下拖拽：源到目标之间的所有按钮逐格向左上移动
+    // 向右/下拖拽：源到目标之间的按钮逐格向左上移动
     for (const item of result) {
       if (item === dragged) continue
-      const order = (item.row ?? 0) * maxCols + (item.col ?? 0)
+      const order = (item.row ?? 0) * cols + (item.col ?? 0)
       if (order > dragOrder && order <= targetOrder) {
         item.col = (item.col ?? 0) - 1
-        if (item.col < 0) {
-          item.col = maxCols - 1
-          item.row = (item.row ?? 0) - 1
-        }
+        if (item.col < 0) { item.col = cols - 1; item.row = (item.row ?? 0) - 1 }
       }
     }
   } else {
-    // 向左/上拖拽：目标到源之间的所有按钮逐格向右下移动
+    // 向左/上拖拽：目标到源之间的按钮逐格向右下移动
     for (const item of result) {
       if (item === dragged) continue
-      const order = (item.row ?? 0) * maxCols + (item.col ?? 0)
+      const order = (item.row ?? 0) * cols + (item.col ?? 0)
       if (order >= targetOrder && order < dragOrder) {
         item.col = (item.col ?? 0) + 1
-        if (item.col >= maxCols) {
-          item.col = 0
-          item.row = (item.row ?? 0) + 1
-        }
+        if (item.col >= cols) { item.col = 0; item.row = (item.row ?? 0) + 1 }
       }
     }
   }
 
   return result
 }
+
 const SHORTCUTS_KEY = 'nav-shortcuts'
 
 /*
