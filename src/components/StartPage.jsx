@@ -859,9 +859,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         // 基于校准元素位置计算鼠标所在行列
         const relX = clientX - calibRect.left
         const relY = clientY - calibRect.top
-        const col = Math.max(0, Math.min(5, Math.floor(relX / cellTotal)))
+        const col = Math.max(0, Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal))))
         const row = Math.max(0, Math.floor(relY / cellTotal))
-        if (getMeta) return { col, row, cols: 6, baseX: calibRect.left, padTop, cellTotal }
+        if (getMeta) return { col, row, cols, baseX: calibRect.left, padTop, cellTotal }
         return { col, row }
       }
 
@@ -877,9 +877,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const centerOffsetX = (contentWidth - gridWidth) / 2
       const relX = clientX - gridRect.left - padLeft - centerOffsetX
       const relY = clientY - gridRect.top - padTop
-      const col = Math.max(0, Math.min(5, Math.floor(relX / cellTotal)))
+      const col = Math.max(0, Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal))))
       const row = Math.max(0, Math.floor(relY / cellTotal))
-      if (getMeta) return { col, row, cols: 6, baseX: gridRect.left + padLeft + centerOffsetX, padTop, cellTotal }
+      if (getMeta) return { col, row, cols, baseX: gridRect.left + padLeft + centerOffsetX, padTop, cellTotal }
       return { col, row }
     }
   }, [])
@@ -901,7 +901,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
 
       useEffect(() => {
-    // 动态计算网格列数（与 CSS auto-fill 保持一致）
+    // 动态计算网格列数
     const getColCount = () => {
       const gridEl = gridRef.current
       if (!gridEl) return 6
@@ -913,24 +913,22 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       return Math.max(1, Math.floor((contentWidth + gap) / (CELL_SIZE + gap)))
     }
 
-    const getDragPos = (e) => {
-      const pos = getGridPos(e.clientX, e.clientY, true)
-      if (!pos) {
-        // 回退：使用 elementFromPoint 检测元素位置
-        const el = document.elementFromPoint(e.clientX, e.clientY)
-        const itemEl = el?.closest("[data-shortcut]")
-        if (itemEl) {
-          const idx = parseInt(itemEl.getAttribute("data-index"))
-          if (!isNaN(idx) && idx >= 0 && idx < shortcuts.length) {
-            const rect = itemEl.getBoundingClientRect()
-            const after = e.clientX > rect.left + rect.width / 2
-            const s = shortcuts[idx]
-            return { col: (s.col ?? 0) + (after ? 1 : 0), row: s.row ?? 0 }
-          }
+    const getDragPos = (cx, cy) => {
+      const pos = getGridPos(cx, cy, true)
+      if (pos) return { col: pos.col, row: pos.row }
+      // 回退：elementFromPoint 检测元素
+      const el = document.elementFromPoint(cx, cy)
+      const itemEl = el?.closest("[data-shortcut]")
+      if (itemEl) {
+        const idx = parseInt(itemEl.getAttribute("data-index"))
+        if (!isNaN(idx) && idx >= 0 && idx < shortcuts.length) {
+          const rect = itemEl.getBoundingClientRect()
+          const after = cx > rect.left + rect.width / 2
+          const s = shortcuts[idx]
+          return { col: (s.col ?? 0) + (after ? 1 : 0), row: s.row ?? 0 }
         }
-        return null
       }
-      return { col: pos.col, row: pos.row }
+      return null
     }
 
     let rafId = null
@@ -939,10 +937,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
       e.dataTransfer.dropEffect = "move"
-
+      const cx = e.clientX
+      const cy = e.clientY
       if (rafId) cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(() => {
-        const pos = getDragPos(e)
+        const pos = getDragPos(cx, cy)
         if (pos) setDropTarget(pos)
       })
     }
@@ -951,11 +950,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
       if (rafId) { cancelAnimationFrame(rafId); rafId = null }
+      const cx = e.clientX
+      const cy = e.clientY
 
       const srcIdx = dragItemIndex.current
       if (srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
 
-      const pos = getDragPos(e)
+      const pos = getDragPos(cx, cy)
       if (!pos) { handleDragEnd(); return }
 
       const targetCol = pos.col
@@ -967,7 +968,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         return
       }
 
-      // 检查目标是否被占用
       const occupied = shortcuts.some((s, i) =>
         i !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow
       )
@@ -975,7 +975,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const cols = getColCount()
       if (occupied) {
         const searchGrid = shortcuts.map((s) => ({ col: s.col ?? 0, row: s.row ?? 0 }))
-        // BFS 先试向右，不行再向下
         const nearest = findNearestEmpty(searchGrid, targetCol, targetRow, srcIdx, cols)
         const u = [...shortcuts]
         u[srcIdx] = { ...u[srcIdx], col: nearest.col, row: nearest.row }
@@ -1352,7 +1351,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                 gridRowStart: dropTarget.row + 1,
                 gridColumnEnd: `span 1`,
                 gridRowEnd: `span 1`,
-                pointerEvents: 'none',
+                pointerEvents: 'none', zIndex: 10,
               }}
             />
           )}
