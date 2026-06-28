@@ -901,27 +901,56 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
 
       useEffect(() => {
-    // 共享的获取拖拽目标位置的函数：通过网格坐标映射鼠标位置
+    // 动态计算网格列数（与 CSS auto-fill 保持一致）
+    const getColCount = () => {
+      const gridEl = gridRef.current
+      if (!gridEl) return 6
+      const cs = getComputedStyle(gridEl)
+      const padLeft = parseFloat(cs.paddingLeft) || 0
+      const padRight = parseFloat(cs.paddingRight) || 0
+      const gap = parseFloat(cs.columnGap) || GAP
+      const contentWidth = gridEl.getBoundingClientRect().width - padLeft - padRight
+      return Math.max(1, Math.floor((contentWidth + gap) / (CELL_SIZE + gap)))
+    }
+
     const getDragPos = (e) => {
       const pos = getGridPos(e.clientX, e.clientY, true)
-      if (!pos) return null
+      if (!pos) {
+        // 回退：使用 elementFromPoint 检测元素位置
+        const el = document.elementFromPoint(e.clientX, e.clientY)
+        const itemEl = el?.closest("[data-shortcut]")
+        if (itemEl) {
+          const idx = parseInt(itemEl.getAttribute("data-index"))
+          if (!isNaN(idx) && idx >= 0 && idx < shortcuts.length) {
+            const rect = itemEl.getBoundingClientRect()
+            const after = e.clientX > rect.left + rect.width / 2
+            const s = shortcuts[idx]
+            return { col: (s.col ?? 0) + (after ? 1 : 0), row: s.row ?? 0 }
+          }
+        }
+        return null
+      }
       return { col: pos.col, row: pos.row }
     }
+
+    let rafId = null
 
     const onDocDragOver = (e) => {
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
       e.dataTransfer.dropEffect = "move"
 
-      const pos = getDragPos(e)
-      if (pos) {
-        setDropTarget(pos)
-      }
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => {
+        const pos = getDragPos(e)
+        if (pos) setDropTarget(pos)
+      })
     }
 
     const onDocDrop = (e) => {
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null }
 
       const srcIdx = dragItemIndex.current
       if (srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
@@ -933,41 +962,45 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const targetRow = pos.row
       const dragged = shortcuts[srcIdx]
 
-      // 未移动则忽略
       if ((dragged.col ?? 0) === targetCol && (dragged.row ?? 0) === targetRow) {
         handleDragEnd()
         return
       }
 
-      // 检查目标是否被其他按钮占用
+      // 检查目标是否被占用
       const occupied = shortcuts.some((s, i) =>
         i !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow
       )
 
+      const cols = getColCount()
       if (occupied) {
-        // 目标被占用：找最近的空闲格
-        const gridForSearch = shortcuts.map((s) => ({ col: s.col ?? 0, row: s.row ?? 0 }))
-        const nearest = findNearestEmpty(gridForSearch, targetCol, targetRow, srcIdx, 6)
-        const updated2 = [...shortcuts]
-        updated2[srcIdx] = { ...updated2[srcIdx], col: nearest.col, row: nearest.row }
-        setShortcuts(updated2)
-        saveShortcuts(pageId, updated2)
+        const searchGrid = shortcuts.map((s) => ({ col: s.col ?? 0, row: s.row ?? 0 }))
+        // BFS 先试向右，不行再向下
+        const nearest = findNearestEmpty(searchGrid, targetCol, targetRow, srcIdx, cols)
+        const u = [...shortcuts]
+        u[srcIdx] = { ...u[srcIdx], col: nearest.col, row: nearest.row }
+        setShortcuts(u)
+        saveShortcuts(pageId, u)
       } else {
-        // 目标为空：直接放置
-        const updated = [...shortcuts]
-        updated[srcIdx] = { ...updated[srcIdx], col: targetCol, row: targetRow }
-        setShortcuts(updated)
-        saveShortcuts(pageId, updated)
+        const u = [...shortcuts]
+        u[srcIdx] = { ...u[srcIdx], col: targetCol, row: targetRow }
+        setShortcuts(u)
+        saveShortcuts(pageId, u)
       }
       handleDragEnd()
     }
-    const onDocDragEnd = () => { handleDragEnd() }
+
+    const onDocDragEnd = () => {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null }
+      handleDragEnd()
+    }
 
     document.addEventListener("dragover", onDocDragOver)
     document.addEventListener("drop", onDocDrop)
     document.addEventListener("dragend", onDocDragEnd)
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId)
       document.removeEventListener("dragover", onDocDragOver)
       document.removeEventListener("drop", onDocDrop)
       document.removeEventListener("dragend", onDocDragEnd)
@@ -1311,14 +1344,14 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
             )
           })}
           {/* 拖拽悬浮占位预览：使用 CSS grid 定位，坐标与快捷网页一致 */}
-          {dropTarget && dragItemData.current && (
+          {dropTarget && (
             <div
               className={styles.dropPlaceholder}
               style={{
                 gridColumnStart: dropTarget.col + 1,
                 gridRowStart: dropTarget.row + 1,
-                gridColumnEnd: `span ${dragItemData.current.cols || 1}`,
-                gridRowEnd: `span ${dragItemData.current.rows || 1}`,
+                gridColumnEnd: `span 1`,
+                gridRowEnd: `span 1`,
                 pointerEvents: 'none',
               }}
             />
