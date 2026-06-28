@@ -413,6 +413,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /* 拖拽悬停目标索引，用于高亮当前拖拽位置 */
   const [dragOverIndex, setDragOverIndex] = useState(null)
+  const [previewShortcuts, setPreviewShortcuts] = useState(null)
   /* 拖拽悬浮占位位置 { col, row } */
   const [dropTarget, setDropTarget] = useState(null)
   // 拖拽悬停时的级联避让布局（临时计算结果）
@@ -516,11 +517,12 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    * 合并列表：快捷网页 + 小部件，每个项携带 col/row 坐标。
    * 旧数据没有 col/row 时，按数组顺序自动分配（兼容迁移）。
    */
+  const displayShortcuts = previewShortcuts !== null ? previewShortcuts : shortcuts
   const gridItems = useMemo(() => {
-    const sItems = shortcuts.map((s, i) => ({ ...s, itemType: 'shortcut', col: s.col ?? (i % 6), row: s.row ?? Math.floor(i / 6) }))
-    const wItems = widgets.map((w, i) => ({ ...w, itemType: 'widget', col: w.col ?? ((shortcuts.length + i) % 6), row: w.row ?? Math.floor((shortcuts.length + i) / 6) }))
+    const sItems = displayShortcuts.map((s, i) => ({ ...s, itemType: 'shortcut', col: i % 6, row: Math.floor(i / 6) }))
+    const wItems = widgets.map((w, i) => ({ ...w, itemType: 'widget', col: (displayShortcuts.length + i) % 6, row: Math.floor((displayShortcuts.length + i) / 6) }))
     return [...sItems, ...wItems]
-  }, [shortcuts, widgets])
+  }, [displayShortcuts, widgets])
   /* 从合并列表分离并保存 */
   const updateFromGrid = (newGrid) => {
     const newShortcuts = newGrid.filter(i => i.itemType === 'shortcut').map(({ itemType, ...rest }) => rest)
@@ -887,18 +889,39 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    * 在 document 级别监听拖拽事件，确保整个页面（包括 topBar、时间栏、搜索框等区域）
    * 都能响应 dragover/drop，不受子元素事件冒泡阻断影响
    */
-  useEffect(() => {
+      useEffect(() => {
     const onDragOver = (e) => {
-      if (!isEditShortcuts) return
+      if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
       e.dataTransfer.dropEffect = 'move'
 
-      const pos = getGridPos(e.clientX, e.clientY)
-      if (pos) {
-        setDropTarget(pos)
-        prevDropRef.current = pos
-        // 实时预览：重排按钮显示最终布局
+      const pos = getGridPos(e.clientX, e.clientY, true)
+      if (!pos) return
+      const { col, row, baseX, cellTotal, cols: viewCols } = pos
+      const srcIdx = dragItemIndex.current
+      if (srcIdx >= shortcuts.length) return
+
+      const inCellX = baseX !== undefined && cellTotal ? (e.clientX - baseX) % cellTotal : 0
+      const realCols = viewCols || 6
+
+      const after = inCellX > CELL_SIZE / 2
+      let tc = col, tr = row
+      if (after) { tc++; if (tc >= realCols) { tc = 0; tr++ } }
+      let tidx = tr * realCols + tc
+      tidx = Math.max(0, Math.min(tidx, shortcuts.length))
+      if (srcIdx < tidx) tidx--
+
+      if (tidx >= 0 && tidx !== srcIdx) {
+        const preview = [...shortcuts]
+        const [moved] = preview.splice(srcIdx, 1)
+        preview.splice(tidx, 0, moved)
+        setPreviewShortcuts(preview)
+      } else {
+        setPreviewShortcuts(null)
       }
+
+      setDropTarget(pos)
+      prevDropRef.current = pos
     }
 
     const onDrop = (e) => {
@@ -906,46 +929,43 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       e.preventDefault()
 
       const pos = getGridPos(e.clientX, e.clientY, true)
-      if (!pos) return
-      let { col, row } = pos
-      const { baseX, cellTotal, cols: viewCols } = pos
-
-      // 根据鼠标在单元格内的位置判断插入左侧还是右侧
-      if (baseX !== undefined && cellTotal) {
-        const inCellX = (e.clientX - baseX) % cellTotal
-        if (inCellX > CELL_SIZE / 2) {
-          col++
-          const maxCols = viewCols || 6
-          if (col >= maxCols) {
-            col = 0
-            row++
-          }
-        }
-      }
+      if (!pos) { cleanupDrag(); return }
+      const { col, row, baseX, cellTotal, cols: viewCols } = pos
 
       const dragData = e.dataTransfer.getData('text/plain')
+      if (!dragData.startsWith('item:')) { cleanupDrag(); return }
+      const srcIdx = parseInt(dragData.split(':')[1])
+      if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { cleanupDrag(); return }
 
-      if (dragData.startsWith('item:')) {
-        const idx = parseInt(dragData.split(':')[1])
-        if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
-          const finalGrid = computeShiftedGrid(gridItems, idx, col, row)
-          updateFromGrid(finalGrid)
-        }
+      const inCellX = baseX !== undefined && cellTotal ? (e.clientX - baseX) % cellTotal : 0
+      const realCols = viewCols || 6
+
+      const after = inCellX > CELL_SIZE / 2
+      let tc = col, tr = row
+      if (after) { tc++; if (tc >= realCols) { tc = 0; tr++ } }
+      let tidx = tr * realCols + tc
+      tidx = Math.max(0, Math.min(tidx, shortcuts.length))
+      if (srcIdx < tidx) tidx--
+
+      if (tidx >= 0 && tidx !== srcIdx) {
+        const updated = [...shortcuts]
+        const [moved] = updated.splice(srcIdx, 1)
+        updated.splice(tidx, 0, moved)
+        setShortcuts(updated)
+        saveShortcuts(pageId, updated)
       }
-
-      dragItemIndex.current = null
-      dragItemData.current = null
-      setDropTarget(null)
-      setDragOverIndex(null)
-      originalGridRef.current = null
+      cleanupDrag()
     }
 
-const onDragEnd = () => {
+    const onDragEnd = () => { cleanupDrag() }
+
+    const cleanupDrag = () => {
       dragItemIndex.current = null
       dragItemData.current = null
       setDropTarget(null)
       setDragOverIndex(null)
       originalGridRef.current = null
+      setPreviewShortcuts(null)
     }
 
     document.addEventListener('dragover', onDragOver)
@@ -957,7 +977,7 @@ const onDragEnd = () => {
       document.removeEventListener('drop', onDrop)
       document.removeEventListener('dragend', onDragEnd)
     }
-  }, [isEditShortcuts, pageId, gridItems])
+  }, [isEditShortcuts, shortcuts.length, shortcuts, pageId])
 
   return (
     /*
