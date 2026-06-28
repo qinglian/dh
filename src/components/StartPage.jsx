@@ -1,4 +1,4 @@
-/*
+﻿/*
  * StartPage - 浏览器起始页
  * 功能：展示问候语、实时时钟、多引擎搜索框、快捷网页图标，支持主题切换、快捷网页编辑/拖拽排序。
  *       支持多页面（pageId）模式下独立保存每个页面的快捷方式和设置。
@@ -901,76 +901,90 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
 
       useEffect(() => {
+    const getGridCols = () => {
+      const gridEl = gridRef.current
+      if (!gridEl) return 6
+      const cs = getComputedStyle(gridEl)
+      const pl = parseFloat(cs.paddingLeft) || 0
+      const pr = parseFloat(cs.paddingRight) || 0
+      const gap = parseFloat(cs.columnGap) || GAP
+      const cw = gridEl.getBoundingClientRect().width - pl - pr
+      return Math.max(1, Math.floor((cw + gap) / (CELL_SIZE + gap)))
+    }
+
+    const computeReorderLayout = (srcIdx, targetCol, targetRow, maxCols) => {
+      const sorted = shortcuts.map((s, i) => ({ ...s, __origIdx: i }))
+        .sort((a, b) => {
+          const aPos = (a.row ?? 0) * maxCols + (a.col ?? 0)
+          const bPos = (b.row ?? 0) * maxCols + (b.col ?? 0)
+          return aPos - bPos
+        })
+      const srcPos = sorted.findIndex(s => s.__origIdx === srcIdx)
+      const targetPos = sorted.findIndex(s => s.__origIdx !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow)
+      if (srcPos === -1 || targetPos === -1) return null
+      const [item] = sorted.splice(srcPos, 1)
+      sorted.splice(targetPos, 0, item)
+      return sorted.map((s, i) => {
+        const { __origIdx, ...rest } = s
+        return { ...rest, col: i % maxCols, row: Math.floor(i / maxCols) }
+      })
+    }
+
     const onDocDragOver = (e) => {
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
       e.dataTransfer.dropEffect = "move"
       const pos = getGridPos(e.clientX, e.clientY)
-      if (pos) setDropTarget(pos)
+      if (!pos) return
+      setDropTarget(pos)
+      const si = dragItemIndex.current
+      const cols = getGridCols()
+      const occupied = shortcuts.some((s, i) => i !== si && (s.col ?? 0) === pos.col && (s.row ?? 0) === pos.row)
+      if (occupied) {
+        const reordered = computeReorderLayout(si, pos.col, pos.row, cols)
+        if (reordered) setPreviewShortcuts(reordered)
+      } else {
+        setPreviewShortcuts(shortcuts.map((s, i) => i === si ? { ...s, col: pos.col, row: pos.row } : s))
+      }
     }
 
     const onDocDrop = (e) => {
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
-
-        const srcIdx = (() => {
-          // 优先从 dataTransfer 读取（React onDragEnd 可能先于 native drop 清掉 ref）
-          const dragData = e.dataTransfer.getData('text/plain')
-          if (dragData && dragData.startsWith('item:')) {
-            const idx = parseInt(dragData.split(':')[1])
-            if (!isNaN(idx) && idx >= 0 && idx < shortcuts.length) return idx
-          }
-          return dragItemIndex.current
-        })()
+      const srcIdx = (() => {
+        const dragData = e.dataTransfer.getData("text/plain")
+        if (dragData && dragData.startsWith("item:")) {
+          const idx = parseInt(dragData.split(":")[1])
+          if (!isNaN(idx) && idx >= 0 && idx < shortcuts.length) return idx
+        }
+        return dragItemIndex.current
+      })()
       if (srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
-
       const pos = getGridPos(e.clientX, e.clientY)
       if (!pos) { handleDragEnd(); return }
-
       const targetCol = pos.col
       const targetRow = pos.row
       const dragged = shortcuts[srcIdx]
-
       if ((dragged.col ?? 0) === targetCol && (dragged.row ?? 0) === targetRow) {
         handleDragEnd()
         return
       }
-
-      const occupied = shortcuts.some((s, i) =>
-        i !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow
-      )
-
+      const cols = getGridCols()
+      const occupied = shortcuts.some((s, i) => i !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow)
       if (occupied) {
-        // 动态列数
-        const gridEl = gridRef.current
-        let cols = 6
-        if (gridEl) {
-          const cs = getComputedStyle(gridEl)
-          const pl = parseFloat(cs.paddingLeft) || 0
-          const pr = parseFloat(cs.paddingRight) || 0
-          const gap = parseFloat(cs.columnGap) || GAP
-          const cw = gridEl.getBoundingClientRect().width - pl - pr
-          cols = Math.max(1, Math.floor((cw + gap) / (CELL_SIZE + gap)))
+        const reordered = computeReorderLayout(srcIdx, targetCol, targetRow, cols)
+        if (reordered) {
+          setShortcuts(reordered)
+          saveShortcuts(pageId, reordered)
         }
-        const searchGrid = shortcuts.map((s) => ({ col: s.col ?? 0, row: s.row ?? 0 }))
-        const nearest = findNearestEmpty(searchGrid, targetCol, targetRow, srcIdx, cols)
-        const u = [...shortcuts]
-          // DEBUG: log drop
-          console.log('FREE POS DROP empty target:', targetCol, targetRow, 'srcIdx:', srcIdx, 'item cols/rows set:', targetCol, targetRow)
-        u[srcIdx] = { ...u[srcIdx], col: nearest.col, row: nearest.row }
-        setShortcuts(u)
-        saveShortcuts(pageId, u)
       } else {
         const u = [...shortcuts]
-          // DEBUG: log drop
-          console.log('FREE POS DROP occupied->BFS nearest:', nearest, 'target:', targetCol, targetRow, 'srcIdx:', srcIdx)
         u[srcIdx] = { ...u[srcIdx], col: targetCol, row: targetRow }
         setShortcuts(u)
         saveShortcuts(pageId, u)
       }
       handleDragEnd()
     }
-
     const onDocDragEnd = () => { handleDragEnd() }
 
     document.addEventListener("dragover", onDocDragOver)
