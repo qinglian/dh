@@ -945,12 +945,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       )
 
       if (occupied) {
-        // 目标被占用：使用 computeShiftedGrid 级联避让
-        const grid = shortcuts.map((s) => ({ ...s }))
-        const newGrid = computeShiftedGrid(grid, srcIdx, targetCol, targetRow, 6)
-        const newShortcuts = newGrid
-        setShortcuts(newShortcuts)
-        saveShortcuts(pageId, newShortcuts)
+        // 目标被占用：找最近的空闲格
+        const gridForSearch = shortcuts.map((s) => ({ col: s.col ?? 0, row: s.row ?? 0 }))
+        const nearest = findNearestEmpty(gridForSearch, targetCol, targetRow, srcIdx, 6)
+        const updated2 = [...shortcuts]
+        updated2[srcIdx] = { ...updated2[srcIdx], col: nearest.col, row: nearest.row }
+        setShortcuts(updated2)
+        saveShortcuts(pageId, updated2)
       } else {
         // 目标为空：直接放置
         const updated = [...shortcuts]
@@ -960,7 +961,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       }
       handleDragEnd()
     }
-
     const onDocDragEnd = () => { handleDragEnd() }
 
     document.addEventListener("dragover", onDocDragOver)
