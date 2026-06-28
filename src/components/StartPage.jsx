@@ -892,86 +892,67 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    * 都能响应 dragover/drop，不受子元素事件冒泡阻断影响
    */
 
-  /* 计算拖拽目标索引：根据鼠标在目标元素左/右半区决定插入位置 */
-  const calcDragTargetIdx = (e, targetEl) => {
-    const srcIdx = dragItemIndex.current
-    if (srcIdx === null || srcIdx >= shortcuts.length) return null
-    const rect = targetEl.getBoundingClientRect()
-    const after = e.clientX > rect.left + rect.width / 2
-    const targetIndex = parseInt(targetEl.getAttribute("data-index"))
-    if (isNaN(targetIndex)) return null
-    let tidx = targetIndex
-    if (after) tidx++
-    tidx = Math.max(0, Math.min(tidx, shortcuts.length))
-    if (srcIdx < tidx) tidx--
-    return tidx >= 0 && tidx !== srcIdx ? tidx : null
-  }
-
-  /* 拖拽悬停：更新预览布局 */
-  const handleItemDragOver = (e) => {
-    if (!isEditShortcuts || dragItemIndex.current === null) return
-    e.preventDefault()
-    e.stopPropagation()
-    e.dataTransfer.dropEffect = "move"
-
-    const tidx = calcDragTargetIdx(e, e.currentTarget)
-    if (tidx === null) { setPreviewShortcuts(null); return }
-
-    const srcIdx = dragItemIndex.current
-    const preview = [...shortcuts]
-    const [moved] = preview.splice(srcIdx, 1)
-    preview.splice(tidx, 0, moved)
-    setPreviewShortcuts(preview)
-  }
-
-  /* 拖拽放下：执行重排 */
-  const handleItemDrop = (e) => {
-    if (!isEditShortcuts) return
-    e.preventDefault()
-    e.stopPropagation()
-    e._dhHandled = true
-
-    const dragData = e.dataTransfer.getData("text/plain")
-    if (!dragData || !dragData.startsWith("item:")) { handleDragEnd(); return }
-    const srcIdx = parseInt(dragData.split(":")[1])
-    if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
-
-    const tidx = calcDragTargetIdx(e, e.currentTarget)
-    if (tidx === null) { handleDragEnd(); return }
-
-    const updated = [...shortcuts]
-    const [moved] = updated.splice(srcIdx, 1)
-    updated.splice(tidx, 0, moved)
-    setShortcuts(updated)
-    saveShortcuts(pageId, updated)
-
-    handleDragEnd()
-  }
 
       useEffect(() => {
+    const calcDragTargetIdx = (e, itemEl) => {
+      const srcIdx = dragItemIndex.current
+      if (srcIdx === null || srcIdx >= shortcuts.length) return null
+      const rect = itemEl.getBoundingClientRect()
+      const after = e.clientX > rect.left + rect.width / 2
+      var targetIndex = parseInt(itemEl.getAttribute("data-index"))
+      if (isNaN(targetIndex)) return null
+      let tidx = targetIndex
+      if (after) tidx++
+      tidx = Math.max(0, Math.min(tidx, shortcuts.length))
+      if (srcIdx < tidx) tidx--
+      return tidx >= 0 && tidx !== srcIdx ? tidx : null
+    }
+
     const onDocDragOver = (e) => {
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
       e.dataTransfer.dropEffect = "move"
+
+      var el = document.elementFromPoint(e.clientX, e.clientY)
+      var itemEl = el?.closest("[data-shortcut]")
+      if (!itemEl) { setPreviewShortcuts(null); return }
+
+      var srcIdx = dragItemIndex.current
+      var tidx = calcDragTargetIdx(e, itemEl)
+      if (tidx === null) { setPreviewShortcuts(null); return }
+
+      var preview = [...shortcuts]
+      var [moved] = preview.splice(srcIdx, 1)
+      preview.splice(tidx, 0, moved)
+      setPreviewShortcuts(preview)
     }
 
     const onDocDrop = (e) => {
       if (!isEditShortcuts) return
-      if (e._dhHandled) return
       e.preventDefault()
 
-      const dragData = e.dataTransfer.getData("text/plain")
+      var dragData = e.dataTransfer.getData("text/plain")
       if (!dragData || !dragData.startsWith("item:")) { handleDragEnd(); return }
-      const srcIdx = parseInt(dragData.split(":")[1])
+      var srcIdx = parseInt(dragData.split(":")[1])
       if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
 
-      let tidx = shortcuts.length
-      if (srcIdx < tidx) tidx--
+      var el = document.elementFromPoint(e.clientX, e.clientY)
+      var itemEl = el?.closest("[data-shortcut]")
+
+      let tidx
+      if (itemEl) {
+        tidx = calcDragTargetIdx(e, itemEl)
+        if (tidx === null) { handleDragEnd(); return }
+      } else {
+        tidx = shortcuts.length
+        if (srcIdx < tidx) tidx--
+        if (tidx === srcIdx) { handleDragEnd(); return }
+      }
 
       if (tidx >= 0 && tidx !== srcIdx) {
-        const updated = [...shortcuts]
-        const [moved] = updated.splice(srcIdx, 1)
-        updated.splice(tidx, 0, moved)
+        var updated = [...shortcuts]
+        var [moved2] = updated.splice(srcIdx, 1)
+        updated.splice(tidx, 0, moved2)
         setShortcuts(updated)
         saveShortcuts(pageId, updated)
       }
@@ -979,7 +960,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     }
 
     const onDocDragEnd = () => { handleDragEnd() }
-
 
     document.addEventListener("dragover", onDocDragOver)
     document.addEventListener("drop", onDocDrop)
@@ -1238,8 +1218,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                 draggable={isEditShortcuts && !isWidget ? editingId !== item.id : isEditShortcuts}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragEnd={handleDragEnd}
-                onDragOver={!isWidget ? handleItemDragOver : undefined}
-                onDrop={!isWidget ? handleItemDrop : undefined}
+
+
               >
                 {isWidget ? (
                   /* 小部件渲染 */
