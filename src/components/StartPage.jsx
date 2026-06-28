@@ -901,62 +901,22 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
 
       useEffect(() => {
-    // 动态计算网格列数
-    const getColCount = () => {
-      const gridEl = gridRef.current
-      if (!gridEl) return 6
-      const cs = getComputedStyle(gridEl)
-      const padLeft = parseFloat(cs.paddingLeft) || 0
-      const padRight = parseFloat(cs.paddingRight) || 0
-      const gap = parseFloat(cs.columnGap) || GAP
-      const contentWidth = gridEl.getBoundingClientRect().width - padLeft - padRight
-      return Math.max(1, Math.floor((contentWidth + gap) / (CELL_SIZE + gap)))
-    }
-
-    const getDragPos = (cx, cy) => {
-      const pos = getGridPos(cx, cy, true)
-      if (pos) return { col: pos.col, row: pos.row }
-      // 回退：elementFromPoint 检测元素
-      const el = document.elementFromPoint(cx, cy)
-      const itemEl = el?.closest("[data-shortcut]")
-      if (itemEl) {
-        const idx = parseInt(itemEl.getAttribute("data-index"))
-        if (!isNaN(idx) && idx >= 0 && idx < shortcuts.length) {
-          const rect = itemEl.getBoundingClientRect()
-          const after = cx > rect.left + rect.width / 2
-          const s = shortcuts[idx]
-          return { col: (s.col ?? 0) + (after ? 1 : 0), row: s.row ?? 0 }
-        }
-      }
-      return null
-    }
-
-    let rafId = null
-
     const onDocDragOver = (e) => {
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
       e.dataTransfer.dropEffect = "move"
-      const cx = e.clientX
-      const cy = e.clientY
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(() => {
-        const pos = getDragPos(cx, cy)
-        if (pos) setDropTarget(pos)
-      })
+      const pos = getGridPos(e.clientX, e.clientY)
+      if (pos) setDropTarget(pos)
     }
 
     const onDocDrop = (e) => {
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
-      if (rafId) { cancelAnimationFrame(rafId); rafId = null }
-      const cx = e.clientX
-      const cy = e.clientY
 
       const srcIdx = dragItemIndex.current
       if (srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
 
-      const pos = getDragPos(cx, cy)
+      const pos = getGridPos(e.clientX, e.clientY)
       if (!pos) { handleDragEnd(); return }
 
       const targetCol = pos.col
@@ -972,8 +932,18 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         i !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow
       )
 
-      const cols = getColCount()
       if (occupied) {
+        // 动态列数
+        const gridEl = gridRef.current
+        let cols = 6
+        if (gridEl) {
+          const cs = getComputedStyle(gridEl)
+          const pl = parseFloat(cs.paddingLeft) || 0
+          const pr = parseFloat(cs.paddingRight) || 0
+          const gap = parseFloat(cs.columnGap) || GAP
+          const cw = gridEl.getBoundingClientRect().width - pl - pr
+          cols = Math.max(1, Math.floor((cw + gap) / (CELL_SIZE + gap)))
+        }
         const searchGrid = shortcuts.map((s) => ({ col: s.col ?? 0, row: s.row ?? 0 }))
         const nearest = findNearestEmpty(searchGrid, targetCol, targetRow, srcIdx, cols)
         const u = [...shortcuts]
@@ -989,17 +959,13 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       handleDragEnd()
     }
 
-    const onDocDragEnd = () => {
-      if (rafId) { cancelAnimationFrame(rafId); rafId = null }
-      handleDragEnd()
-    }
+    const onDocDragEnd = () => { handleDragEnd() }
 
     document.addEventListener("dragover", onDocDragOver)
     document.addEventListener("drop", onDocDrop)
     document.addEventListener("dragend", onDocDragEnd)
 
     return () => {
-      if (rafId) cancelAnimationFrame(rafId)
       document.removeEventListener("dragover", onDocDragOver)
       document.removeEventListener("drop", onDocDrop)
       document.removeEventListener("dragend", onDocDragEnd)
