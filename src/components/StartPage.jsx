@@ -98,59 +98,57 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
     return result
   }
 
-    ﻿  // 目标被占用：插入式重排——仅移动源与目标之间的按钮，保持间隔不变
+        // fix: 按阅读顺序排序后用索引判断方向
 
-  // 计算实际列数（基于所有按钮的最大列号）
-  const cols = Math.max(1, ...result.map(item => (item.col ?? 0) + 1), 6)
+  const sorted = result.map((item, idx) => ({ ...item, _idx: idx }))
+    .sort((a, b) => {
+      const ra = a.row ?? 0, rb = b.row ?? 0
+      const ca = a.col ?? 0, cb = b.col ?? 0
+      return ra !== rb ? ra - rb : ca - cb
+    })
 
-  // 找到被目标位置占用的按钮索引
-  let targetIdx = -1
-  for (let i = 0; i < result.length; i++) {
-    if (i === dragIdx) continue
-    if ((result[i].col ?? 0) === targetCol && (result[i].row ?? 0) === targetRow) {
-      targetIdx = i
-      break
-    }
-  }
-  if (targetIdx === -1) return result
+  let dragSortedIdx = sorted.findIndex(item => item._idx === dragIdx)
+  if (dragSortedIdx === -1) return result
 
-  const targetItem = result[targetIdx]
-  const tcol = targetItem.col ?? 0
-  const trow = targetItem.row ?? 0
+  let targetSortedIdx = sorted.findIndex(item =>
+    (item.col ?? 0) === targetCol && (item.row ?? 0) === targetRow && item._idx !== dragIdx
+  )
+  if (targetSortedIdx === -1) return result
 
-  // 阅读顺序：row * cols + col（使用实际列数确保顺序连续）
-  const dragOrder = origRow * cols + origCol
-  const targetOrder = trow * cols + tcol
+  const tcol = sorted[targetSortedIdx].col ?? 0
+  const trow = sorted[targetSortedIdx].row ?? 0
 
-  // 将被拖拽按钮直接放到目标位置
   dragged.col = tcol
   dragged.row = trow
 
-  if (dragOrder < targetOrder) {
-    // 向右/下拖拽：源到目标之间的按钮逐格向左上移动
-    for (const item of result) {
-      if (item === dragged) continue
-      const order = (item.row ?? 0) * cols + (item.col ?? 0)
-      if (order > dragOrder && order <= targetOrder) {
-        item.col = (item.col ?? 0) - 1
-        if (item.col < 0) { item.col = cols - 1; item.row = (item.row ?? 0) - 1 }
+  if (dragSortedIdx < targetSortedIdx) {
+    for (let i = 0; i < sorted.length; i++) {
+      if (sorted[i]._idx === dragIdx) continue
+      if (i > dragSortedIdx && i <= targetSortedIdx) {
+        const origIdx = sorted[i]._idx
+        result[origIdx].col = (result[origIdx].col ?? 0) - 1
+        if (result[origIdx].col < 0) {
+          result[origIdx].col = 99
+          result[origIdx].row = (result[origIdx].row ?? 0) - 1
+        }
       }
     }
   } else {
-    // 向左/上拖拽：目标到源之间的按钮逐格向右下移动
-    for (const item of result) {
-      if (item === dragged) continue
-      const order = (item.row ?? 0) * cols + (item.col ?? 0)
-      if (order >= targetOrder && order < dragOrder) {
-        item.col = (item.col ?? 0) + 1
-        if (item.col >= cols) { item.col = 0; item.row = (item.row ?? 0) + 1 }
+    for (let i = 0; i < sorted.length; i++) {
+      if (sorted[i]._idx === dragIdx) continue
+      if (i >= targetSortedIdx && i < dragSortedIdx) {
+        const origIdx = sorted[i]._idx
+        result[origIdx].col = (result[origIdx].col ?? 0) + 1
+        if (result[origIdx].col > 99) {
+          result[origIdx].col = 0
+          result[origIdx].row = (result[origIdx].row ?? 0) + 1
+        }
       }
     }
   }
 
   return result
 }
-
 const SHORTCUTS_KEY = 'nav-shortcuts'
 
 /*
