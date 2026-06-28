@@ -932,12 +932,12 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     e._dhHandled = true
 
     const dragData = e.dataTransfer.getData("text/plain")
-    if (!dragData || !dragData.startsWith("item:")) { cleanupDrag(); return }
+    if (!dragData || !dragData.startsWith("item:")) { handleDragEnd(); return }
     const srcIdx = parseInt(dragData.split(":")[1])
-    if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { cleanupDrag(); return }
+    if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
 
     const tidx = calcDragTargetIdx(e, e.currentTarget)
-    if (tidx === null) { cleanupDrag(); return }
+    if (tidx === null) { handleDragEnd(); return }
 
     const updated = [...shortcuts]
     const [moved] = updated.splice(srcIdx, 1)
@@ -945,7 +945,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     setShortcuts(updated)
     saveShortcuts(pageId, updated)
 
-    cleanupDrag()
+    handleDragEnd()
   }
 
       useEffect(() => {
@@ -961,9 +961,9 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       e.preventDefault()
 
       const dragData = e.dataTransfer.getData("text/plain")
-      if (!dragData || !dragData.startsWith("item:")) { cleanupDrag(); return }
+      if (!dragData || !dragData.startsWith("item:")) { handleDragEnd(); return }
       const srcIdx = parseInt(dragData.split(":")[1])
-      if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { cleanupDrag(); return }
+      if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
 
       let tidx = shortcuts.length
       if (srcIdx < tidx) tidx--
@@ -975,19 +975,11 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         setShortcuts(updated)
         saveShortcuts(pageId, updated)
       }
-      cleanupDrag()
+      handleDragEnd()
     }
 
-    const onDocDragEnd = () => { cleanupDrag() }
+    const onDocDragEnd = () => { handleDragEnd() }
 
-    const cleanupDrag = () => {
-      dragItemIndex.current = null
-      dragItemData.current = null
-      setDropTarget(null)
-      setDragOverIndex(null)
-      originalGridRef.current = null
-      setPreviewShortcuts(null)
-    }
 
     document.addEventListener("dragover", onDocDragOver)
     document.addEventListener("drop", onDocDrop)
