@@ -98,8 +98,12 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
     return result
   }
 
-        // fix: 按阅读顺序排序后用索引判断方向
+          // 目标被占用：插入式重排
 
+  // 计算列数：取现有按钮最大列+1，至少1列
+  const cols = Math.max(1, ...result.map(item => (item.col ?? 0) + 1), 6)
+
+  // 1. 按阅读顺序（先行后列）排序所有项目
   const sorted = result.map((item, idx) => ({ ...item, _idx: idx }))
     .sort((a, b) => {
       const ra = a.row ?? 0, rb = b.row ?? 0
@@ -107,44 +111,40 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
       return ra !== rb ? ra - rb : ca - cb
     })
 
-  let dragSortedIdx = sorted.findIndex(item => item._idx === dragIdx)
+  // 2. 找到拖动项和目标插入位置在排序数组中的索引
+  let dragSortedIdx = -1
+  let targetSortedIdx = -1
+
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i]._idx === dragIdx) dragSortedIdx = i
+    const col = sorted[i].col ?? 0
+    const row = sorted[i].row ?? 0
+    if (col === targetCol && row === targetRow && sorted[i]._idx !== dragIdx) {
+      targetSortedIdx = i
+    }
+  }
+
   if (dragSortedIdx === -1) return result
 
-  let targetSortedIdx = sorted.findIndex(item =>
-    (item.col ?? 0) === targetCol && (item.row ?? 0) === targetRow && item._idx !== dragIdx
-  )
-  if (targetSortedIdx === -1) return result
+  if (targetSortedIdx === -1) {
+    targetSortedIdx = sorted.findIndex(item => {
+      const r = item.row ?? 0
+      const c = item.col ?? 0
+      return r > targetRow || (r === targetRow && c >= targetCol)
+    })
+    if (targetSortedIdx === -1) targetSortedIdx = sorted.length
+  }
 
-  const tcol = sorted[targetSortedIdx].col ?? 0
-  const trow = sorted[targetSortedIdx].row ?? 0
+  const [removed] = sorted.splice(dragSortedIdx, 1)
+  const insertIdx = dragSortedIdx < targetSortedIdx ? targetSortedIdx - 1 : targetSortedIdx
+  sorted.splice(insertIdx, 0, removed)
 
-  dragged.col = tcol
-  dragged.row = trow
-
-  if (dragSortedIdx < targetSortedIdx) {
-    for (let i = 0; i < sorted.length; i++) {
-      if (sorted[i]._idx === dragIdx) continue
-      if (i > dragSortedIdx && i <= targetSortedIdx) {
-        const origIdx = sorted[i]._idx
-        result[origIdx].col = (result[origIdx].col ?? 0) - 1
-        if (result[origIdx].col < 0) {
-          result[origIdx].col = 99
-          result[origIdx].row = (result[origIdx].row ?? 0) - 1
-        }
-      }
-    }
-  } else {
-    for (let i = 0; i < sorted.length; i++) {
-      if (sorted[i]._idx === dragIdx) continue
-      if (i >= targetSortedIdx && i < dragSortedIdx) {
-        const origIdx = sorted[i]._idx
-        result[origIdx].col = (result[origIdx].col ?? 0) + 1
-        if (result[origIdx].col > 99) {
-          result[origIdx].col = 0
-          result[origIdx].row = (result[origIdx].row ?? 0) + 1
-        }
-      }
-    }
+  for (let i = 0; i < sorted.length; i++) {
+    sorted[i].col = i % cols
+    sorted[i].row = Math.floor(i / cols)
+    const idx = sorted[i]._idx
+    result[idx].col = sorted[i].col
+    result[idx].row = sorted[i].row
   }
 
   return result
@@ -840,8 +840,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         // 基于校准元素位置计算鼠标所在行列
         const relX = clientX - calibRect.left
         const relY = clientY - calibRect.top
-        const col = Math.max(0, Math.min(cols - 1, Math.floor((relX + gap / 2) / cellTotal)))
-        const row = Math.max(0, Math.floor((relY + gap / 2) / cellTotal))
+        const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
+        const row = Math.max(0, Math.floor(relY / cellTotal))
         return { col, row }
       }
 
@@ -857,8 +857,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const centerOffsetX = (contentWidth - gridWidth) / 2
       const relX = clientX - gridRect.left - padLeft - centerOffsetX
       const relY = clientY - gridRect.top - padTop
-      const col = Math.max(0, Math.min(cols - 1, Math.floor((relX + gap / 2) / cellTotal)))
-      const row = Math.max(0, Math.floor((relY + gap / 2) / cellTotal))
+      const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
+      const row = Math.max(0, Math.floor(relY / cellTotal))
       return { col, row }
     }
   }, [])
