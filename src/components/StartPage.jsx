@@ -912,7 +912,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         const idx = parseInt(dragData.split(':')[1])
         if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
           // 使用拖拽预览时已计算好的布局，保证预览与最终位置一致
-          const finalGrid = shiftedGridRef.current || computeShiftedGrid(gridItems, idx, col, row)
+          const finalGrid = computeShiftedGrid(gridItems, idx, col, row)
           updateFromGrid(finalGrid)
         }
       }
@@ -1174,7 +1174,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
           {/* 隐藏校准元素：grid (0,0) 位置 */}
           <div ref={calibRef} style={{ gridColumn: 1, gridRow: 1, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
           {/* 拖拽悬停时使用级联避让布局，否则使用原始布局 */}
-          {(shiftedGrid && dragItemIndex.current !== null ? shiftedGrid : gridItems).map((item, index) => {
+          {(gridItems).map((item, index) => {
             const isWidget = item.itemType === 'widget'
             const cols = isWidget && item.cols ? item.cols : 1
             const rows = isWidget && item.rows ? item.rows : 1
