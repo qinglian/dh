@@ -1,4 +1,4 @@
-/*
+﻿/*
  * StartPage - 浏览器起始页
  * 功能：展示问候语、实时时钟、多引擎搜索框、快捷网页图标，支持主题切换、快捷网页编辑/拖拽排序。
  *       支持多页面（pageId）模式下独立保存每个页面的快捷方式和设置。
@@ -854,6 +854,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         const relY = clientY - calibRect.top
         const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
         const row = Math.max(0, Math.floor(relY / cellTotal))
+        if (getMeta) return { col, row, cols: 6, baseX: calibRect.left, padTop, cellTotal }
         return { col, row }
       }
 
@@ -871,7 +872,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const relY = clientY - gridRect.top - padTop
       const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
       const row = Math.max(0, Math.floor(relY / cellTotal))
-      if (getMeta) return { col, row, cols, baseX: gridRect.left + padLeft + centerOffsetX, padTop, cellTotal, gridWidth }
+      if (getMeta) return { col, row, cols: 6, baseX: gridRect.left + padLeft + centerOffsetX, padTop, cellTotal }
       return { col, row }
     }
   }, [])
@@ -1378,3 +1379,4 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     </div>
   )
 }
+
