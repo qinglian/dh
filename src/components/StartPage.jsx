@@ -421,7 +421,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const prevDropRef = useRef(null)
   /* 拖拽项的原始索引，用于交换计算 */
   const dragItemIndex = useRef(null)
-  const dragWorkingArray = useRef(null)
   /* 拖拽项的原始数据引用 */
   const dragItemData = useRef(null)
   // 拖拽开始时保存原始 grid（用于取消时恢复）
@@ -459,7 +458,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       setShowEnginePicker(false)
     }, 5000)
   }
-  
   // 监听favicon缓存事件，更新快捷方式iconUrl
   useEffect(() => {
     const handler = (e) => {
@@ -520,8 +518,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    */
   const displayShortcuts = previewShortcuts !== null ? previewShortcuts : shortcuts
   const gridItems = useMemo(() => {
-    const sItems = displayShortcuts.map((s, i) => ({ ...s, itemType: 'shortcut', col: i % 6, row: Math.floor(i / 6) }))
-    const wItems = widgets.map((w, i) => ({ ...w, itemType: 'widget', col: (displayShortcuts.length + i) % 6, row: Math.floor((displayShortcuts.length + i) / 6) }))
+    const sItems = displayShortcuts.map((s) => ({ ...s, itemType: 'shortcut' }))
+    const wItems = widgets.map((w) => ({ ...w, itemType: 'widget' }))
     return [...sItems, ...wItems]
   }, [displayShortcuts, widgets])
   /* 从合并列表分离并保存 */
@@ -557,7 +555,15 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
   /* 页面切换时重新加载该页面的快捷方式和设置，并退出编辑模式 */
   useEffect(() => {
-    setShortcuts(getSavedShortcuts(pageId))
+    const savedShortcuts = getSavedShortcuts(pageId)
+    // 为没有 col/row 的旧快捷方式补充网格坐标
+    const migrated = savedShortcuts.map((s, idx) => {
+      if (s.col === undefined || s.row === undefined) {
+        return { ...s, col: idx % 6, row: Math.floor(idx / 6) }
+      }
+      return s
+    })
+    setShortcuts(migrated)
     setStartSettings(getSettings(pageId))
     setIsEditShortcuts(false)
   }, [pageId])
@@ -806,7 +812,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    */
   const handleDragStart = (e, index) => {
     if (!isEditShortcuts) return
-    dragWorkingArray.current = [...shortcuts]
     dragItemIndex.current = index
     dragItemData.current = gridItems[index]
     originalGridRef.current = gridItems.map(item => ({ ...item }))
@@ -886,7 +891,6 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     setDropTarget(null)
     setDragOverIndex(null)
     originalGridRef.current = null
-    dragWorkingArray.current = null
     setPreviewShortcuts(null)
   }
 
@@ -897,66 +901,60 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
 
       useEffect(() => {
-    const calcDragTargetIdx = (e, itemEl, srcIdx) => {
-      if (srcIdx === null || srcIdx >= shortcuts.length) return null
-      const rect = itemEl.getBoundingClientRect()
-      const after = e.clientX > rect.left + rect.width / 2
-      var targetIndex = parseInt(itemEl.getAttribute("data-index"))
-      if (isNaN(targetIndex)) return null
-      let tidx = targetIndex
-      if (after) tidx++
-      tidx = Math.max(0, Math.min(tidx, shortcuts.length))
-      if (srcIdx < tidx) tidx--
-      return tidx >= 0 && tidx !== srcIdx ? tidx : null
+    // 共享的获取拖拽目标位置的函数：通过网格坐标映射鼠标位置
+    const getDragPos = (e) => {
+      const pos = getGridPos(e.clientX, e.clientY, true)
+      if (!pos) return null
+      return { col: pos.col, row: pos.row }
     }
 
     const onDocDragOver = (e) => {
-      if (!isEditShortcuts || dragItemIndex.current === null || !dragWorkingArray.current) return
+      if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
       e.dataTransfer.dropEffect = "move"
 
-      var el = document.elementFromPoint(e.clientX, e.clientY)
-      var itemEl = el?.closest("[data-shortcut]")
-      if (!itemEl) { setPreviewShortcuts(null); return }
-
-      var srcIdx = dragItemIndex.current
-      var tidx = calcDragTargetIdx(e, itemEl, srcIdx)
-      if (tidx === null) { setPreviewShortcuts(null); return }
-
-      var preview = [...dragWorkingArray.current]
-      var [moved] = preview.splice(srcIdx, 1)
-      preview.splice(tidx, 0, moved)
-      setPreviewShortcuts(preview)
-      dragWorkingArray.current = preview
-      dragItemIndex.current = tidx
+      const pos = getDragPos(e)
+      if (pos) {
+        setDropTarget(pos)
+      }
     }
 
     const onDocDrop = (e) => {
-      if (!isEditShortcuts) return
+      if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
 
-      var dragData = e.dataTransfer.getData("text/plain")
-      if (!dragData || !dragData.startsWith("item:")) { handleDragEnd(); return }
-      var srcIdx = parseInt(dragData.split(":")[1])
-      if (isNaN(srcIdx) || srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
+      const srcIdx = dragItemIndex.current
+      if (srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
 
-      var el = document.elementFromPoint(e.clientX, e.clientY)
-      var itemEl = el?.closest("[data-shortcut]")
+      const pos = getDragPos(e)
+      if (!pos) { handleDragEnd(); return }
 
-      let tidx
-      if (itemEl) {
-        tidx = calcDragTargetIdx(e, itemEl, srcIdx)
-        if (tidx === null) { handleDragEnd(); return }
-      } else {
-        tidx = shortcuts.length
-        if (srcIdx < tidx) tidx--
-        if (tidx === srcIdx) { handleDragEnd(); return }
+      const targetCol = pos.col
+      const targetRow = pos.row
+      const dragged = shortcuts[srcIdx]
+
+      // 未移动则忽略
+      if ((dragged.col ?? 0) === targetCol && (dragged.row ?? 0) === targetRow) {
+        handleDragEnd()
+        return
       }
 
-      if (tidx >= 0 && tidx !== srcIdx) {
-        var updated = [...shortcuts]
-        var [moved2] = updated.splice(srcIdx, 1)
-        updated.splice(tidx, 0, moved2)
+      // 检查目标是否被其他按钮占用
+      const occupied = shortcuts.some((s, i) =>
+        i !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow
+      )
+
+      if (occupied) {
+        // 目标被占用：使用 computeShiftedGrid 级联避让
+        const grid = shortcuts.map((s) => ({ ...s }))
+        const newGrid = computeShiftedGrid(grid, srcIdx, targetCol, targetRow, 6)
+        const newShortcuts = newGrid
+        setShortcuts(newShortcuts)
+        saveShortcuts(pageId, newShortcuts)
+      } else {
+        // 目标为空：直接放置
+        const updated = [...shortcuts]
+        updated[srcIdx] = { ...updated[srcIdx], col: targetCol, row: targetRow }
         setShortcuts(updated)
         saveShortcuts(pageId, updated)
       }
@@ -974,7 +972,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       document.removeEventListener("drop", onDocDrop)
       document.removeEventListener("dragend", onDocDragEnd)
     }
-  }, [isEditShortcuts, shortcuts.length, shortcuts, pageId])
+  }, [isEditShortcuts, shortcuts, pageId, getGridPos])
 
   return (
     /*
