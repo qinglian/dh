@@ -98,59 +98,56 @@ function computeShiftedGrid(grid, dragIdx, targetCol, targetRow, maxCols = 100) 
     return result
   }
 
-  // 目标被占用：插入式重排
+    // 目标被占用：插入式重排——仅移动源与目标之间的按钮，保持间隔不变
 
-  // 计算列数：取现有按钮最大列+1，至少1列
-  const cols = Math.max(1, ...result.map(item => (item.col ?? 0) + 1), 6)
-
-  // 1. 按阅读顺序（先行后列）排序所有项目
-  const sorted = result.map((item, idx) => ({ ...item, _idx: idx }))
-    .sort((a, b) => {
-      const ra = a.row ?? 0, rb = b.row ?? 0
-      const ca = a.col ?? 0, cb = b.col ?? 0
-      return ra !== rb ? ra - rb : ca - cb
-    })
-
-  // 2. 找到拖动项和目标插入位置在排序数组中的索引
-  let dragSortedIdx = -1
-  let targetSortedIdx = -1
-
-  for (let i = 0; i < sorted.length; i++) {
-    if (sorted[i]._idx === dragIdx) dragSortedIdx = i
-    const c = sorted[i].col ?? 0
-    const r = sorted[i].row ?? 0
-    if (c === targetCol && r === targetRow && sorted[i]._idx !== dragIdx) {
-      targetSortedIdx = i
+  // 找到被目标位置占用的按钮索引
+  let targetIdx = -1
+  for (let i = 0; i < result.length; i++) {
+    if (i === dragIdx) continue
+    if ((result[i].col ?? 0) === targetCol && (result[i].row ?? 0) === targetRow) {
+      targetIdx = i
+      break
     }
   }
+  if (targetIdx === -1) return result
 
-  if (dragSortedIdx === -1) return result
+  const targetItem = result[targetIdx]
+  const tcol = targetItem.col ?? 0
+  const trow = targetItem.row ?? 0
 
-  // 如果目标位置是空的，计算插入位置（首个 row>targetRow 或 row===targetRow && col>targetCol 的项）
-  if (targetSortedIdx === -1) {
-    targetSortedIdx = sorted.findIndex(item => {
-      const r = item.row ?? 0
-      const c = item.col ?? 0
-      return r > targetRow || (r === targetRow && c >= targetCol)
-    })
-    if (targetSortedIdx === -1) targetSortedIdx = sorted.length
-  }
+  const dragOrder = origRow * maxCols + origCol
+  const targetOrder = trow * maxCols + tcol
 
-  // 3. 从排序数组中移除拖动项，插入到目标位置
-  const [removed] = sorted.splice(dragSortedIdx, 1)
+  // 将被拖拽按钮直接放到目标位置
+  dragged.col = tcol
+  dragged.row = trow
 
-  // 重新计算插入位置（因为移除后索引可能变化）
-  const insertIdx = dragSortedIdx < targetSortedIdx ? targetSortedIdx - 1 : targetSortedIdx
-  sorted.splice(insertIdx, 0, removed)
-
-  // 4. 按新顺序重新分配网格位置
-  for (let i = 0; i < sorted.length; i++) {
-    sorted[i].col = i % cols
-    sorted[i].row = Math.floor(i / cols)
-    // 同步回 result 数组
-    const idx = sorted[i]._idx
-    result[idx].col = sorted[i].col
-    result[idx].row = sorted[i].row
+  if (dragOrder < targetOrder) {
+    // 向右/下拖拽：源到目标之间的所有按钮逐格向左上移动
+    for (const item of result) {
+      if (item === dragged) continue
+      const order = (item.row ?? 0) * maxCols + (item.col ?? 0)
+      if (order > dragOrder && order <= targetOrder) {
+        item.col = (item.col ?? 0) - 1
+        if (item.col < 0) {
+          item.col = maxCols - 1
+          item.row = (item.row ?? 0) - 1
+        }
+      }
+    }
+  } else {
+    // 向左/上拖拽：目标到源之间的所有按钮逐格向右下移动
+    for (const item of result) {
+      if (item === dragged) continue
+      const order = (item.row ?? 0) * maxCols + (item.col ?? 0)
+      if (order >= targetOrder && order < dragOrder) {
+        item.col = (item.col ?? 0) + 1
+        if (item.col >= maxCols) {
+          item.col = 0
+          item.row = (item.row ?? 0) + 1
+        }
+      }
+    }
   }
 
   return result
