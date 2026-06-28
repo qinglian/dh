@@ -1,4 +1,4 @@
-﻿/*
+/*
  * StartPage - 浏览器起始页
  * 功能：展示问候语、实时时钟、多引擎搜索框、快捷网页图标，支持主题切换、快捷网页编辑/拖拽排序。
  *       支持多页面（pageId）模式下独立保存每个页面的快捷方式和设置。
@@ -421,6 +421,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   const prevDropRef = useRef(null)
   /* 拖拽项的原始索引，用于交换计算 */
   const dragItemIndex = useRef(null)
+  const dragWorkingArray = useRef(null)
   /* 拖拽项的原始数据引用 */
   const dragItemData = useRef(null)
   // 拖拽开始时保存原始 grid（用于取消时恢复）
@@ -805,6 +806,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    */
   const handleDragStart = (e, index) => {
     if (!isEditShortcuts) return
+    dragWorkingArray.current = [...shortcuts]
     dragItemIndex.current = index
     dragItemData.current = gridItems[index]
     originalGridRef.current = gridItems.map(item => ({ ...item }))
@@ -884,6 +886,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     setDropTarget(null)
     setDragOverIndex(null)
     originalGridRef.current = null
+    dragWorkingArray.current = null
     setPreviewShortcuts(null)
   }
 
@@ -894,8 +897,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
 
       useEffect(() => {
-    const calcDragTargetIdx = (e, itemEl) => {
-      const srcIdx = dragItemIndex.current
+    const calcDragTargetIdx = (e, itemEl, srcIdx) => {
       if (srcIdx === null || srcIdx >= shortcuts.length) return null
       const rect = itemEl.getBoundingClientRect()
       const after = e.clientX > rect.left + rect.width / 2
@@ -909,7 +911,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     }
 
     const onDocDragOver = (e) => {
-      if (!isEditShortcuts || dragItemIndex.current === null) return
+      if (!isEditShortcuts || dragItemIndex.current === null || !dragWorkingArray.current) return
       e.preventDefault()
       e.dataTransfer.dropEffect = "move"
 
@@ -918,13 +920,15 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (!itemEl) { setPreviewShortcuts(null); return }
 
       var srcIdx = dragItemIndex.current
-      var tidx = calcDragTargetIdx(e, itemEl)
+      var tidx = calcDragTargetIdx(e, itemEl, srcIdx)
       if (tidx === null) { setPreviewShortcuts(null); return }
 
-      var preview = [...shortcuts]
+      var preview = [...dragWorkingArray.current]
       var [moved] = preview.splice(srcIdx, 1)
       preview.splice(tidx, 0, moved)
       setPreviewShortcuts(preview)
+      dragWorkingArray.current = preview
+      dragItemIndex.current = tidx
     }
 
     const onDocDrop = (e) => {
@@ -941,7 +945,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
 
       let tidx
       if (itemEl) {
-        tidx = calcDragTargetIdx(e, itemEl)
+        tidx = calcDragTargetIdx(e, itemEl, srcIdx)
         if (tidx === null) { handleDragEnd(); return }
       } else {
         tidx = shortcuts.length
