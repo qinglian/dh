@@ -913,7 +913,15 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (!isEditShortcuts || dragItemIndex.current === null) return
       e.preventDefault()
 
-      const srcIdx = dragItemIndex.current
+        const srcIdx = (() => {
+          // 优先从 dataTransfer 读取（React onDragEnd 可能先于 native drop 清掉 ref）
+          const dragData = e.dataTransfer.getData('text/plain')
+          if (dragData && dragData.startsWith('item:')) {
+            const idx = parseInt(dragData.split(':')[1])
+            if (!isNaN(idx) && idx >= 0 && idx < shortcuts.length) return idx
+          }
+          return dragItemIndex.current
+        })()
       if (srcIdx < 0 || srcIdx >= shortcuts.length) { handleDragEnd(); return }
 
       const pos = getGridPos(e.clientX, e.clientY)
@@ -1221,7 +1229,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
                 data-index={index}
                 draggable={isEditShortcuts && !isWidget ? editingId !== item.id : isEditShortcuts}
                 onDragStart={(e) => handleDragStart(e, index)}
-                onDragEnd={handleDragEnd}
+
 
 
               >
