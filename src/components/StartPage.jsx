@@ -425,6 +425,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
   // 拖拽悬停时的级联避让布局（临时计算结果）
   // 上一次的拖拽目标位置，用于检测拖拽是否移开
   const prevDropRef = useRef(null)
+  const shiftedGridRef = useRef(null)
   /* 拖拽项的原始索引，用于交换计算 */
   const dragItemIndex = useRef(null)
   /* 拖拽项的原始数据引用 */
@@ -803,6 +804,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     dragItemIndex.current = index
     dragItemData.current = gridItems[index]
     originalGridRef.current = gridItems.map(item => ({ ...item }))
+    shiftedGridRef.current = null
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', 'item:' + index)
     // 隐藏浏览器原生拖拽预览，避免与自定义预览冲突
@@ -898,6 +900,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         // 实时预览：重排按钮显示最终布局
         const shifted = computeShiftedGrid(gridItems, dragItemIndex.current, pos.col, pos.row)
         setShiftedGrid(shifted)
+        shiftedGridRef.current = shifted
       }
     }
 
@@ -914,8 +917,8 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (dragData.startsWith('item:')) {
         const idx = parseInt(dragData.split(':')[1])
         if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
-          // 应用级联避让后的最终布局
-          const finalGrid = computeShiftedGrid(gridItems, idx, col, row)
+          // 使用拖拽预览时已计算好的布局，保证预览与最终位置一致
+          const finalGrid = shiftedGridRef.current || computeShiftedGrid(gridItems, idx, col, row)
           updateFromGrid(finalGrid)
         }
       }
