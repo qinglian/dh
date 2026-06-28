@@ -732,6 +732,16 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     saveShortcuts(pageId, updated)
   }
 
+  /* 拖拽重排：将 fromIndex 位置的快捷方式移动到 toIndex 位置 */
+  const reorderShortcuts = (fromIndex, toIndex) => {
+    if (fromIndex === toIndex) return
+    const updated = [...shortcuts]
+    const [moved] = updated.splice(fromIndex, 1)
+    updated.splice(toIndex, 0, moved)
+    setShortcuts(updated)
+    saveShortcuts(pageId, updated)
+  }
+
   /* 添加小部件 */
   const handleAddWidget = (widgetData) => {
     const newWidget = {
@@ -818,7 +828,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
    * 计算鼠标对应的网格位置：通过隐藏校准元素精确映射坐标。
    */
   const getGridPos = useMemo(() => {
-    return (clientX, clientY) => {
+    return (clientX, clientY, getMeta) => {
       const gridEl = gridRef.current
       const calibEl = calibRef.current
       if (!gridEl) return null
@@ -859,18 +869,18 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const relY = clientY - gridRect.top - padTop
       const col = Math.max(0, Math.min(cols - 1, Math.floor(relX / cellTotal)))
       const row = Math.max(0, Math.floor(relY / cellTotal))
+      if (getMeta) return { col, row, cols, baseX: gridRect.left + padLeft + centerOffsetX, padTop, cellTotal, gridWidth }
       return { col, row }
     }
   }, [])
 
   /* 拖拽结束：重置所有拖拽引用 */
-  const handleDragEnd = (e) => {
+  const handleDragEnd = () => {
     dragItemIndex.current = null
     dragItemData.current = null
-      setDropTarget(null)
-      setDragOverIndex(null)
-      originalGridRef.current = null
+    setDropTarget(null)
     setDragOverIndex(null)
+    originalGridRef.current = null
   }
 
   /*
@@ -895,16 +905,29 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       if (!isEditShortcuts) return
       e.preventDefault()
 
-      const pos = getGridPos(e.clientX, e.clientY)
+      const pos = getGridPos(e.clientX, e.clientY, true)
       if (!pos) return
-      const { col, row } = pos
+      let { col, row } = pos
+      const { baseX, cellTotal, cols: viewCols } = pos
+
+      // 根据鼠标在单元格内的位置判断插入左侧还是右侧
+      if (baseX !== undefined && cellTotal) {
+        const inCellX = (e.clientX - baseX) % cellTotal
+        if (inCellX > CELL_SIZE / 2) {
+          col++
+          const maxCols = viewCols || 6
+          if (col >= maxCols) {
+            col = 0
+            row++
+          }
+        }
+      }
 
       const dragData = e.dataTransfer.getData('text/plain')
 
       if (dragData.startsWith('item:')) {
         const idx = parseInt(dragData.split(':')[1])
         if (!isNaN(idx) && idx >= 0 && idx < gridItems.length) {
-          // 使用拖拽预览时已计算好的布局，保证预览与最终位置一致
           const finalGrid = computeShiftedGrid(gridItems, idx, col, row)
           updateFromGrid(finalGrid)
         }
@@ -917,10 +940,7 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       originalGridRef.current = null
     }
 
-
-
-
-    const onDragEnd = () => {
+const onDragEnd = () => {
       dragItemIndex.current = null
       dragItemData.current = null
       setDropTarget(null)
