@@ -947,11 +947,15 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
         const searchGrid = shortcuts.map((s) => ({ col: s.col ?? 0, row: s.row ?? 0 }))
         const nearest = findNearestEmpty(searchGrid, targetCol, targetRow, srcIdx, cols)
         const u = [...shortcuts]
+          // DEBUG: log drop
+          console.log('FREE POS DROP empty target:', targetCol, targetRow, 'srcIdx:', srcIdx, 'item cols/rows set:', targetCol, targetRow)
         u[srcIdx] = { ...u[srcIdx], col: nearest.col, row: nearest.row }
         setShortcuts(u)
         saveShortcuts(pageId, u)
       } else {
         const u = [...shortcuts]
+          // DEBUG: log drop
+          console.log('FREE POS DROP occupied->BFS nearest:', nearest, 'target:', targetCol, targetRow, 'srcIdx:', srcIdx)
         u[srcIdx] = { ...u[srcIdx], col: targetCol, row: targetRow }
         setShortcuts(u)
         saveShortcuts(pageId, u)
