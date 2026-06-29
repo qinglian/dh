@@ -913,20 +913,15 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
     }
 
     const computeReorderLayout = (srcIdx, targetCol, targetRow, maxCols) => {
-      const sorted = shortcuts.map((s, i) => ({ ...s, __origIdx: i }))
-        .sort((a, b) => {
-          const aPos = (a.row ?? 0) * maxCols + (a.col ?? 0)
-          const bPos = (b.row ?? 0) * maxCols + (b.col ?? 0)
-          return aPos - bPos
-        })
-      const srcPos = sorted.findIndex(s => s.__origIdx === srcIdx)
-      const targetPos = sorted.findIndex(s => s.__origIdx !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow)
-      if (srcPos === -1 || targetPos === -1) return null
-      const [item] = sorted.splice(srcPos, 1)
-      sorted.splice(targetPos, 0, item)
-      return sorted.map((s, i) => {
-        const { __origIdx, ...rest } = s
-        return { ...rest, col: i % maxCols, row: Math.floor(i / maxCols) }
+      const targetIdx = shortcuts.findIndex((s, i) => i !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow)
+      if (targetIdx === -1) return null
+      const srcItem = shortcuts[srcIdx]
+      const origCol = srcItem.col ?? 0
+      const origRow = srcItem.row ?? 0
+      return shortcuts.map((s, i) => {
+        if (i === srcIdx) return { ...s, col: targetCol, row: targetRow }
+        if (i === targetIdx) return { ...s, col: origCol, row: origRow }
+        return { ...s }
       })
     }
 
