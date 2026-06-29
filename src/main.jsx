@@ -1,17 +1,22 @@
-﻿import React from "react"
-import ReactDOM from "react-dom/client"
-import App from "./App.jsx"
-import "./index.css"
+﻿/**
+ * main.jsx - 应用程序入口文件
+ */
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
 
-const rootEl = document.getElementById("root")
-if (!rootEl) {
-  document.body.innerHTML = '<h1 style="color:white;text-align:center;padding-top:100px">#root not found</h1>'
-} else {
-  try {
-    ReactDOM.createRoot(rootEl).render(
-      React.createElement(React.StrictMode, null, React.createElement(App))
-    )
-  } catch(e) {
-    rootEl.innerHTML = '<h1 style="color:red;text-align:center;padding-top:100px">Error: ' + e.message + '</h1>'
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false }; }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) return React.createElement('div', { style: { color: 'red', textAlign: 'center', paddingTop: 100 } }, React.createElement('h1', null, '页面出错了，请刷新重试'));
+    return this.props.children;
   }
 }
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  React.createElement(ErrorBoundary, null,
+    React.createElement(React.StrictMode, null, React.createElement(App))
+  )
+)
