@@ -465,7 +465,7 @@ function WeatherEffect({ type, isDay = true }) {
           ctx.beginPath()
           ctx.moveTo(p.x, p.y)
           ctx.lineTo(p.x + p.wind * 2, p.y + p.length)
-          const grad = ctx.createLinearGradient(p.x, p.y, p.x + p.wind * 2, p.y + p.length)
+          if (!isFinite(p.x) || !isFinite(p.y) || !isFinite(p.length)) return; const grad = ctx.createLinearGradient(p.x, p.y, p.x + p.wind * 2, p.y + p.length)
           grad.addColorStop(0, `rgba(174,194,224,0)`)
           grad.addColorStop(0.3, `rgba(174,194,224,${p.opacity * 0.3})`)
           grad.addColorStop(1, `rgba(174,194,224,${p.opacity})`)

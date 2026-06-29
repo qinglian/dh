@@ -323,7 +323,7 @@ export function DataProvider({ children }) {
     const handler = (e) => {
       const { siteUrl, faviconUrl } = e.detail || {}
       if (!siteUrl || !faviconUrl) return
-      const updated = data.map(cat => ({
+      const updated = data.categories.map(cat => ({
         ...cat,
         sites: cat.sites?.map(site => {
           if (site.url === siteUrl && !site.iconUrl) return { ...site, iconUrl: faviconUrl }

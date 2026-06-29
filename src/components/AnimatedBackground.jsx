@@ -107,6 +107,7 @@ function drawWaves(ctx, canvas, waves, theme, time, mouse) {
       ctx.lineTo(x, wave.y + Math.sin(x * wave.frequency + time * wave.speed + wave.offset) * (wave.amplitude + mouseInfluence * (index + 1) * 0.3));
     }
     ctx.lineTo(canvas.width, canvas.height); ctx.closePath();
+    if (!isFinite(wave.y) || !isFinite(wave.amplitude)) return;
     const g = ctx.createLinearGradient(0, wave.y - wave.amplitude, 0, canvas.height);
     g.addColorStop(0, colors[index]);
     g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -242,6 +243,7 @@ function drawMeteors(ctx, canvas, meteors, theme, mouse) {
       m.life = 0.7 + Math.random() * 0.3; m.length = 80 + Math.random() * 100;
     }
     const tailX = m.x - m.vx * m.length * 0.25; const tailY = m.y - m.vy * m.length * 0.25;
+    if (!isFinite(tailX) || !isFinite(tailY) || !isFinite(m.x) || !isFinite(m.y)) return;
     const g = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
     g.addColorStop(0, `rgba(255,255,255,${m.life})`);
     g.addColorStop(0.3, `rgba(${color}, ${m.life * 0.8})`);
@@ -857,10 +859,12 @@ function MultiEffectCanvas({ effects, theme }) {
     };
 
     const draw = () => {
+      if (!isFinite(canvas.width) || !isFinite(canvas.height)) { animationId = requestAnimationFrame(draw); return; }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       time += 0.016;
       const mouse = mouseRef.current;
 
+      try {
       effects.forEach(effectId => {
         switch (effectId) {
           case 'particles': drawParticles(ctx, canvas, itemsRef.current['particles'], theme, mouse); break;
@@ -877,6 +881,7 @@ function MultiEffectCanvas({ effects, theme }) {
           case 'neongrid': drawNeonGrid(ctx, canvas, itemsRef.current['neongrid'], theme, time, mouse); break;
         }
       });
+      } catch(e) { /* skip frame */ }
 
       animationId = requestAnimationFrame(draw);
     };

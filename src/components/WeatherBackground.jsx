@@ -539,7 +539,7 @@ export default function WeatherBackground({ theme }) {
     /* ==================== 天 空 背 景 ==================== */
 
     const drawSky = () => {
-      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      if (!isFinite(h)) return; const grad = ctx.createLinearGradient(0, 0, 0, h);
       const t = state.transitionAlpha; // 过渡系数
 
       if (type === 'sunny') {
@@ -656,7 +656,7 @@ export default function WeatherBackground({ theme }) {
           ctx.globalAlpha = m.opacity;
           const tailX = m.x - Math.cos(m.angle) * m.length;
           const tailY = m.y - Math.sin(m.angle) * m.length;
-          const grad = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
+          if (!isFinite(m.x) || !isFinite(m.y) || !isFinite(tailX) || !isFinite(tailY)) return; const grad = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
           grad.addColorStop(0, 'rgba(255,255,255,1)');
           grad.addColorStop(0.3, 'rgba(200,220,255,0.6)');
           grad.addColorStop(1, 'rgba(200,220,255,0)');
@@ -685,7 +685,7 @@ export default function WeatherBackground({ theme }) {
           ctx.lineTo(w, band.y + band.width);
           ctx.lineTo(0, band.y + band.width);
           ctx.closePath();
-          const g = ctx.createLinearGradient(0, band.y, 0, band.y + band.width);
+          if (!isFinite(band.y) || !isFinite(band.width)) return; const g = ctx.createLinearGradient(0, band.y, 0, band.y + band.width);
           g.addColorStop(0, `hsla(${band.hue},80%,60%,0.25)`);
           g.addColorStop(0.5, `hsla(${band.hue + 20},70%,55%,0.12)`);
           g.addColorStop(1, `hsla(${band.hue + 30},60%,50%,0)`);
@@ -833,7 +833,7 @@ export default function WeatherBackground({ theme }) {
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(p.x + p.wind * 3, p.y + p.length);
-          const grad = ctx.createLinearGradient(p.x, p.y, p.x + p.wind * 3, p.y + p.length);
+          if (!isFinite(p.x) || !isFinite(p.y) || !isFinite(p.length)) return; const grad = ctx.createLinearGradient(p.x, p.y, p.x + p.wind * 3, p.y + p.length);
           grad.addColorStop(0, 'rgba(155,180,215,0)');
           grad.addColorStop(0.25, `rgba(155,180,215,${p.opacity * om * 0.18})`);
           grad.addColorStop(1, `rgba(155,180,215,${p.opacity * om})`);
