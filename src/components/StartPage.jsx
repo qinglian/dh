@@ -916,13 +916,36 @@ export default function StartPage({ onGoToNav, pageId = 'default', onSettingsCha
       const targetIdx = shortcuts.findIndex((s, i) => i !== srcIdx && (s.col ?? 0) === targetCol && (s.row ?? 0) === targetRow)
       if (targetIdx === -1) return null
       const srcItem = shortcuts[srcIdx]
-      const origCol = srcItem.col ?? 0
-      const origRow = srcItem.row ?? 0
-      return shortcuts.map((s, i) => {
-        if (i === srcIdx) return { ...s, col: targetCol, row: targetRow }
-        if (i === targetIdx) return { ...s, col: origCol, row: origRow }
-        return { ...s }
-      })
+      const srcCol = srcItem.col ?? 0
+      const srcRow = srcItem.row ?? 0
+      const srcPos = srcRow * maxCols + srcCol
+      const tgtPos = targetRow * maxCols + targetCol
+      if (srcPos === tgtPos) return null
+      const result = shortcuts.map(s => ({ ...s }))
+      if (srcPos < tgtPos) {
+        for (let i = 0; i < result.length; i++) {
+          if (i === srcIdx) continue
+          const pos = (result[i].row ?? 0) * maxCols + (result[i].col ?? 0)
+          if (pos > srcPos && pos <= tgtPos) {
+            const newPos = pos - 1
+            result[i].col = newPos % maxCols
+            result[i].row = Math.floor(newPos / maxCols)
+          }
+        }
+      } else {
+        for (let i = 0; i < result.length; i++) {
+          if (i === srcIdx) continue
+          const pos = (result[i].row ?? 0) * maxCols + (result[i].col ?? 0)
+          if (pos >= tgtPos && pos < srcPos) {
+            const newPos = pos + 1
+            result[i].col = newPos % maxCols
+            result[i].row = Math.floor(newPos / maxCols)
+          }
+        }
+      }
+      result[srcIdx].col = targetCol
+      result[srcIdx].row = targetRow
+      return result
     }
 
     const onDocDragOver = (e) => {
