@@ -37,18 +37,6 @@ function HlRow({ label, color, opacity, onColorChange, onOpacityChange, onOpenPi
         }}
       />
       <span style={{ fontSize: 11, color: 'var(--text-tertiary)', minWidth: 30, textAlign: 'right', flexShrink: 0 }}>{opacity}%</span>
-
-      {/* 玻璃背景颜色选择器弹窗 */}
-      {glassBgPickerTarget && (
-        <ColorPicker
-          value={glassBgColor}
-          onChange={(c) => {
-            localStorage.setItem(getGlassKey('bg-color'), c)
-            onUpdateGlassBgColor(c)
-          }}
-          onClose={() => setGlassBgPickerTarget(null)}
-        />
-      )}
     </div>
   )
 }
