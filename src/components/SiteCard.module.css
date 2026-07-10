@@ -1,4 +1,4 @@
-.card {
+﻿.card {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -14,7 +14,7 @@
   z-index: 2;
   border: 1px solid var(--glass-border);
   gap: 10px;
-  /* 2:1 横向矩形，高度减小1/5 → 5:2 */
+  /* 2:1 妯悜鐭╁舰锛岄珮搴﹀噺灏?/5 鈫?5:2 */
   aspect-ratio: 5 / 2;
   box-shadow: var(--shadow-sm);
 }
@@ -25,7 +25,7 @@
   background: var(--glass-bg-heavy);
 }
 
-/* 启用按钮高亮时增强 hover 效果 */
+/* 鍚敤鎸夐挳楂樹寒鏃跺寮?hover 鏁堟灉 */
 :not(.no-card-hl) .card:hover {
   box-shadow: var(--shadow-md), 0 0 0 1px color-mix(in srgb, var(--card-hl-border-color) var(--card-hl-border-opacity, 50%), transparent);
   background: color-mix(in srgb, var(--card-hl-bg-color) var(--card-hl-bg-opacity, 8%), var(--glass-bg-heavy));
@@ -40,14 +40,14 @@
   color: color-mix(in srgb, var(--card-hl-desc-color) var(--card-hl-desc-opacity, 0%), var(--text-tertiary));
 }
 
-/* 拖动时的目标位置高亮 */
+/* 鎷栧姩鏃剁殑鐩爣浣嶇疆楂樹寒 */
 .dragOver {
   transform: scale(1.03);
   border-color: var(--card-hl-border-color, var(--accent-primary));
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--card-hl-border-color, var(--accent-primary)) 20%, transparent);
 }
 
-/* 1:1 正方形图标 */
+/* 1:1 姝ｆ柟褰㈠浘鏍?*/
 .iconWrapper {
   width: 28px;
   height: 28px;
@@ -183,7 +183,7 @@
   background: #ff3b30;
 }
 
-/* ==================== 网站状态小圆点 ==================== */
+/* ==================== 缃戠珯鐘舵€佸皬鍦嗙偣 ==================== */
 .statusDot {
   position: absolute;
   top: 6px;
@@ -221,15 +221,15 @@
   50% { opacity: 0.5; }
 }
 
-/* 离线状态卡片样式 */
+/* 绂荤嚎鐘舵€佸崱鐗囨牱寮?*/
 .cardOffline {
   border-color: rgba(239, 68, 68, 0.3);
-  background: var(--glass-bg-section);
+  background: var(--glass-bg);
 }
 
 .cardOffline:hover {
   border-color: rgba(239, 68, 68, 0.5);
-  background: var(--glass-bg-section);
+  background: var(--glass-bg);
 }
 
 .iconWrapperOffline {

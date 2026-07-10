@@ -69,6 +69,7 @@ export default function MouseSpotlight({
   color1 = '#ffffff',
   color2 = '#000000',
   colorMix = 50,
+  feather = 60,
 }) {
   const canvasRef = useRef(null)
   const sR = useRef(size)
@@ -83,6 +84,7 @@ export default function MouseSpotlight({
   c1R.current = color1
   c2R.current = color2
   xR.current = colorMix
+  const fR = useRef(feather); fR.current = feather
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -110,9 +112,10 @@ export default function MouseSpotlight({
     function drawCircle(cx, cy, r) {
       const color = mix(c1R.current, c2R.current, xR.current / 100)
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-      grad.addColorStop(0,    color)
-      grad.addColorStop(0.4,  color)
-      grad.addColorStop(1,    color + '00')
+      const solidStop = Math.max(0, Math.min(1, 1 - fR.current / 100))
+      grad.addColorStop(0,            color)
+      grad.addColorStop(solidStop,  color)
+      grad.addColorStop(1,            color + '00')
       ctx.beginPath()
       ctx.arc(cx, cy, r, 0, Math.PI * 2)
       ctx.fillStyle = grad

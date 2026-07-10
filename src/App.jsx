@@ -291,6 +291,8 @@ function AppContent() {
     setSpotlightColor2(localStorage.getItem(getSpotlightKey('spotlight-color2')) || (theme === 'dark' ? '#0d1117' : '#000000'))
     const savedMix = localStorage.getItem(getSpotlightKey('spotlight-colorMix'))
     setSpotlightColorMix(savedMix ? parseInt(savedMix, 10) : 50)
+    const savedFeather = localStorage.getItem(getSpotlightKey('spotlight-feather'))
+    setSpotlightFeather(savedFeather ? parseInt(savedFeather, 10) : 60)
 
     // 重新加载玻璃效果设置
     const savedBlur = localStorage.getItem(getGlassKey('blur-level'))
@@ -1140,7 +1142,7 @@ function AppContent() {
       <div className={styles.app} style={getWallpaperStyle()}>
         <AnimatedBackground enabled={animatedBg} theme={theme} effects={bgEffects} multiMode={bgMultiMode} />
         {MediaBg}
-        <MouseSpotlight enabled={mouseSpotlight} size={spotlightSize} opacity={spotlightOpacity} maskMode={spotlightMaskMode} color1={spotlightColor1} color2={spotlightColor2} colorMix={spotlightColorMix} />
+        <MouseSpotlight enabled={mouseSpotlight} size={spotlightSize} opacity={spotlightOpacity} maskMode={spotlightMaskMode} color1={spotlightColor1} color2={spotlightColor2} colorMix={spotlightColorMix} feather={spotlightFeather} />
         {showSidebar && (
           <PageSidebar
             pages={pages}

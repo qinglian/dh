@@ -137,6 +137,8 @@ export default function NavPageSettings({
   onUpdateSpotlightColor2,
   spotlightColorMix,
   onUpdateSpotlightColorMix,
+  spotlightFeather,
+  onUpdateSpotlightFeather,
   blurLevel,
   onUpdateBlurLevel,
   blurEnabled,
@@ -1144,7 +1146,24 @@ export default function NavPageSettings({
                       </div>
                     </div>
 
-                    {/* 遮罩模式 */}
+                    
+                    {/* 聚光灯羽化值 */}
+                    <div className={styles.settingItem} style={{ paddingLeft: 16 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>羽化值</span>
+                          <span style={{ fontSize: 12, color: "var(--accent-primary)", fontWeight: 600, background: "rgba(0,122,255,0.08)", padding: "2px 10px", borderRadius: 10 }}>{spotlightFeather}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0} max={100} step={1}
+                          value={spotlightFeather}
+                          onChange={e => onUpdateSpotlightFeather(parseInt(e.target.value, 10))}
+                          style={sliderStyle(spotlightFeather + "%")}
+                        />
+                      </div>
+                    </div>
+{/* 遮罩模式 */}
                     <div className={styles.settingItem} style={{ paddingLeft: 16 }}>
                       <div className={styles.toggleRow}>
                         <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>遮罩模式（仅卡片/搜索框/按钮栏）</span>

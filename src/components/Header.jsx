@@ -69,7 +69,8 @@ import DataManager from './DataManager'
 import NavPageSettings from './NavPageSettings'
 import styles from './Header.module.css'
 
-export default function Header({ isEditMode, onToggleEdit, onUndo, onRedo, onCancelEdit, canUndo, canRedo, searchQuery, onSearch, onToggleBgMode, animatedBg, onOpenEffectPicker, onOpenWallpaperPicker, onLogoClick, siteStatusEnabled, onToggleSiteStatus, siteTitle, siteSubtitle, onUpdateSiteTitle, onUpdateSiteSubtitle, categories, reorderCategories, updateCategory, deleteCategory, addCategory, hiddenCategories, setHiddenCategories, mouseSpotlight, onToggleMouseSpotlight, spotlightSize, onUpdateSpotlightSize, spotlightOpacity, onUpdateSpotlightOpacity, spotlightMaskMode, onToggleSpotlightMaskMode, spotlightColor1, onUpdateSpotlightColor1, spotlightColor2, onUpdateSpotlightColor2, spotlightColorMix, onUpdateSpotlightColorMix, blurLevel, onUpdateBlurLevel, opacityLevel, onUpdateOpacityLevel, windowOverrides, setWindowOverrides, independentGlassControl, onToggleIndependentGlassControl, blurEnabled, onToggleBlurEnabled, opacityEnabled, onToggleOpacityEnabled, textColor1, onUpdateTextColor1, textColor2, onUpdateTextColor2, textColor3, onUpdateTextColor3, textColorEnabled, onToggleTextColorEnabled, getGlassKey, copyrightEnabled, onToggleCopyrightEnabled, glassBgColor, onUpdateGlassBgColor, glassBgColorOpacity, onUpdateGlassBgColorOpacity, glassBgColorEnabled, onToggleGlassBgColorEnabled }) {
+export default function Header({ isEditMode, onToggleEdit, onUndo, onRedo, onCancelEdit, canUndo, canRedo, searchQuery, onSearch, onToggleBgMode, animatedBg, onOpenEffectPicker, onOpenWallpaperPicker, onLogoClick, siteStatusEnabled, onToggleSiteStatus, siteTitle, siteSubtitle, onUpdateSiteTitle, onUpdateSiteSubtitle, categories, reorderCategories, updateCategory, deleteCategory, addCategory, hiddenCategories, setHiddenCategories, mouseSpotlight, onToggleMouseSpotlight, spotlightSize, onUpdateSpotlightSize, spotlightOpacity, onUpdateSpotlightOpacity, spotlightMaskMode, onToggleSpotlightMaskMode, spotlightColor1, onUpdateSpotlightColor1, spotlightColor2, onUpdateSpotlightColor2, spotlightColorMix, onUpdateSpotlightColorMix,
+  spotlightFeather, onUpdateSpotlightFeather, blurLevel, onUpdateBlurLevel, opacityLevel, onUpdateOpacityLevel, windowOverrides, setWindowOverrides, independentGlassControl, onToggleIndependentGlassControl, blurEnabled, onToggleBlurEnabled, opacityEnabled, onToggleOpacityEnabled, textColor1, onUpdateTextColor1, textColor2, onUpdateTextColor2, textColor3, onUpdateTextColor3, textColorEnabled, onToggleTextColorEnabled, getGlassKey, copyrightEnabled, onToggleCopyrightEnabled, glassBgColor, onUpdateGlassBgColor, glassBgColorOpacity, onUpdateGlassBgColorOpacity, glassBgColorEnabled, onToggleGlassBgColorEnabled }) {
   const { theme, themeMode, setTheme } = useTheme()
 
   /* 导航页设置弹窗的显示状态 */
@@ -367,6 +368,8 @@ export default function Header({ isEditMode, onToggleEdit, onUndo, onRedo, onCan
           onUpdateSpotlightColor2={onUpdateSpotlightColor2}
           spotlightColorMix={spotlightColorMix}
           onUpdateSpotlightColorMix={onUpdateSpotlightColorMix}
+          spotlightFeather={spotlightFeather}
+          onUpdateSpotlightFeather={onUpdateSpotlightFeather}
           blurLevel={blurLevel}
           onUpdateBlurLevel={onUpdateBlurLevel}
           opacityLevel={opacityLevel}

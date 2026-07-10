@@ -1,4 +1,4 @@
-.wrapper {
+﻿.wrapper {
   max-width: 540px;
   margin: 0 auto;
   padding: 0 24px;
@@ -10,7 +10,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 18px;
-  background: var(--bg-card);
+  background: var(--glass-bg-section);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
   transition: all var(--transition-normal);
