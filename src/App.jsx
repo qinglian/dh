@@ -1270,6 +1270,8 @@ function AppContent() {
           setSpotlightColorMix(mix)
           localStorage.setItem(getSpotlightKey('spotlight-colorMix'), String(mix))
         }}
+        spotlightFeather={spotlightFeather}
+        onUpdateSpotlightFeather={(v) => { setSpotlightFeather(v); localStorage.setItem(getSpotlightKey('spotlight-feather'), String(v)) }}
         blurLevel={blurLevel}
         onUpdateBlurLevel={(level) => setBlurLevel(level)}
         opacityLevel={opacityLevel}
