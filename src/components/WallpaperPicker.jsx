@@ -59,7 +59,7 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
   const getUrl  = (t) => bg?.prefix==='url'&&bg?.type===t?bg.src:null
 
   return (
-    <div className={`${styles.overlay}${isSliding ? " " + styles.noBlur : ""}`} onClick={onCancel}>
+    <div className={styles.overlay} style={isSliding ? { backdropFilter: "none", WebkitBackdropFilter: "none" } : undefined} onClick={onCancel}>
       <div className={styles.picker} onClick={e=>e.stopPropagation()}>
         <div className={styles.fixedTop}>
           <div className={styles.header}>
