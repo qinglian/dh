@@ -516,13 +516,13 @@ function AppContent() {
     localStorage.setItem(getGlassKey('opacity-level'), String(opacityLevel))
     const r = document.documentElement
     if (!opacityEnabled) {
-      r.style.removeProperty('--glass-bg-section')
+      r.style.removeProperty('--glass-border')
     } else {
-      // 使用 React context 中的 theme 而非 DOM 属性，避免首次渲染时 data-theme 尚未设置导致 baseAlpha 计算错误
-      let baseAlpha = 0.35
-      if (theme === 'dark') baseAlpha = 0.04
-      else if (r.getAttribute('data-bg') === 'custom') baseAlpha = 0.30
-      r.style.setProperty('--glass-bg-section', `linear-gradient(var(--glass-bg-tint, transparent), var(--glass-bg-tint, transparent)), rgba(255,255,255,${Math.min(1, (baseAlpha * opacityLevel / 100)).toFixed(3)})`)
+      let baseBorder = 0.6
+      if (theme === 'dark' && r.getAttribute('data-bg') === 'custom') baseBorder = 0.12
+      else if (r.getAttribute('data-bg') === 'custom') baseBorder = 0.5
+      else if (theme === 'dark') baseBorder = 0.1
+      r.style.setProperty('--glass-border', `rgba(255,255,255,${Math.min(1, (baseBorder * opacityLevel / 100)).toFixed(3)})`)
     }
   }, [opacityLevel, opacityEnabled, theme])
 
