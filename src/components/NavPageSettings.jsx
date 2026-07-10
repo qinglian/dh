@@ -1309,7 +1309,7 @@ export default function NavPageSettings({
                 {/* 不透明度控制 */}
                 <div className={styles.settingItem}>
                   <div className={styles.toggleRow}>
-                    <span className={styles.toggleLabel}>卡片边框不透明度{opacityEnabled ? ` (${opacityLevel}%)` : ''}</span>
+                    <span className={styles.toggleLabel}>卡片投影效果{opacityEnabled ? ` (${opacityLevel}%)` : ''}</span>
                     <button
                       className={`${styles.toggle} ${opacityEnabled ? styles.toggleOn : styles.toggleOff}`}
                       onClick={onToggleOpacityEnabled}

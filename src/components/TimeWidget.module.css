@@ -17,6 +17,16 @@
   transition: background 0.8s ease, border-color 0.8s ease;
 }
 
+
+.widget::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-bg-tint, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
 /* 内容层 */
 .content {
   position: relative;

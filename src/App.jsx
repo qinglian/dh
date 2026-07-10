@@ -516,13 +516,14 @@ function AppContent() {
     localStorage.setItem(getGlassKey('opacity-level'), String(opacityLevel))
     const r = document.documentElement
     if (!opacityEnabled) {
-      r.style.removeProperty('--glass-border')
+      r.style.removeProperty('--shadow-glass')
     } else {
-      let baseBorder = 0.6
-      if (theme === 'dark' && r.getAttribute('data-bg') === 'custom') baseBorder = 0.12
-      else if (r.getAttribute('data-bg') === 'custom') baseBorder = 0.5
-      else if (theme === 'dark') baseBorder = 0.1
-      r.style.setProperty('--glass-border', `rgba(255,255,255,${Math.min(1, (baseBorder * opacityLevel / 100)).toFixed(3)})`)
+      let baseOuter = 0.06, baseInner = 0.5
+      if (theme === 'dark' && r.getAttribute('data-bg') === 'custom') { baseOuter = 0.3; baseInner = 0.1 }
+      else if (r.getAttribute('data-bg') === 'custom') { baseOuter = 0.08; baseInner = 0.6 }
+      else if (theme === 'dark') { baseOuter = 0.3; baseInner = 0.08 }
+      const s = opacityLevel / 100
+      r.style.setProperty('--shadow-glass', `0 4px 16px rgba(0,0,0,${(baseOuter * s).toFixed(3)}), inset 0 0.5px 0 rgba(255,255,255,${(baseInner * s).toFixed(3)})`)
     }
   }, [opacityLevel, opacityEnabled, theme])
 
