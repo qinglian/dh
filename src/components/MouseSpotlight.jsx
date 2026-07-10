@@ -111,7 +111,7 @@ export default function MouseSpotlight({
       const color = mix(c1R.current, c2R.current, xR.current / 100)
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
       grad.addColorStop(0,    color)
-      grad.addColorStop(0.92, color)
+      grad.addColorStop(0.4,  color)
       grad.addColorStop(1,    'transparent')
       ctx.beginPath()
       ctx.arc(cx, cy, r, 0, Math.PI * 2)
