@@ -1,4 +1,4 @@
-/**
+﻿/**
  * App.jsx — 清炼导航主应用组件
  *
  * 职责：
@@ -41,6 +41,7 @@ import StartPageSettings from './components/StartPageSettings'
 import { getSettings } from './utils/startPageSettings'
 import NavPageSettings from './components/NavPageSettings'
 import { applyDefaultConfig } from './utils/defaultConfig'
+import { dbGet, dbSet, dbRemove } from './utils/storage'
 import styles from './App.module.css'
 
 // 应用首次加载时，若 localStorage 无配置，写入内置默认值
@@ -172,8 +173,16 @@ function AppContent() {
   const bgSnapshotRef = useRef(null)
   const wpSnapshotRef = useRef(null)
 
+    // 从 IndexedDB 恢复上传的壁纸数据
+  useEffect(() => {
+    const v = localStorage.getItem('nav-wallpaper')
+    if (v === 'media:stored') {
+      dbGet('wallpaper-media').then(data => { if (data) setWallpaper(data) })
+    }
+  }, [])
+
   const [animatedBg, setAnimatedBg] = useState(() => localStorage.getItem('nav-animated-bg') === 'true')
-  const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('nav-wallpaper') || 'default')
+  const [wallpaper, setWallpaper] = useState(() => { const v = localStorage.getItem('nav-wallpaper'); if (!v || v === 'media:stored') return 'default'; if (v === 'default') return 'default'; return v })
   const [bgBlur, setBgBlur] = useState(() => {
     const v = localStorage.getItem('nav-bg-blur')
     return v ? parseInt(v, 10) : 0
@@ -418,7 +427,18 @@ function AppContent() {
   }, [bgMultiMode])
 
   useEffect(() => {
-    try { localStorage.setItem('nav-wallpaper', wallpaper) } catch (e) { console.warn('壁纸存储失败:', e.message) }
+    if (wallpaper.startsWith('media:')) {
+      // 大对象存 IndexedDB，localStorage 仅存标记
+      dbSet('wallpaper-media', wallpaper)
+      localStorage.setItem('nav-wallpaper', 'media:stored')
+    } else {
+      // 小值直接存 localStorage
+      try { localStorage.setItem('nav-wallpaper', wallpaper) } catch (e) { console.warn('壁纸存储失败:', e.message) }
+      // 如果之前有 IndexedDB 数据，清理掉
+      if (localStorage.getItem('nav-wallpaper') === 'media:stored') {
+        dbRemove('wallpaper-media')
+      }
+    }
   }, [wallpaper])
 
   useEffect(() => {

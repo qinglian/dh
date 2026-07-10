@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+﻿import { useRef, useState, useEffect } from 'react'
 import { Upload, X, Film, Video, FileImage, Link } from 'lucide-react'
 import styles from './WallpaperPicker.module.css'
 
@@ -29,6 +29,7 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
   const [mediaType, setMediaType] = useState(null)
   const [sourceMode, setSourceMode] = useState('file')
   const [urlInput, setUrlInput] = useState('')
+  const [isSliding, setIsSliding] = useState(false)
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -41,7 +42,7 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
     if (type==='image'&&!file.type.startsWith('image/')&&file.type!=='image/gif'){alert('请选择图片文件');e.target.value='';return}
     if (type==='gif'&&file.type!=='image/gif'){alert('请选择GIF文件');e.target.value='';return}
     if (type==='video'&&!file.type.startsWith('video/')){alert('请选择视频文件');e.target.value='';return}
-    const r=new FileReader(); r.onload=ev=>{ onUpload(`media:${type}:${ev.target?.result}`); onConfirm() }; r.readAsDataURL(file); e.target.value=''
+    const r=new FileReader(); r.onload=ev=>{ onUpload(`media:${type}:${ev.target?.result}`); }; r.readAsDataURL(file); e.target.value=''
   }
 
   const handleUrlSubmit = () => {
@@ -49,7 +50,7 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
     let type='image'; const l=url.toLowerCase()
     if(/\.gif($|\?)/.test(l))type='gif'; else if(/\.(mp4|webm|ogg|mov)($|\?)/.test(l))type='video'
     else if(/\.(png|jpg|jpeg|webp|svg|bmp)($|\?)/.test(l))type='image'
-    onUpload(`url:${type}:${url}`); onConfirm()
+    onUpload(`url:${type}:${url}`)
   }
 
   const bg = parseBg(currentWallpaper)
@@ -58,7 +59,7 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
   const getUrl  = (t) => bg?.prefix==='url'&&bg?.type===t?bg.src:null
 
   return (
-    <div className={styles.overlay} onClick={onCancel}>
+    <div className={`${styles.overlay}${isSliding ? " " + styles.noBlur : ""}`} onClick={onCancel}>
       <div className={styles.picker} onClick={e=>e.stopPropagation()}>
         <div className={styles.fixedTop}>
           <div className={styles.header}>
@@ -133,8 +134,8 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
             {hasAnyCustom&&(
               <div className={styles.effectsControl}>
                 <div className={styles.effectsTitle}>背景效果</div>
-                <SliderRow label="模糊度" value={bgBlur} max={50} step={1} suffix="px" onChange={onSetBlur}/>
-                <SliderRow label="不透明度" value={bgOpacity} max={100} step={5} suffix="%" onChange={onSetOpacity}/>
+                <SliderRow label="模糊度" value={bgBlur} max={50} step={1} suffix="px" onChange={onSetBlur} onInteractStart={()=>setIsSliding(true)} onInteractEnd={()=>setIsSliding(false)}/>
+                <SliderRow label="不透明度" value={bgOpacity} max={100} step={5} suffix="%" onChange={onSetOpacity} onInteractStart={()=>setIsSliding(true)} onInteractEnd={()=>setIsSliding(false)}/>
               </div>
             )}
           </div>
@@ -151,9 +152,9 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
   )
 }
 
-function SliderRow({label,value,max,step,suffix,onChange}){
+function SliderRow({label,value,max,step,suffix,onChange,onInteractStart,onInteractEnd}){
   return <div className={styles.sliderRow}>
     <div className={styles.sliderHeader}><span className={styles.sliderLabel}>{label}</span><span className={styles.sliderValue}>{value}{suffix}</span></div>
-    <input type="range" min={0} max={max} step={step} value={value} onChange={e=>onChange(+e.target.value)} className={styles.sliderInput}/>
+    <input type="range" min={0} max={max} step={step} value={value} onMouseDown={onInteractStart} onTouchStart={onInteractStart} onMouseUp={onInteractEnd} onTouchEnd={onInteractEnd} onChange={e=>onChange(+e.target.value)} className={styles.sliderInput}/>
   </div>
 }
