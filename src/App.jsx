@@ -1,4 +1,4 @@
-﻿/**
+/**
  * App.jsx — 清炼导航主应用组件
  *
  * 职责：
@@ -243,6 +243,16 @@ function AppContent() {
   const [opacityEnabled, setOpacityEnabled] = useState(() => {
     return localStorage.getItem(getGlassKey('opacity-enabled')) !== 'false'
   })
+  const [glassBgColor, setGlassBgColor] = useState(() => {
+    return localStorage.getItem(getGlassKey('bg-color')) || '#6366f1'
+  })
+  const [glassBgColorOpacity, setGlassBgColorOpacity] = useState(() => {
+    const saved = localStorage.getItem(getGlassKey('bg-color-opacity'))
+    return saved ? parseInt(saved, 10) : 30
+  })
+  const [glassBgColorEnabled, setGlassBgColorEnabled] = useState(() => {
+    return localStorage.getItem(getGlassKey('bg-color-enabled')) === 'true'
+  })
   const [textColor1, setTextColor1] = useState(() => {
     return localStorage.getItem(getGlassKey('text-color1')) || (theme === 'dark' ? '#f5f5f7' : '#1c1c1e')
   })
@@ -294,6 +304,9 @@ function AppContent() {
     setTextColor3(localStorage.getItem(getGlassKey('text-color3')) || (theme === 'dark' ? '#636366' : '#8e8e93'))
     setTextColorEnabled(localStorage.getItem(getGlassKey('text-color-enabled')) === 'true')
     try {
+    setGlassBgColor(localStorage.getItem(getGlassKey('bg-color')) || '#6366f1')
+    setGlassBgColorOpacity((() => { const s = localStorage.getItem(getGlassKey('bg-color-opacity')); return s ? parseInt(s, 10) : 30 })())
+    setGlassBgColorEnabled(localStorage.getItem(getGlassKey('bg-color-enabled')) === 'true')
       const s = localStorage.getItem(getGlassKey('window-overrides'))
       setWindowOverrides(s ? JSON.parse(s) : {})
     } catch { setWindowOverrides({}) }
@@ -506,6 +519,20 @@ function AppContent() {
     }
   }, [opacityLevel, opacityEnabled, theme])
 
+
+  // 玻璃背景颜色效果
+  useEffect(() => {
+    const r = document.documentElement
+    if (!glassBgColorEnabled || glassBgColorOpacity <= 0) {
+      r.style.removeProperty('--glass-bg-tint')
+    } else {
+      const hex = glassBgColor.replace('#', '')
+      const rr = parseInt(hex.substring(0,2), 16)
+      const gg = parseInt(hex.substring(2,4), 16)
+      const bb = parseInt(hex.substring(4,6), 16)
+      r.style.setProperty('--glass-bg-tint', 'rgba(' + rr + ',' + gg + ',' + bb + ',' + (glassBgColorOpacity / 100).toFixed(2) + ')')
+    }
+  }, [glassBgColor, glassBgColorOpacity, glassBgColorEnabled])
   // 文字颜色启用时设置 CSS 变量
   useEffect(() => {
     const r = document.documentElement
@@ -546,6 +573,19 @@ function AppContent() {
     localStorage.setItem(getGlassKey('text-color-enabled'), String(textColorEnabled))
   }, [textColorEnabled, theme])
 
+
+  // 保存玻璃背景颜色设置
+  useEffect(() => {
+    localStorage.setItem(getGlassKey('bg-color'), glassBgColor)
+  }, [glassBgColor, theme])
+
+  useEffect(() => {
+    localStorage.setItem(getGlassKey('bg-color-opacity'), String(glassBgColorOpacity))
+  }, [glassBgColorOpacity, theme])
+
+  useEffect(() => {
+    localStorage.setItem(getGlassKey('bg-color-enabled'), String(glassBgColorEnabled))
+  }, [glassBgColorEnabled, theme])
   // 当前页面的分类数据
   const currentCategories = pageData[currentPageId]?.categories || []
 
@@ -1253,6 +1293,22 @@ function AppContent() {
           localStorage.setItem(getGlassKey('opacity-enabled'), String(v))
         }}
         textColor1={textColor1}
+        glassBgColor={glassBgColor}
+        onUpdateGlassBgColor={(color) => {
+          setGlassBgColor(color)
+          localStorage.setItem(getGlassKey('bg-color'), color)
+        }}
+        glassBgColorOpacity={glassBgColorOpacity}
+        onUpdateGlassBgColorOpacity={(v) => {
+          setGlassBgColorOpacity(v)
+          localStorage.setItem(getGlassKey('bg-color-opacity'), String(v))
+        }}
+        glassBgColorEnabled={glassBgColorEnabled}
+        onToggleGlassBgColorEnabled={() => {
+          const v = !glassBgColorEnabled
+          setGlassBgColorEnabled(v)
+          localStorage.setItem(getGlassKey('bg-color-enabled'), String(v))
+        }}
         onUpdateTextColor1={(color) => {
           setTextColor1(color)
           localStorage.setItem(getGlassKey('text-color1'), color)

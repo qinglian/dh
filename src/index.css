@@ -142,7 +142,9 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'PingFang SC', sans-serif;
-  background: var(--bg-primary);
+  background-color: var(--bg-primary);
+  background-image: linear-gradient(var(--glass-bg-tint, transparent), var(--glass-bg-tint, transparent));
+  background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.5;
   min-height: 100vh;

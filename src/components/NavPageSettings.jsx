@@ -37,6 +37,18 @@ function HlRow({ label, color, opacity, onColorChange, onOpacityChange, onOpenPi
         }}
       />
       <span style={{ fontSize: 11, color: 'var(--text-tertiary)', minWidth: 30, textAlign: 'right', flexShrink: 0 }}>{opacity}%</span>
+
+      {/* 玻璃背景颜色选择器弹窗 */}
+      {glassBgPickerTarget && (
+        <ColorPicker
+          value={glassBgColor}
+          onChange={(c) => {
+            localStorage.setItem(getGlassKey('bg-color'), c)
+            onUpdateGlassBgColor(c)
+          }}
+          onClose={() => setGlassBgPickerTarget(null)}
+        />
+      )}
     </div>
   )
 }
@@ -145,6 +157,12 @@ export default function NavPageSettings({
   onUpdateOpacityLevel,
   opacityEnabled,
   onToggleOpacityEnabled,
+  glassBgColor,
+  onUpdateGlassBgColor,
+  glassBgColorOpacity,
+  onUpdateGlassBgColorOpacity,
+  glassBgColorEnabled,
+  onToggleGlassBgColorEnabled,
   independentGlassControl,
   onToggleIndependentGlassControl,
   textColor1,
@@ -185,6 +203,7 @@ export default function NavPageSettings({
   const [hlDescColor, setHlDescColor] = useState(() => localStorage.getItem(hlKey('desc-color')) || '#007aff')
   const [hlDescOpacity, setHlDescOpacity] = useState(() => { const v = localStorage.getItem(hlKey('desc-opacity')); return v !== null ? parseInt(v) : 0 })
   const [hlPickerTarget, setHlPickerTarget] = useState(null)
+  const [glassBgPickerTarget, setGlassBgPickerTarget] = useState(null)
   const [searchHistoryEnabled, setSearchHistoryEnabled] = useState(() => localStorage.getItem('nav-search-history-enabled') !== 'false')
   const [tagShape, setTagShape] = useState(() => localStorage.getItem('nav-tag-shape') === 'rect' ? 'rect' : 'capsule')
   const [showTagShapeDropdown, setShowTagShapeDropdown] = useState(false)
@@ -1235,6 +1254,51 @@ export default function NavPageSettings({
                   )}
                 </div>
 
+                {/* 玻璃背景颜色 */}
+                <div className={styles.settingItem}>
+                  <div className={styles.toggleRow}>
+                    <span className={styles.toggleLabel}>玻璃背景颜色{glassBgColorEnabled ? ` (${glassBgColorOpacity}%)` : ""}</span>
+                    <button
+                      className={`${styles.toggle} ${glassBgColorEnabled ? styles.toggleOn : styles.toggleOff}`}
+                      onClick={onToggleGlassBgColorEnabled}
+                    >
+                      <span className={styles.toggleThumb} />
+                    </button>
+                  </div>
+                  {glassBgColorEnabled && (
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                      <button
+                        onClick={() => setGlassBgPickerTarget("glassBg")}
+                        title={glassBgColor}
+                        style={{
+                          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                          background: glassBgColor,
+                          border: "2px solid var(--glass-border)",
+                          cursor: "pointer", padding: 0,
+                          boxShadow: "inset 0 1px 2px rgba(0,0,0,0.08)",
+                          transition: "transform .12s cubic-bezier(.34,1.56,.64,1), filter .15s ease",
+                        }}
+                        onMouseDown={e => { e.currentTarget.style.transform = "scale(0.85)"; e.currentTarget.style.filter = "brightness(0.85)" }}
+                        onMouseUp={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.filter = "none" }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.filter = "none" }}
+                      />
+                      <input
+                        type="range"
+                        min={0} max={100} step={1}
+                        value={glassBgColorOpacity}
+                        onChange={e => onUpdateGlassBgColorOpacity(parseInt(e.target.value, 10))}
+                        style={{
+                          flex: 1, height: 4, borderRadius: 2,
+                          WebkitAppearance: "none", appearance: "none",
+                          background: `linear-gradient(to right, transparent, ${glassBgColor})`,
+                          outline: "none", cursor: "pointer",
+                        }}
+                      />
+                      <span style={{ fontSize: 11, color: "var(--text-tertiary)", minWidth: 30, textAlign: "right", flexShrink: 0 }}>{glassBgColorOpacity}%</span>
+                    </div>
+                  )}
+                </div>
+
                 {/* 不透明度控制 */}
                 <div className={styles.settingItem}>
                   <div className={styles.toggleRow}>
@@ -1892,6 +1956,18 @@ export default function NavPageSettings({
             window.dispatchEvent(new CustomEvent('cardHighlightChanged'))
           }}
           onClose={() => setHlPickerTarget(null)}
+        />
+      )}
+
+      {/* 玻璃背景颜色选择器弹窗 */}
+      {glassBgPickerTarget && (
+        <ColorPicker
+          value={glassBgColor}
+          onChange={(c) => {
+            localStorage.setItem(getGlassKey('bg-color'), c)
+            onUpdateGlassBgColor(c)
+          }}
+          onClose={() => setGlassBgPickerTarget(null)}
         />
       )}
     </div>
