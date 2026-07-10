@@ -30,6 +30,9 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
   const [sourceMode, setSourceMode] = useState('file')
   const [urlInput, setUrlInput] = useState('')
   const [isSliding, setIsSliding] = useState(false)
+  const overlayRef = useRef(null)
+
+  useEffect(() => { if (overlayRef.current) { overlayRef.current.style.backdropFilter = isSliding ? 'none' : ''; overlayRef.current.style.WebkitBackdropFilter = isSliding ? 'none' : ''; } }, [isSliding])
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -59,7 +62,7 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
   const getUrl  = (t) => bg?.prefix==='url'&&bg?.type===t?bg.src:null
 
   return (
-    <div className={styles.overlay} style={isSliding ? { backdropFilter: "none", WebkitBackdropFilter: "none" } : undefined} onClick={onCancel}>
+    <div className={styles.overlay} ref={overlayRef} onClick={onCancel}>
       <div className={styles.picker} onClick={e=>e.stopPropagation()}>
         <div className={styles.fixedTop}>
           <div className={styles.header}>
