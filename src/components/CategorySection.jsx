@@ -261,6 +261,7 @@ export default function CategorySection({
             s['--text-secondary'] = windowOverride.textColor2
             s['--text-tertiary'] = windowOverride.textColor3
           }
+          s.backgroundImage = `linear-gradient(var(--glass-bg-tint, transparent), var(--glass-bg-tint, transparent))`
           return s
         })()}
       >
