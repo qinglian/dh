@@ -223,6 +223,11 @@ function AppContent() {
     const saved = localStorage.getItem(getSpotlightKey('spotlight-colorMix'))
     return saved ? parseInt(saved, 10) : 50
   })
+  const [spotlightFeather, setSpotlightFeather] = useState(() => {
+    const saved = localStorage.getItem(getSpotlightKey("spotlight-feather"))
+    return saved ? parseInt(saved, 10) : 60
+  })
+
   const [blurLevel, setBlurLevel] = useState(() => {
     const saved = localStorage.getItem(getGlassKey('blur-level'))
     return saved ? parseInt(saved, 10) : 50
