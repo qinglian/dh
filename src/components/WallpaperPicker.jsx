@@ -153,8 +153,14 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
 }
 
 function SliderRow({label,value,max,step,suffix,onChange,onInteractStart,onInteractEnd}){
+  const handleStart = () => {
+    if (onInteractStart) onInteractStart();
+    const onUp = () => { if (onInteractEnd) onInteractEnd(); document.removeEventListener('mouseup', onUp); document.removeEventListener('touchend', onUp); };
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+  };
   return <div className={styles.sliderRow}>
     <div className={styles.sliderHeader}><span className={styles.sliderLabel}>{label}</span><span className={styles.sliderValue}>{value}{suffix}</span></div>
-    <input type="range" min={0} max={max} step={step} value={value} onMouseDown={onInteractStart} onTouchStart={onInteractStart} onMouseUp={onInteractEnd} onTouchEnd={onInteractEnd} onChange={e=>onChange(+e.target.value)} className={styles.sliderInput}/>
+    <input type="range" min={0} max={max} step={step} value={value} onMouseDown={handleStart} onTouchStart={handleStart} onChange={e=>onChange(+e.target.value)} className={styles.sliderInput}/>
   </div>
 }
