@@ -195,7 +195,20 @@ export default function NavPageSettings({
   const [hlPickerTarget, setHlPickerTarget] = useState(null)
   const [glassBgPickerTarget, setGlassBgPickerTarget] = useState(null)
   const [searchHistoryEnabled, setSearchHistoryEnabled] = useState(() => localStorage.getItem('nav-search-history-enabled') !== 'false')
+  const [sliderActive, setSliderActive] = useState(false)
   const [tagShape, setTagShape] = useState(() => localStorage.getItem('nav-tag-shape') === 'rect' ? 'rect' : 'capsule')
+
+  // 滑块拖动时取消弹窗模糊
+  useEffect(() => {
+    const up = () => setSliderActive(false)
+    window.addEventListener('mouseup', up)
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchend', up)
+    }
+  }, [])
+
   const [showTagShapeDropdown, setShowTagShapeDropdown] = useState(false)
   const tagDdRef = useRef(null)
   const tagBtnRef = useRef(null)
@@ -661,8 +674,8 @@ export default function NavPageSettings({
   })
 
   return (
-    <div className={styles.overlayWrapper}>
-      <div className={styles.overlay} onClick={onClose} />
+    <div className={styles.overlayWrapper} onMouseDown={e => { if (e.target.type === "range") setSliderActive(true) }} onTouchStart={e => { if (e.target.type === "range") setSliderActive(true) }}>
+<div className={styles.overlay} onClick={onClose} style={sliderActive ? { backdropFilter: "none", WebkitBackdropFilter: "none" } : {}} />
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <div className={styles.headerTitle}>
