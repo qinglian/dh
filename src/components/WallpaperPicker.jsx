@@ -30,6 +30,7 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
   const [sourceMode, setSourceMode] = useState('file')
   const [urlInput, setUrlInput] = useState('')
   const [isSliding, setIsSliding] = useState(false)
+  const mediaTypeRef = useRef(null)
   const overlayRef = useRef(null)
 
   useEffect(() => { if (overlayRef.current) { overlayRef.current.style.backdropFilter = isSliding ? 'none' : ''; overlayRef.current.style.WebkitBackdropFilter = isSliding ? 'none' : ''; } }, [isSliding])
@@ -109,19 +110,14 @@ export default function WallpaperPicker({ currentWallpaper, onSelect, onUpload, 
                 {sourceMode==='file'&&(<>
                   <div className={styles.mediaOptions}>
                     {[{type:'image',icon:FileImage,label:'图片',desc:'静态图'},{type:'gif',icon:Film,label:'GIF',desc:'动图'},{type:'video',icon:Video,label:'视频',desc:'视频'}].map(m=>(
-                      <button key={m.type} className={styles.mediaOption} onClick={()=>setMediaType(mediaType===m.type?null:m.type)}>
+                      <button key={m.type} className={styles.mediaOption} onClick={()=>{ mediaTypeRef.current=m.type; setMediaType(m.type); const fi=fileInputRef.current; if(fi){fi.accept=m.type==='image'?'image/png,image/jpeg,image/webp':m.type==='gif'?'image/gif':'video/mp4,video/webm,video/ogg'; fi.click()} }}>
                         <m.icon size={20}/><span>{m.label}</span><span className={styles.mediaDesc}>{m.desc}</span>
                       </button>
                     ))}
                   </div>
-                  {mediaType&&(
-                    <div className={styles.uploadArea}>
-                      <div className={styles.uploadLabel}>选择{mediaType==='image'?'图片':mediaType==='gif'?'GIF':'视频'}文件</div>
-                      <button className={styles.uploadBtn} onClick={()=>fileInputRef.current?.click()}><Upload size={14}/>浏览文件</button>
-                      <input ref={fileInputRef} type="file" accept={mediaType==='image'?'image/png,image/jpeg,image/webp':mediaType==='gif'?'image/gif':'video/mp4,video/webm,video/ogg'} onChange={e=>handleMediaFile(mediaType,e)} style={{display:'none'}}/>
-                    </div>
-                  )}
+                  
                 </>)}
+                <input ref={fileInputRef} type="file" accept="" onChange={e=>handleMediaFile(mediaTypeRef.current, e)} style={{display:'none'}}/>
                 {sourceMode==='url'&&(
                   <div className={styles.urlArea}>
                     <div className={styles.uploadLabel}>输入图片 / GIF / 视频的直链地址</div>
